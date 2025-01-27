@@ -1,10 +1,15 @@
+import { ReactiveCache } from '/imports/reactiveCache';
+import { TAPi18n } from '/imports/i18n';
+import moment from 'moment/min/moment-with-locales';
+
 // Helper function to replace HH with H for 24 hours format, because H allows also single-digit hours
 function adjustedTimeFormat() {
   return moment
     .localeData()
-    .longDateFormat('LT')
-    .replace(/HH/i, 'H');
+    .longDateFormat('LT');
 }
+
+//   .replace(/HH/i, 'H');
 
 export class DatePicker extends BlazeComponent {
   template() {
@@ -19,7 +24,7 @@ export class DatePicker extends BlazeComponent {
   }
 
   startDayOfWeek() {
-    const currentUser = Meteor.user();
+    const currentUser = ReactiveCache.getCurrentUser();
     if (currentUser) {
       return currentUser.getStartDayOfWeek();
     } else {

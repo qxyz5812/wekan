@@ -22,10 +22,10 @@ const pkgdef :Spk.PackageDefinition = (
     appTitle = (defaultText = "Wekan"),
     # The name of the app as it is displayed to the user.
 
-    appVersion = 590,
+    appVersion = 780,
     # Increment this for every release.
 
-    appMarketingVersion = (defaultText = "5.90.0~2021-12-26"),
+    appMarketingVersion = (defaultText = "7.80.0~2025-01-12"),
     # Human-readable presentation of the app version.
 
     minUpgradableAppVersion = 0,
@@ -86,14 +86,8 @@ const pkgdef :Spk.PackageDefinition = (
         ),
       ],
 
-      changeLog = (
-        defaultText = embed "CHANGELOG.md",
-        localizations = [
-          (locale = "fr", text = embed "meta/t9n-changelog/fr.md"),
-          (locale = "fi", text = embed "meta/t9n-changelog/fi.md"),
-        ],
-      )
-    )
+      changeLog = (defaultText = embed "CHANGELOG.md"),
+    ),
   ),
 
   sourceMap = (
@@ -233,10 +227,21 @@ const pkgdef :Spk.PackageDefinition = (
 
 const myCommand :Spk.Manifest.Command = (
   # Here we define the command used to start up your server.
+  #argv = ["/sandstorm-http-bridge", "4000", "--", "node", "start.js"],
+  #argv = ["/sandstorm-http-bridge", "4000", "--", "node", "--stack-size=65500", "start.js"],
   argv = ["/sandstorm-http-bridge", "4000", "--", "node", "start.js"],
   environ = [
     # Note that this defines the *entire* environment seen by your app.
+    #---------------------------------------------------------------------
+    # https://github.com/wekan/wekan/issues/3585#issuecomment-1021522132
+    # Add more Node heap:
+    #export NODE_OPTIONS="--max_old_space_size=4096"
+    # Add more stack:
+    #bash -c "ulimit -s 65500; exec node --stack-size=65500 main.js"
+    #---------------------------------------------------------------------
+    (key = "NODE_OPTIONS", value = "--max_old_space_size=4096"),
     (key = "PATH", value = "/usr/local/bin:/usr/bin:/bin"),
+    (key = "WRITABLE_PATH", value = "/var/wekan-uploads"),
     (key = "RESULTS_PER_PAGE", value = ""),
     (key = "WITH_API", value = "true"),
     (key = "RICHER_CARD_COMMENT_EDITOR", value="false"),
@@ -253,6 +258,7 @@ const myCommand :Spk.Manifest.Command = (
     (key = "OAUTH2_ENABLED", value="false"),
     (key = "OAUTH2_CA_CERT", value=""),
     (key = "OAUTH2_ADFS_ENABLED", value="false"),
+    (key = "OAUTH2_B2C_ENABLED", value="false"),
     (key = "OAUTH2_CLIENT_ID", value="false"),
     (key = "OAUTH2_SECRET", value=""),
     (key = "OAUTH2_SERVER_URL", value=""),

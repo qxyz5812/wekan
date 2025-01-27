@@ -73,22 +73,25 @@ template(name="people")
 
 template(name="orgGeneral")
   table
-    tbody
+    thead
       tr
         th {{_ 'displayName'}}
         th {{_ 'description'}}
         th {{_ 'shortName'}}
+        th {{_ 'autoAddUsersWithDomainName'}}
         th {{_ 'website'}}
         th {{_ 'createdAt'}}
         th {{_ 'active'}}
         th
           +newOrgRow
+    tbody
+      tr
       each org in orgList
         +orgRow(orgId=org._id)
 
 template(name="teamGeneral")
   table
-    tbody
+    thead
       tr
         th {{_ 'displayName'}}
         th {{_ 'description'}}
@@ -98,6 +101,8 @@ template(name="teamGeneral")
         th {{_ 'active'}}
         th
           +newTeamRow
+    tbody
+      tr
       each team in teamList
         +teamRow(teamId=team._id)
 
@@ -105,7 +110,7 @@ template(name="peopleGeneral")
   #divAddOrRemoveTeamContainer
     +modifyTeamsUsers
   table
-    tbody
+    thead
       tr
         th
           +selectAllUser
@@ -123,6 +128,8 @@ template(name="peopleGeneral")
         th {{_ 'teams'}}
         th
           +newUserRow
+    tbody
+      tr
       each user in peopleList
         +peopleRow(userId=user._id)
 
@@ -148,30 +155,34 @@ template(name="newUserRow")
 template(name="orgRow")
   tr
     if orgData.orgIsActive
-      td <s>{{ orgData.orgDisplayName }}</s>
-    else
       td {{ orgData.orgDisplayName }}
-    if orgData.orgIsActive
-      td <s>{{ orgData.orgDesc }}</s>
     else
+      td <s>{{ orgData.orgDisplayName }}</s>
+    if orgData.orgIsActive
       td {{ orgData.orgDesc }}
-    if orgData.orgIsActive
-      td <s>{{ orgData.orgShortName }}</s>
     else
+      td <s>{{ orgData.orgDesc }}</s>
+    if orgData.orgIsActive
       td {{ orgData.orgShortName }}
-    if orgData.orgIsActive
-      td <s>{{ orgData.orgWebsite }}</s>
     else
+      td <s>{{ orgData.orgShortName }}</s>
+    if orgData.orgIsActive
+      td {{ orgData.orgAutoAddUsersWithDomainName }}
+    else
+      td <s>{{ orgData.orgAutoAddUsersWithDomainName }}</s>
+    if orgData.orgIsActive
       td {{ orgData.orgWebsite }}
-    if orgData.orgIsActive
-      td <s>{{ moment orgData.createdAt 'LLL' }}</s>
     else
+      td <s>{{ orgData.orgWebsite }}</s>
+    if orgData.orgIsActive
       td {{ moment orgData.createdAt 'LLL' }}
+    else
+      td <s>{{ moment orgData.createdAt 'LLL' }}</s>
     td
       if orgData.orgIsActive
-        | {{_ 'no'}}
-      else
         | {{_ 'yes'}}
+      else
+        | {{_ 'no'}}
     td
       a.edit-org
         i.fa.fa-edit
@@ -182,30 +193,30 @@ template(name="orgRow")
 template(name="teamRow")
   tr
     if teamData.teamIsActive
-      td <s>{{ teamData.teamDisplayName }}</s>
-    else
       td {{ teamData.teamDisplayName }}
-    if teamData.teamIsActive
-      td <s>{{ teamData.teamDesc }}</s>
     else
+      td <s>{{ teamData.teamDisplayName }}</s>
+    if teamData.teamIsActive
       td {{ teamData.teamDesc }}
-    if teamData.teamIsActive
-      td <s>{{ teamData.teamShortName }}</s>
     else
+      td <s>{{ teamData.teamDesc }}</s>
+    if teamData.teamIsActive
       td {{ teamData.teamShortName }}
-    if teamData.teamIsActive
-      td <s>{{ teamData.teamWebsite }}</s>
     else
+      td <s>{{ teamData.teamShortName }}</s>
+    if teamData.teamIsActive
       td {{ teamData.teamWebsite }}
-    if teamData.teamIsActive
-      td <s>{{ moment teamData.createdAt 'LLL' }}</s>
     else
+      td <s>{{ teamData.teamWebsite }}</s>
+    if teamData.teamIsActive
       td {{ moment teamData.createdAt 'LLL' }}
+    else
+      td <s>{{ moment teamData.createdAt 'LLL' }}</s>
     td
       if teamData.teamIsActive
-        | {{_ 'no'}}
-      else
         | {{_ 'yes'}}
+      else
+        | {{_ 'no'}}
     td
       a.edit-team
         i.fa.fa-edit
@@ -308,13 +319,16 @@ template(name="editOrgPopup")
       | {{_ 'shortName'}}
       input.js-orgShortName(type="text" value=org.orgShortName required)
     label
+      | {{_ 'autoAddUsersWithDomainName'}}
+      input.js-orgAutoAddUsersWithDomainName(type="text" value=org.orgAutoAddUsersWithDomainName)
+    label
       | {{_ 'website'}}
-      input.js-orgWebsite(type="text" value=org.orgWebsite required)
+      input.js-orgWebsite(type="text" value=org.orgWebsite)
     label
       | {{_ 'active'}}
       select.select-active.js-org-isactive
-        option(value="false") {{_ 'yes'}}
-        option(value="true" selected="{{org.orgIsActive}}") {{_ 'no'}}
+        option(value="false") {{_ 'no'}}
+        option(value="true" selected="{{org.orgIsActive}}") {{_ 'yes'}}
     hr
     div.buttonsContainer
       input.primary.wide(type="submit" value="{{_ 'save'}}")
@@ -335,12 +349,12 @@ template(name="editTeamPopup")
       input.js-teamShortName(type="text" value=team.teamShortName required)
     label
       | {{_ 'website'}}
-      input.js-teamWebsite(type="text" value=team.teamWebsite required)
+      input.js-teamWebsite(type="text" value=team.teamWebsite)
     label
       | {{_ 'active'}}
       select.select-active.js-team-isactive
-        option(value="false") {{_ 'yes'}}
-        option(value="true" selected="{{team.teamIsActive}}") {{_ 'no'}}
+        option(value="false") {{_ 'no'}}
+        option(value="true" selected="{{team.teamIsActive}}") {{_ 'yes'}}
     hr
     div.buttonsContainer
       input.primary.wide(type="submit" value="{{_ 'save'}}")
@@ -403,9 +417,9 @@ template(name="editUserPopup")
       select.js-orgs#jsOrgs
         option(value="-1") {{_ 'organizations'}} :
         each value in orgsDatas
-          option(value="{{value._id}}") {{_ value.orgDisplayName}}
+          option(value="{{value._id}}") {{value.orgDisplayName}}
       input#jsUserOrgsInPut.js-userOrgs(type="text" value=user.orgsUserBelongs, disabled)
-      input#jsUserOrgIdsInPut.js-userOrgIds.hide(type="text" value=user.orgIdsUserBelongs)
+      input#jsUserOrgIdsInPut.js-userOrgIds.hide(type="hidden" value=user.orgIdsUserBelongs)
     label
       | {{_ 'teams'}}
       i.fa.fa-plus-square#addUserTeam
@@ -415,7 +429,7 @@ template(name="editUserPopup")
         each value in teamsDatas
           option(value="{{value._id}}") {{_ value.teamDisplayName}}
       input#jsUserTeamsInPut.js-userteams(type="text" value=user.teamsUserBelongs, disabled)
-      input#jsUserTeamIdsInPut.js-userteamIds.hide(type="text" value=user.teamIdsUserBelongs)
+      input#jsUserTeamIdsInPut.js-userteamIds.hide(type="hidden" value=user.teamIdsUserBelongs)
 
     hr
     label
@@ -437,13 +451,16 @@ template(name="newOrgPopup")
       | {{_ 'shortName'}}
       input.js-orgShortName(type="text" value="" required)
     label
+      | {{_ 'autoAddUsersWithDomainName'}}
+      input.js-orgAutoAddUsersWithDomainName(type="text" value="")
+    label
       | {{_ 'website'}}
       input.js-orgWebsite(type="text" value="" required)
     label
       | {{_ 'active'}}
       select.select-active.js-org-isactive
-        option(value="false" selected="selected") {{_ 'yes'}}
-        option(value="true") {{_ 'no'}}
+        option(value="false" selected="selected") {{_ 'no'}}
+        option(value="true") {{_ 'yes'}}
     hr
     div.buttonsContainer
       input.primary.wide(type="submit" value="{{_ 'save'}}")
@@ -462,12 +479,12 @@ template(name="newTeamPopup")
       input.js-teamShortName(type="text" value="" required)
     label
       | {{_ 'website'}}
-      input.js-teamWebsite(type="text" value="" required)
+      input.js-teamWebsite(type="text" value="")
     label
       | {{_ 'active'}}
       select.select-active.js-team-isactive
-        option(value="false" selected="selected") {{_ 'yes'}}
-        option(value="true") {{_ 'no'}}
+        option(value="false" selected="selected") {{_ 'no'}}
+        option(value="true") {{_ 'yes'}}
     hr
     div.buttonsContainer
       input.primary.wide(type="submit" value="{{_ 'save'}}")
@@ -483,9 +500,9 @@ template(name="modifyTeamsUsers")
     | {{_ 'r-action'}}
     .form-group.flex
       input.wekan-form-control#addAction(type="radio" name="action" value="true" checked="checked")
-      span {{_ 'add'}}
+      label(for=addAction) {{_ 'add'}}
       input.wekan-form-control#deleteAction(type="radio" name="action" value="false")
-      span {{_ 'delete'}}
+      label(for=deleteAction) {{_ 'delete'}}
   div.buttonsContainer
     input.primary.wide#addTeamBtn(type="submit" value="{{_ 'save'}}")
     input.primary.wide#cancelBtn(type="submit" value="{{_ 'cancel'}}")
@@ -543,7 +560,7 @@ template(name="newUserPopup")
       select.js-orgsNewUser#jsOrgsNewUser
         option(value="-1") {{_ 'organizations'}} :
         each value in orgsDatas
-          option(value="{{value._id}}") {{_ value.orgDisplayName}}
+          option(value="{{value._id}}") {{value.orgDisplayName}}
       input#jsUserOrgsInPutNewUser.js-userOrgsNewUser(type="text" value=user.orgsUserBelongs, disabled)
       input#jsUserOrgIdsInPutNewUser.js-userOrgIdsNewUser.hide(type="text" value=user.orgIdsUserBelongs)
     label

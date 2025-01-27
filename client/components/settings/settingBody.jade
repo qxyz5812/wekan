@@ -30,6 +30,10 @@ template(name="setting")
               a.js-setting-menu(data-id="announcement-setting")
                 i.fa.fa-bullhorn
                 | {{_ 'admin-announcement'}}
+            //li
+            //  a.js-setting-menu(data-id="accessibility-setting")
+            //    i.fa.fa-universal-access
+            //    | {{_ 'accessibility'}}
             li
               a.js-setting-menu(data-id="layout-setting")
                 i.fa.fa-object-group
@@ -52,6 +56,8 @@ template(name="setting")
             +tableVisibilityModeSettings
           else if announcementSetting.get
             +announcementSettings
+          else if accessibilitySetting.get
+            +accessibilitySettings
           else if layoutSetting.get
             +layoutSettings
           else if webhookSetting.get
@@ -63,6 +69,11 @@ template(name="webhookSettings")
 
 template(name="general")
   ul#registration-setting.setting-detail
+    li
+      a.flex.js-toggle-forgot-password
+        .materialCheckBox(class="{{#if currentSetting.disableForgotPassword}}is-checked{{/if}}")
+
+        span {{_ 'disable-forgot-password'}}
     li
       a.flex.js-toggle-registration
         .materialCheckBox(class="{{#if currentSetting.disableRegistration}}is-checked{{/if}}")
@@ -132,54 +143,77 @@ template(name='tableVisibilityModeSettings')
       .title {{_ 'tableVisibilityMode-allowPrivateOnly'}}
       .form-group.flex
         input.wekan-form-control#accounts-allowPrivateOnly(type="radio" name="allowPrivateOnly" value="true" checked="{{#if allowPrivateOnly}}checked{{/if}}")
-        span {{_ 'yes'}}
+        label {{_ 'yes'}}
         input.wekan-form-control#accounts-allowPrivateOnly(type="radio" name="allowPrivateOnly" value="false" checked="{{#unless allowPrivateOnly}}checked{{/unless}}")
-        span {{_ 'no'}}
+        label {{_ 'no'}}
       button.js-tableVisibilityMode-save.primary {{_ 'save'}}
 
 template(name='accountSettings')
   ul#account-setting.setting-detail
-    li
-      button.js-all-hide-system-messages.primary {{_ 'hide-system-messages-of-all-users'}}
     li.accounts-form
       .title {{_ 'accounts-allowEmailChange'}}
       .form-group.flex
         input.wekan-form-control#accounts-allowEmailChange(type="radio" name="allowEmailChange" value="true" checked="{{#if allowEmailChange}}checked{{/if}}")
-        span {{_ 'yes'}}
+        label {{_ 'yes'}}
         input.wekan-form-control#accounts-allowEmailChange(type="radio" name="allowEmailChange" value="false" checked="{{#unless allowEmailChange}}checked{{/unless}}")
-        span {{_ 'no'}}
+        label {{_ 'no'}}
       .title {{_ 'accounts-allowUserNameChange'}}
       .form-group.flex
         input.wekan-form-control#accounts-allowUserNameChange(type="radio" name="allowUserNameChange" value="true" checked="{{#if allowUserNameChange}}checked{{/if}}")
-        span {{_ 'yes'}}
+        label {{_ 'yes'}}
         input.wekan-form-control#accounts-allowUserNameChange(type="radio" name="allowUserNameChange" value="false" checked="{{#unless allowUserNameChange}}checked{{/unless}}")
-        span {{_ 'no'}}
+        label {{_ 'no'}}
       .title {{_ 'accounts-allowUserDelete'}}
       .form-group.flex
         input.wekan-form-control#accounts-allowUserDelete(type="radio" name="allowUserDelete" value="true" checked="{{#if allowUserDelete}}checked{{/if}}")
-        span {{_ 'yes'}}
+        label {{_ 'yes'}}
         input.wekan-form-control#accounts-allowUserDelete(type="radio" name="allowUserDelete" value="false" checked="{{#unless allowUserDelete}}checked{{/unless}}")
-        span {{_ 'no'}}
+        label {{_ 'no'}}
       button.js-accounts-save.primary {{_ 'save'}}
 
 template(name='announcementSettings')
   ul#announcement-setting.setting-detail
     li
       a.flex.js-toggle-activemessage
-        .materialCheckBox(class="{{#if currentSetting.enabled}}is-checked{{/if}}")
+        .materialCheckBox(class="{{#if currentAnnouncements.enabled}}is-checked{{/if}}")
 
         span {{_ 'admin-announcement-active'}}
     li
-      .admin-announcement(class="{{#if currentSetting.enabled}}{{else}}hide{{/if}}")
+      .admin-announcement(class="{{#if currentAnnouncements.enabled}}{{else}}hide{{/if}}")
         ul
           li
             .title {{_ 'admin-announcement-title'}}
-            textarea#admin-announcement.wekan-form-control= currentSetting.body
+            textarea#admin-announcement.wekan-form-control= currentAnnouncements.body
           li
             button.js-announcement-save.primary {{_ 'save'}}
 
+template(name='accessibilitySettings')
+  ul#accessibility-setting.setting-detail
+    li
+      a.flex.js-toggle-accessibility
+        .materialCheckBox(class="{{#if currentAccessibility.enabled}}is-checked{{/if}}")
+
+        span {{_ 'admin-accessibility-active'}}
+    li
+      .title {{_ 'accessibility-title'}}
+      .form-group
+        input.wekan-form-control#accessibility-title(type="text", placeholder="" value="{{currentSetting.accessibilityTitle}}")
+    li
+      .accessibility-content(class="{{#if currentAccessibility.enabled}}{{else}}hide{{/if}}")
+        ul
+          li
+            .title {{_ 'admin-accessibility-title'}}
+            textarea#admin-accessibility.wekan-form-control= currentAccessibility.accessibilityTitle
+          li
+            .title {{_ 'admin-accessibility-content'}}
+            textarea#admin-accessibility.wekan-form-control= currentAccessibility.accessibilityContent
+          li
+            button.js-accessibility-save.primary {{_ 'save'}}
+
 template(name='layoutSettings')
   ul#layout-setting.setting-detail
+    li
+      button.js-all-boards-hide-activities.primary {{_ 'hide-activities-of-all-boards'}}
     li.layout-form
       .title {{_ 'oidc-button-text'}}
       .form-group
@@ -196,9 +230,9 @@ template(name='layoutSettings')
       .title {{_ 'display-authentication-method'}}
       .form-group.flex
         input.wekan-form-control#display-authentication-method(type="radio" name="displayAuthenticationMethod" value="true" checked="{{#if currentSetting.displayAuthenticationMethod}}checked{{/if}}")
-        span {{_ 'yes'}}
+        label {{_ 'yes'}}
         input.wekan-form-control#display-authentication-method(type="radio" name="displayAuthenticationMethod" value="false" checked="{{#unless currentSetting.displayAuthenticationMethod}}checked{{/unless}}")
-        span {{_ 'no'}}
+        label {{_ 'no'}}
     li.layout-form
       .title {{_ 'default-authentication-method'}}
       +selectAuthenticationMethod(authenticationMethod=currentSetting.defaultAuthenticationMethod)
@@ -213,9 +247,9 @@ template(name='layoutSettings')
       .title {{_ 'hide-logo'}}
       .form-group.flex
         input.wekan-form-control#hide-logo(type="radio" name="hideLogo" value="true" checked="{{#if currentSetting.hideLogo}}checked{{/if}}")
-        span {{_ 'yes'}}
+        label {{_ 'yes'}}
         input.wekan-form-control#hide-logo(type="radio" name="hideLogo" value="false" checked="{{#unless currentSetting.hideLogo}}checked{{/unless}}")
-        span {{_ 'no'}}
+        label {{_ 'no'}}
     li.layout-form
       .title {{_ 'custom-login-logo-image-url'}}
       .form-group
@@ -224,6 +258,10 @@ template(name='layoutSettings')
       .title {{_ 'custom-login-logo-link-url'}}
       .form-group
         input.wekan-form-control#custom-login-logo-link-url(type="text", placeholder="" value="{{currentSetting.customLoginLogoLinkUrl}}")
+    li.layout-form
+      .title {{_ 'custom-help-link-url'}}
+      .form-group
+        input.wekan-form-control#custom-help-link-url(type="text", placeholder="" value="{{currentSetting.customHelpLinkUrl}}")
     li.layout-form
       .title {{_ 'text-below-custom-login-logo'}}
       .form-group
@@ -244,6 +282,20 @@ template(name='layoutSettings')
       .title {{_ 'automatic-linked-url-schemes'}}
       .form-group
         textarea#automatic-linked-url-schemes.wekan-form-control= currentSetting.automaticLinkedUrlSchemes
+    li.layout-form
+      .title {{_ 'hide-card-counter-list'}}
+      .form-group.flex
+        input.wekan-form-control#hide-card-counter-list(type="radio" name="hideCardCounterList" value="true" checked="{{#if currentSetting.hideCardCounterList}}checked{{/if}}")
+        label {{_ 'yes'}}
+        input.wekan-form-control#hide-card-counter-list(type="radio" name="hideCardCounterList" value="false" checked="{{#unless currentSetting.hideCardCounterList}}checked{{/unless}}")
+        label {{_ 'no'}}
+    li.layout-form
+      .title {{_ 'hide-board-member-list'}}
+      .form-group.flex
+        input.wekan-form-control#hide-board-member-list(type="radio" name="hideBoardMemberList" value="true" checked="{{#if currentSetting.hideBoardMemberList}}checked{{/if}}")
+        label {{_ 'yes'}}
+        input.wekan-form-control#hide-board-member-list(type="radio" name="hideBoardMemberList" value="false" checked="{{#unless currentSetting.hideBoardMemberList}}checked{{/unless}}")
+        label {{_ 'no'}}
     li
       button.js-save-layout.primary {{_ 'save'}}
 

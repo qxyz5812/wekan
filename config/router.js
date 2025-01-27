@@ -1,3 +1,5 @@
+import { TAPi18n } from '/imports/i18n';
+
 let previousPath;
 FlowRouter.triggers.exit([
   ({ path }) => {
@@ -49,6 +51,30 @@ FlowRouter.route('/public', {
     BlazeLayout.render('defaultLayout', {
       headerBar: 'boardListHeaderBar',
       content: 'boardList',
+    });
+  },
+});
+
+FlowRouter.route('/accessibility', {
+  name: 'accessibility',
+  triggersEnter: [AccountsTemplates.ensureSignedIn],
+  action() {
+    Session.set('currentBoard', null);
+    Session.set('currentList', null);
+    Session.set('currentCard', null);
+    Session.set('popupCardId', null);
+    Session.set('popupCardBoardId', null);
+
+    Filter.reset();
+    Session.set('sortBy', '');
+    EscapeActions.executeAll();
+
+    Utils.manageCustomUI();
+    Utils.manageMatomo();
+
+    BlazeLayout.render('defaultLayout', {
+      headerBar: 'accessibilityHeaderBar',
+      content: 'accessibility',
     });
   },
 });
@@ -355,6 +381,54 @@ FlowRouter.route('/admin-reports', {
   },
 });
 
+FlowRouter.route('/attachments', {
+  name: 'attachments',
+  triggersEnter: [
+    AccountsTemplates.ensureSignedIn,
+    () => {
+      Session.set('currentBoard', null);
+      Session.set('currentList', null);
+      Session.set('currentCard', null);
+      Session.set('popupCardId', null);
+      Session.set('popupCardBoardId', null);
+
+      Filter.reset();
+      Session.set('sortBy', '');
+      EscapeActions.executeAll();
+    },
+  ],
+  action() {
+    BlazeLayout.render('defaultLayout', {
+      headerBar: 'settingHeaderBar',
+      content: 'attachments',
+    });
+  },
+});
+
+FlowRouter.route('/translation', {
+  name: 'translation',
+  triggersEnter: [
+    AccountsTemplates.ensureSignedIn,
+    () => {
+      Session.set('currentBoard', null);
+      Session.set('currentList', null);
+      Session.set('currentCard', null);
+      Session.set('popupCardId', null);
+      Session.set('popupCardBoardId', null);
+
+      Filter.reset();
+      Session.set('sortBy', '');
+      EscapeActions.executeAll();
+    },
+  ],
+  action() {
+    BlazeLayout.render('defaultLayout', {
+      headerBar: 'settingHeaderBar',
+      content: 'translation',
+    });
+  },
+});
+
 FlowRouter.notFound = {
   action() {
     BlazeLayout.render('defaultLayout', { content: 'notFound' });
@@ -395,7 +469,7 @@ _.each(redirections, (newPath, oldPath) => {
 //Meteor.isClient && Meteor.startup(() => {
 //  Tracker.autorun(() => {
 
-//    const currentBoard = Boards.findOne(Session.get('currentBoard'));
+//    const currentBoard = Utils.getCurrentBoard();
 //    const titleStack = [appTitle];
 //    if (currentBoard) {
 //      titleStack.push(currentBoard.title);

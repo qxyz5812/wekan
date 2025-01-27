@@ -9,7 +9,6 @@ Package.describe({
 });
 
 Package.onUse((api) => {
-  api.versionsFrom('1.4.2.3');
   api.use([
     'ecmascript',
     'accounts-password',

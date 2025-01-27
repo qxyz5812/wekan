@@ -1,3 +1,4 @@
+import { ReactiveCache } from '/imports/reactiveCache';
 import Fiber from 'fibers';
 
 Meteor.startup(() => {
@@ -20,7 +21,7 @@ Meteor.startup(() => {
       error.statusCode = 401;
       throw error;
     }
-    const admin = Users.findOne({ _id: userId, isAdmin: true });
+    const admin = ReactiveCache.getUser({ _id: userId, isAdmin: true });
 
     if (admin === undefined) {
       const error = new Meteor.Error('Forbidden', 'Forbidden');
@@ -43,7 +44,7 @@ Meteor.startup(() => {
   // This throws an error if otherReq is false and the user is not an admin
   Authentication.checkAdminOrCondition = function(userId, otherReq) {
     if (otherReq) return;
-    const admin = Users.findOne({ _id: userId, isAdmin: true });
+    const admin = ReactiveCache.getUser({ _id: userId, isAdmin: true });
     if (admin === undefined) {
       const error = new Meteor.Error('Forbidden', 'Forbidden');
       error.statusCode = 403;
@@ -51,14 +52,11 @@ Meteor.startup(() => {
     }
   };
 
-  // Helper function. Will throw an error if the user does not have read only access to the given board
+  // Helper function. Will throw an error if the user is not active BoardAdmin or active Normal user of the board.
   Authentication.checkBoardAccess = function(userId, boardId) {
     Authentication.checkLoggedIn(userId);
-
-    const board = Boards.findOne({ _id: boardId });
-    const normalAccess =
-      board.permission === 'public' ||
-      board.members.some(e => e.userId === userId && e.isActive);
+    const board = ReactiveCache.getBoard(boardId);
+    const normalAccess = board.members.some(e => e.userId === userId && e.isActive && !e.isNoComments && !e.isCommentOnly && !e.isWorker);
     Authentication.checkAdminOrCondition(userId, normalAccess);
   };
 
@@ -108,7 +106,7 @@ Meteor.startup(() => {
           // OAUTH2_ID_TOKEN_WHITELIST_FIELDS || [],
           // OAUTH2_REQUEST_PERMISSIONS || 'openid profile email',
         },
-      );
+        );
     } else if (
       process.env.CAS_ENABLED === 'true' ||
       process.env.CAS_ENABLED === true
@@ -128,7 +126,7 @@ Meteor.startup(() => {
             validateUrl: process.env.CASE_VALIDATE_URL,
             casVersion: 3.0,
             attributes: {
-              debug: process.env.DEBUG,
+              debug: process.env.DEBUG === 'true',
             },
           },
         },

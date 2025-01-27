@@ -1,19 +1,30 @@
+import { ReactiveCache } from '/imports/reactiveCache';
+
 Meteor.publish('globalwebhooks', () => {
   const boardId = Integrations.Const.GLOBAL_WEBHOOK_ID;
-  return Integrations.find({
-    boardId,
-  });
+  const ret = ReactiveCache.getIntegrations(
+    {
+      boardId,
+    },
+    {},
+    true,
+  );
+  return ret;
 });
 Meteor.publish('setting', () => {
-  return Settings.find(
+  const ret = Settings.find(
     {},
     {
       fields: {
         disableRegistration: 1,
+        disableForgotPassword: 1,
         productName: 1,
         hideLogo: 1,
+        hideCardCounterList: 1,
+        hideBoardMemberList: 1,
         customLoginLogoImageUrl: 1,
         customLoginLogoLinkUrl: 1,
+        customHelpLinkUrl: 1,
         textBelowCustomLoginLogo: 1,
         automaticLinkedUrlSchemes: 1,
         customTopLeftCornerLogoImageUrl: 1,
@@ -27,16 +38,21 @@ Meteor.publish('setting', () => {
         oidcBtnText: 1,
         mailDomainName: 1,
         legalNotice: 1,
+        accessibilityPageEnabled: 1,
+        accessibilityTitle: 1,
+        accessibilityContent: 1,
       },
     },
   );
+  return ret;
 });
 
 Meteor.publish('mailServer', function() {
-  if (!Match.test(this.userId, String)) return [];
-  const user = Users.findOne(this.userId);
+  const user = ReactiveCache.getCurrentUser();
+
+  let ret = []
   if (user && user.isAdmin) {
-    return Settings.find(
+    ret = Settings.find(
       {},
       {
         fields: {
@@ -49,5 +65,5 @@ Meteor.publish('mailServer', function() {
       },
     );
   }
-  return [];
+  return ret;
 });

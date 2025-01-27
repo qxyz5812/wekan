@@ -1,4 +1,6 @@
+import { ReactiveCache } from '/imports/reactiveCache';
 import DOMPurify from 'dompurify';
+import { TAPi18n } from '/imports/i18n';
 
 const activitiesPerPage = 500;
 
@@ -11,39 +13,41 @@ BlazeComponent.extendComponent({
     const sidebar = Sidebar;
     sidebar && sidebar.callFirstWith(null, 'resetNextPeak');
     this.autorun(() => {
-      let mode = this.data().mode;
-      const capitalizedMode = Utils.capitalize(mode);
-      let searchId;
-      if (mode === 'linkedcard' || mode === 'linkedboard') {
-        searchId = Utils.getCurrentCard().linkedId;
-        mode = mode.replace('linked', '');
-      } else if (mode === 'card') {
-        searchId = Utils.getCurrentCardId();
-      } else {
-        searchId = Session.get(`current${capitalizedMode}`);
-      }
-      const limit = this.page.get() * activitiesPerPage;
-      const user = Meteor.user();
-      const hideSystem = user ? user.hasHiddenSystemMessages() : false;
-      if (searchId === null) return;
-
-      this.subscribe('activities', mode, searchId, limit, hideSystem, () => {
-        this.loadNextPageLocked = false;
-
-        // TODO the guard can be removed as soon as the TODO above is resolved
-        if (!sidebar) return;
-        // If the sibear peak hasn't increased, that mean that there are no more
-        // activities, and we can stop calling new subscriptions.
-        // XXX This is hacky! We need to know excatly and reactively how many
-        // activities there are, we probably want to denormalize this number
-        // dirrectly into card and board documents.
-        const nextPeakBefore = sidebar.callFirstWith(null, 'getNextPeak');
-        sidebar.calculateNextPeak();
-        const nextPeakAfter = sidebar.callFirstWith(null, 'getNextPeak');
-        if (nextPeakBefore === nextPeakAfter) {
-          sidebar.callFirstWith(null, 'resetNextPeak');
+      let mode = this.data()?.mode;
+      if (mode) {
+        const capitalizedMode = Utils.capitalize(mode);
+        let searchId;
+        const showActivities = this.showActivities();
+        if (mode === 'linkedcard' || mode === 'linkedboard') {
+          const currentCard = Utils.getCurrentCard();
+          searchId = currentCard.linkedId;
+          mode = mode.replace('linked', '');
+        } else if (mode === 'card') {
+          searchId = Utils.getCurrentCardId();
+        } else {
+          searchId = Session.get(`current${capitalizedMode}`);
         }
-      });
+        const limit = this.page.get() * activitiesPerPage;
+        if (searchId === null) return;
+
+        this.subscribe('activities', mode, searchId, limit, showActivities, () => {
+          this.loadNextPageLocked = false;
+
+          // TODO the guard can be removed as soon as the TODO above is resolved
+          if (!sidebar) return;
+          // If the sibear peak hasn't increased, that mean that there are no more
+          // activities, and we can stop calling new subscriptions.
+          // XXX This is hacky! We need to know excatly and reactively how many
+          // activities there are, we probably want to denormalize this number
+          // dirrectly into card and board documents.
+          const nextPeakBefore = sidebar.callFirstWith(null, 'getNextPeak');
+          sidebar.calculateNextPeak();
+          const nextPeakAfter = sidebar.callFirstWith(null, 'getNextPeak');
+          if (nextPeakBefore === nextPeakAfter) {
+            sidebar.callFirstWith(null, 'resetNextPeak');
+          }
+        });
+      }
     });
   },
   loadNextPage() {
@@ -52,40 +56,81 @@ BlazeComponent.extendComponent({
       this.loadNextPageLocked = true;
     }
   },
-}).register('activities');
-
-Template.activities.helpers({
-  activities() {
-    const ret = this.card.activities();
+  showActivities() {
+    let ret = false;
+    let mode = this.data()?.mode;
+    if (mode) {
+      if (mode === 'linkedcard' || mode === 'linkedboard') {
+        const currentCard = Utils.getCurrentCard();
+        ret = currentCard.showActivities ?? false;
+      } else if (mode === 'card') {
+        ret = this.data()?.card?.showActivities ?? false;
+      } else {
+        ret = Utils.getCurrentBoard().showActivities ?? false;
+      }
+    }
     return ret;
   },
-});
+  activities() {
+    const ret = this.data().card.activities();
+    return ret;
+  },
+}).register('activities');
 
 BlazeComponent.extendComponent({
   checkItem() {
     const checkItemId = this.currentData().activity.checklistItemId;
-    const checkItem = ChecklistItems.findOne({ _id: checkItemId });
+    const checkItem = ReactiveCache.getChecklistItem(checkItemId);
     return checkItem && checkItem.title;
   },
 
   boardLabelLink() {
     const data = this.currentData();
+    const currentBoardId = Session.get('currentBoard');
     if (data.mode !== 'board') {
-      return createBoardLink(data.activity.board(), data.activity.listName);
+      // data.mode: card, linkedcard, linkedboard
+      return createBoardLink(data.activity.board(), data.activity.listName ? data.activity.listName : null);
+    }
+    else if (currentBoardId != data.activity.boardId) {
+      // data.mode: board
+      // current activitie is linked
+      return createBoardLink(data.activity.board(), data.activity.listName ? data.activity.listName : null);
     }
     return TAPi18n.__('this-board');
   },
 
   cardLabelLink() {
     const data = this.currentData();
-    if (data.mode !== 'card') {
-      return createCardLink(data.activity.card());
+    const currentBoardId = Session.get('currentBoard');
+    if (data.mode == 'card') {
+      // data.mode: card
+      return TAPi18n.__('this-card');
     }
-    return TAPi18n.__('this-card');
+    else if (data.mode !== 'board') {
+      // data.mode: linkedcard, linkedboard
+      return createCardLink(data.activity.card(), null);
+    }
+    else if (currentBoardId != data.activity.boardId) {
+      // data.mode: board
+      // current activitie is linked
+      return createCardLink(data.activity.card(), data.activity.board().title);
+    }
+    return createCardLink(this.currentData().activity.card(), null);
   },
 
   cardLink() {
-    return createCardLink(this.currentData().activity.card());
+    const data = this.currentData();
+    const currentBoardId = Session.get('currentBoard');
+    if (data.mode !== 'board') {
+      // data.mode: card, linkedcard, linkedboard
+      return createCardLink(data.activity.card(), null);
+    }
+    else if (currentBoardId != data.activity.boardId) {
+      // data.mode: board
+      // current activitie is linked
+      return createCardLink(data.activity.card(), data.activity.board().title);
+    }
+    return createCardLink(this.currentData().activity.card(), null);
   },
 
   receivedDate() {
@@ -115,7 +160,7 @@ BlazeComponent.extendComponent({
   lastLabel() {
     const lastLabelId = this.currentData().activity.labelId;
     if (!lastLabelId) return null;
-    const lastLabel = Boards.findOne(
+    const lastLabel = ReactiveCache.getBoard(
       this.currentData().activity.boardId,
     ).getLabelById(lastLabelId);
     if (lastLabel && (lastLabel.name === undefined || lastLabel.name === '')) {
@@ -128,7 +173,7 @@ BlazeComponent.extendComponent({
   },
 
   lastCustomField() {
-    const lastCustomField = CustomFields.findOne(
+    const lastCustomField = ReactiveCache.getCustomField(
       this.currentData().activity.customFieldId,
     );
     if (!lastCustomField) return null;
@@ -136,7 +181,7 @@ BlazeComponent.extendComponent({
   },
 
   lastCustomFieldValue() {
-    const lastCustomField = CustomFields.findOne(
+    const lastCustomField = ReactiveCache.getCustomField(
       this.currentData().activity.customFieldId,
     );
     if (!lastCustomField) return null;
@@ -196,14 +241,14 @@ BlazeComponent.extendComponent({
     // trying to display url before file is stored generates js errors
     return (
       (attachment &&
-        attachment.url({ download: true }) &&
+        attachment.path &&
         Blaze.toHTML(
           HTML.A(
             {
-              href: attachment.url({ download: true }),
+              href: `${attachment.link()}?download=true`,
               target: '_blank',
             },
-            DOMPurify.sanitize(attachment.name()),
+            DOMPurify.sanitize(attachment.name),
           ),
         )) ||
       DOMPurify.sanitize(this.currentData().activity.attachmentName)
@@ -216,32 +261,6 @@ BlazeComponent.extendComponent({
     return customField.name;
   },
 
-  events() {
-    return [
-      {
-        // XXX We should use Popup.afterConfirmation here
-        'click .js-delete-comment': Popup.afterConfirm('deleteComment', () => {
-          const commentId = this.data().activity.commentId;
-          CardComments.remove(commentId);
-          Popup.back();
-        }),
-        'submit .js-edit-comment'(evt) {
-          evt.preventDefault();
-          const commentText = this.currentComponent()
-            .getValue()
-            .trim();
-          const commentId = Template.parentData().activity.commentId;
-          if (commentText) {
-            CardComments.update(commentId, {
-              $set: {
-                text: commentText,
-              },
-            });
-          }
-        },
-      },
-    ];
-  },
 }).register('activity');
 
 Template.activity.helpers({
@@ -252,10 +271,10 @@ Template.activity.helpers({
 
 Template.commentReactions.events({
   'click .reaction'(event) {
-    if (Meteor.user().isBoardMember()) {
+    if (ReactiveCache.getCurrentUser().isBoardMember()) {
       const codepoint = event.currentTarget.dataset['codepoint'];
       const commentId = Template.instance().data.commentId;
-      const cardComment = CardComments.findOne({_id: commentId});
+      const cardComment = ReactiveCache.getCardComment(commentId);
       cardComment.toggleReaction(codepoint);
     }
   },
@@ -264,10 +283,10 @@ Template.commentReactions.events({
 
 Template.addReactionPopup.events({
   'click .add-comment-reaction'(event) {
-    if (Meteor.user().isBoardMember()) {
+    if (ReactiveCache.getCurrentUser().isBoardMember()) {
       const codepoint = event.currentTarget.dataset['codepoint'];
       const commentId = Template.instance().data.commentId;
-      const cardComment = CardComments.findOne({_id: commentId});
+      const cardComment = ReactiveCache.getCardComment(commentId);
       cardComment.toggleReaction(codepoint);
     }
     Popup.back();
@@ -295,17 +314,20 @@ Template.addReactionPopup.helpers({
 
 Template.commentReactions.helpers({
   isSelected(userIds) {
-    return userIds.includes(Meteor.user()._id);
+    return Meteor.userId() && userIds.includes(Meteor.userId());
   },
   userNames(userIds) {
-    return Users.find({_id: {$in: userIds}})
-                .map(user => user.profile.fullname)
-                .join(', ');
+    const ret = ReactiveCache.getUsers({_id: {$in: userIds}})
+      .map(user => user.profile.fullname)
+      .join(', ');
+    return ret;
   }
 })
 
-function createCardLink(card) {
+function createCardLink(card, board) {
   if (!card) return '';
+  let text = card.title;
+  if (board) text = `${board} > ` + text;
   return (
     card &&
     Blaze.toHTML(
@@ -314,7 +336,7 @@ function createCardLink(card) {
           href: card.originRelativeUrl(),
           class: 'action-card',
         },
-        DOMPurify.sanitize(card.title, { ALLOW_UNKNOWN_PROTOCOLS: true }),
+        DOMPurify.sanitize(text, { ALLOW_UNKNOWN_PROTOCOLS: true }),
       ),
     )
   );

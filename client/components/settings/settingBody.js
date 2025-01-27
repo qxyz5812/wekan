@@ -1,9 +1,12 @@
+import { ReactiveCache } from '/imports/reactiveCache';
+import { TAPi18n } from '/imports/i18n';
 import { ALLOWED_WAIT_SPINNERS } from '/config/const';
 
 BlazeComponent.extendComponent({
   onCreated() {
     this.error = new ReactiveVar('');
     this.loading = new ReactiveVar(false);
+    this.forgotPasswordSetting = new ReactiveVar(true);
     this.generalSetting = new ReactiveVar(true);
     this.emailSetting = new ReactiveVar(false);
     this.accountSetting = new ReactiveVar(false);
@@ -40,12 +43,8 @@ BlazeComponent.extendComponent({
     }
   },
 
-  currentSetting() {
-    return Settings.findOne();
-  },
-
   boards() {
-    return Boards.find(
+    const ret = ReactiveCache.getBoards(
       {
         archived: false,
         'members.userId': Meteor.userId(),
@@ -55,11 +54,20 @@ BlazeComponent.extendComponent({
         sort: { sort: 1 /* boards default sorting */ },
       },
     );
+    return ret;
+  },
+  toggleForgotPassword() {
+    this.setLoading(true);
+    const forgotPasswordClosed = ReactiveCache.getCurrentSetting().disableForgotPassword;
+    Settings.update(ReactiveCache.getCurrentSetting()._id, {
+      $set: { disableForgotPassword: !forgotPasswordClosed },
+    });
+    this.setLoading(false);
   },
   toggleRegistration() {
     this.setLoading(true);
-    const registrationClosed = this.currentSetting().disableRegistration;
-    Settings.update(Settings.findOne()._id, {
+    const registrationClosed = ReactiveCache.getCurrentSetting().disableRegistration;
+    Settings.update(ReactiveCache.getCurrentSetting()._id, {
       $set: { disableRegistration: !registrationClosed },
     });
     this.setLoading(false);
@@ -75,6 +83,15 @@ BlazeComponent.extendComponent({
   toggleHideLogo() {
     $('#hide-logo').toggleClass('is-checked');
   },
+  toggleHideCardCounterList() {
+    $('#hide-card-counter-list').toggleClass('is-checked');
+  },
+  toggleHideBoardMemberList() {
+    $('#hide-board-member-list').toggleClass('is-checked');
+  },
+  toggleAccessibilityPageEnabled() {
+    $('#accessibility-page-enabled').toggleClass('is-checked');
+  },
   toggleDisplayAuthenticationMethod() {
     $('#display-authentication-method').toggleClass('is-checked');
   },
@@ -84,6 +101,7 @@ BlazeComponent.extendComponent({
       $('.side-menu li.active').removeClass('active');
       target.parent().addClass('active');
       const targetID = target.data('id');
+      this.forgotPasswordSetting.set('forgot-password-setting' === targetID);
       this.generalSetting.set('registration-setting' === targetID);
       this.emailSetting.set('email-setting' === targetID);
       this.accountSetting.set('account-setting' === targetID);
@@ -148,7 +166,7 @@ BlazeComponent.extendComponent({
         .trim();
       const from = this.checkField('#mail-server-from');
       const tls = $('#mail-server-tls.is-checked').length > 0;
-      Settings.update(Settings.findOne()._id, {
+      Settings.update(ReactiveCache.getCurrentSetting()._id, {
         $set: {
           'mailServer.host': host,
           'mailServer.port': port,
@@ -176,6 +194,9 @@ BlazeComponent.extendComponent({
       .val()
       .trim();
     const customLoginLogoLinkUrl = $('#custom-login-logo-link-url')
+      .val()
+      .trim();
+    const customHelpLinkUrl = $('#custom-help-link-url')
       .val()
       .trim();
     const textBelowCustomLoginLogo = $('#text-below-custom-login-logo')
@@ -216,19 +237,32 @@ BlazeComponent.extendComponent({
       .val()
       .trim();
     const hideLogoChange = $('input[name=hideLogo]:checked').val() === 'true';
+    const hideCardCounterListChange = $('input[name=hideCardCounterList]:checked').val() === 'true';
+    const hideBoardMemberListChange = $('input[name=hideBoardMemberList]:checked').val() === 'true';
     const displayAuthenticationMethod =
       $('input[name=displayAuthenticationMethod]:checked').val() === 'true';
     const defaultAuthenticationMethod = $('#defaultAuthenticationMethod').val();
-
+/*
+    const accessibilityPageEnabled = $('input[name=accessibilityPageEnabled]:checked').val() === 'true';
+    const accessibilityTitle = $('#accessibility-title')
+      .val()
+      .trim();
+    const accessibilityContent = $('#accessibility-content')
+      .val()
+      .trim();
+*/
     const spinnerName = $('#spinnerName').val();
 
     try {
-      Settings.update(Settings.findOne()._id, {
+      Settings.update(ReactiveCache.getCurrentSetting()._id, {
         $set: {
           productName,
           hideLogo: hideLogoChange,
+          hideCardCounterList: hideCardCounterListChange,
+          hideBoardMemberList: hideBoardMemberListChange,
           customLoginLogoImageUrl,
           customLoginLogoLinkUrl,
+          customHelpLinkUrl,
           textBelowCustomLoginLogo,
           customTopLeftCornerLogoImageUrl,
           customTopLeftCornerLogoLinkUrl,
@@ -242,6 +276,11 @@ BlazeComponent.extendComponent({
           legalNotice,
         },
       });
+/*
+          accessibilityPageEnabled,
+          accessibilityTitle,
+          accessibilityContent,
+*/
     } catch (e) {
       return;
     } finally {
@@ -267,6 +306,7 @@ BlazeComponent.extendComponent({
   events() {
     return [
       {
+        'click a.js-toggle-forgot-password': this.toggleForgotPassword,
         'click a.js-toggle-registration': this.toggleRegistration,
         'click a.js-toggle-tls': this.toggleTLS,
         'click a.js-setting-menu': this.switchMenu,
@@ -275,6 +315,9 @@ BlazeComponent.extendComponent({
         'click button.js-save': this.saveMailServerInfo,
         'click button.js-send-smtp-test-email': this.sendSMTPTestEmail,
         'click a.js-toggle-hide-logo': this.toggleHideLogo,
+        'click a.js-toggle-hide-card-counter-list': this.toggleHideCardCounterList,
+        'click a.js-toggle-hide-board-member-list': this.toggleHideBoardMemberList,
+        'click a.js-toggle-accessibility-page-enabled': this.toggleAccessibilityPageEnabled,
         'click button.js-save-layout': this.saveLayout,
         'click a.js-toggle-display-authentication-method': this
           .toggleDisplayAuthenticationMethod,
@@ -310,12 +353,12 @@ BlazeComponent.extendComponent({
   allowUserDelete() {
     return AccountSettings.findOne('accounts-allowUserDelete').booleanValue;
   },
-  allHideSystemMessages() {
-    Meteor.call('setAllUsersHideSystemMessages', (err, ret) => {
+  allBoardsHideActivities() {
+    Meteor.call('setAllBoardsHideActivities', (err, ret) => {
       if (!err && ret) {
         if (ret === true) {
           const message = `${TAPi18n.__(
-            'now-system-messages-of-all-users-are-hidden',
+            'now-activities-of-all-boards-are-hidden',
           )}`;
           alert(message);
         }
@@ -333,7 +376,7 @@ BlazeComponent.extendComponent({
         'click button.js-accounts-save': this.saveAccountsChange,
       },
       {
-        'click button.js-all-hide-system-messages': this.allHideSystemMessages,
+        'click button.js-all-boards-hide-activities': this.allBoardsHideActivities,
       },
     ];
   },
@@ -350,12 +393,12 @@ BlazeComponent.extendComponent({
   allowPrivateOnly() {
     return TableVisibilityModeSettings.findOne('tableVisibilityMode-allowPrivateOnly').booleanValue;
   },
-  allHideSystemMessages() {
-    Meteor.call('setAllUsersHideSystemMessages', (err, ret) => {
+  allBoardsHideActivities() {
+    Meteor.call('setAllBoardsHideActivities', (err, ret) => {
       if (!err && ret) {
         if (ret === true) {
           const message = `${TAPi18n.__(
-            'now-system-messages-of-all-users-are-hidden',
+            'now-activities-of-all-boards-are-hidden',
           )}`;
           alert(message);
         }
@@ -373,7 +416,7 @@ BlazeComponent.extendComponent({
         'click button.js-tableVisibilityMode-save': this.saveTableVisibilityChange,
       },
       {
-        'click button.js-all-hide-system-messages': this.allHideSystemMessages,
+        'click button.js-all-boards-hide-activities': this.allBoardsHideActivities,
       },
     ];
   },
@@ -388,7 +431,7 @@ BlazeComponent.extendComponent({
     this.loading.set(w);
   },
 
-  currentSetting() {
+  currentAnnouncements() {
     return Announcements.findOne();
   },
 
@@ -403,8 +446,9 @@ BlazeComponent.extendComponent({
 
   toggleActive() {
     this.setLoading(true);
-    const isActive = this.currentSetting().enabled;
-    Announcements.update(Announcements.findOne()._id, {
+    const announcements = this.currentAnnouncements();
+    const isActive = announcements.enabled;
+    Announcements.update(announcements._id, {
       $set: { enabled: !isActive },
     });
     this.setLoading(false);

@@ -1,3 +1,6 @@
+import { ReactiveCache } from '/imports/reactiveCache';
+import { TAPi18n } from '/imports/i18n';
+
 Template.headerUserBar.events({
   'click .js-open-header-member-menu': Popup.open('memberMenu'),
   'click .js-change-avatar': Popup.open('changeAvatar'),
@@ -11,27 +14,27 @@ BlazeComponent.extendComponent({
 
 Template.memberMenuPopup.helpers({
   templatesBoardId() {
-    currentUser = Meteor.user();
+    const currentUser = ReactiveCache.getCurrentUser();
     if (currentUser) {
-      return Meteor.user().getTemplatesBoardId();
+      return currentUser.getTemplatesBoardId();
     } else {
       // No need to getTemplatesBoardId on public board
       return false;
     }
   },
   templatesBoardSlug() {
-    currentUser = Meteor.user();
+    const currentUser = ReactiveCache.getCurrentUser();
     if (currentUser) {
-      return Meteor.user().getTemplatesBoardSlug();
+      return currentUser.getTemplatesBoardSlug();
     } else {
       // No need to getTemplatesBoardSlug() on public board
       return false;
     }
   },
   isSameDomainNameSettingValue(){
-    const currSett = Settings.findOne();
+    const currSett = ReactiveCache.getCurrentSetting();
     if(currSett && currSett != undefined && currSett.disableRegistration && currSett.mailDomainName !== undefined && currSett.mailDomainName != ""){
-      currentUser = Meteor.user();
+      currentUser = ReactiveCache.getCurrentUser();
       if (currentUser) {
         let found = false;
         for(let i = 0; i < currentUser.emails.length; i++) {
@@ -49,7 +52,7 @@ Template.memberMenuPopup.helpers({
       return false;
   },
   isNotOAuth2AuthenticationMethod(){
-    currentUser = Meteor.user();
+    const currentUser = ReactiveCache.getCurrentUser();
     if (currentUser) {
       return currentUser.authenticationMethod.toLowerCase() != 'oauth2';
     } else {
@@ -74,6 +77,7 @@ Template.memberMenuPopup.events({
   'click .js-change-avatar': Popup.open('changeAvatar'),
   'click .js-change-password': Popup.open('changePassword'),
   'click .js-change-language': Popup.open('changeLanguage'),
+  'click .js-support': Popup.open('support'),
   'click .js-logout'(event) {
     event.preventDefault();
 
@@ -138,12 +142,6 @@ Template.invitePeoplePopup.events({
   },
 });
 
-Template.invitePeoplePopup.helpers({
-  currentSetting() {
-    return Settings.findOne();
-  },
-});
-
 Template.editProfilePopup.helpers({
   allowEmailChange() {
     Meteor.call('AccountSettings.allowEmailChange', (_, result) => {
@@ -189,9 +187,9 @@ Template.editProfilePopup.events({
         'profile.initials': initials,
       },
     });
-    isChangeUserName = username !== Meteor.user().username;
+    isChangeUserName = username !== ReactiveCache.getCurrentUser().username;
     isChangeEmail =
-      email.toLowerCase() !== Meteor.user().emails[0].address.toLowerCase();
+      email.toLowerCase() !== ReactiveCache.getCurrentUser().emails[0].address.toLowerCase();
     if (isChangeUserName && isChangeEmail) {
       Meteor.call(
         'setUsernameAndEmail',
@@ -251,98 +249,21 @@ Template.editProfilePopup.events({
 // XXX For some reason the useraccounts autofocus isnt working in this case.
 // See https://github.com/meteor-useraccounts/core/issues/384
 Template.changePasswordPopup.onRendered(function() {
+  $('.at-pwd-form').show();
   this.find('#at-field-current_password').focus();
 });
 
 Template.changeLanguagePopup.helpers({
   languages() {
-    return _.map(TAPi18n.getLanguages(), (lang, code) => {
-      // Same code in /client/components/main/layouts.js
-      // TODO : Make code reusable
-      const tag = code;
-      let name = lang.name;
-      if (lang.name === 'br') {
-        name = 'Brezhoneg';
-      } else if (lang.name === 'ar-EG') {
-        // ar-EG = Arabic (Egypt), simply Masri (مَصرى, [ˈmɑsˤɾi], Egyptian, Masr refers to Cairo)
-        name = 'مَصرى';
-      } else if (lang.name === 'de-CH') {
-        name = 'Deutsch (Schweiz)';
-      } else if (lang.name === 'de-AT') {
-        name = 'Deutsch (Österreich)';
-      } else if (lang.name === 'en-DE') {
-        name = 'English (Germany)';
-      } else if (lang.name === 'fa-IR') {
-        // fa-IR = Persian (Iran)
-        name = 'فارسی/پارسی (ایران‎)';
-      } else if (lang.name === 'fr-BE') {
-        name = 'Français (Belgique)';
-      } else if (lang.name === 'fr-CA') {
-        name = 'Français (Canada)';
-      } else if (lang.name === 'fr-CH') {
-        name = 'Français (Schweiz)';
-      } else if (lang.name === 'gu-IN') {
-        // gu-IN = Gurajati (India)
-        name = 'ગુજરાતી';
-      } else if (lang.name === 'hi-IN') {
-        // hi-IN = Hindi (India)
-        name = 'हिंदी (भारत)';
-      } else if (lang.name === 'ig') {
-        name = 'Igbo';
-      } else if (lang.name === 'lv') {
-        name = 'Latviešu';
-      } else if (lang.name === 'latviešu valoda') {
-        name = 'Latviešu';
-      } else if (lang.name === 'ms-MY') {
-        // ms-MY = Malay (Malaysia)
-        name = 'بهاس ملايو';
-      } else if (lang.name === 'en-IT') {
-        name = 'English (Italy)';
-      } else if (lang.name === 'el-GR') {
-        // el-GR = Greek (Greece)
-        name = 'Ελληνικά (Ελλάδα)';
-      } else if (lang.name === 'Español') {
-        name = 'español';
-      } else if (lang.name === 'es_419') {
-        name = 'español de América Latina';
-      } else if (lang.name === 'es-419') {
-        name = 'español de América Latina';
-      } else if (lang.name === 'Español de América Latina') {
-        name = 'español de América Latina';
-      } else if (lang.name === 'es-LA') {
-        name = 'español de América Latina';
-      } else if (lang.name === 'Español de Argentina') {
-        name = 'español de Argentina';
-      } else if (lang.name === 'Español de Chile') {
-        name = 'español de Chile';
-      } else if (lang.name === 'Español de Colombia') {
-        name = 'español de Colombia';
-      } else if (lang.name === 'Español de México') {
-        name = 'español de México';
-      } else if (lang.name === 'es-PY') {
-        name = 'español de Paraguayo';
-      } else if (lang.name === 'Español de Paraguayo') {
-        name = 'español de Paraguayo';
-      } else if (lang.name === 'Español de Perú') {
-        name = 'español de Perú';
-      } else if (lang.name === 'Español de Puerto Rico') {
-        name = 'español de Puerto Rico';
-      } else if (lang.name === 'oc') {
-        name = 'Occitan';
-      } else if (lang.name === 'st') {
-        name = 'Sãotomense';
-      } else if (lang.name === '繁体中文（台湾）') {
-        // Traditional Chinese (Taiwan)
-        name = '繁體中文（台灣）';
-      }
-      return { tag, name };
-    }).sort(function(a, b) {
-      if (a.name === b.name) {
-        return 0;
-      } else {
-        return a.name > b.name ? 1 : -1;
-      }
-    });
+    return TAPi18n.getSupportedLanguages()
+      .map(({ tag, name }) => ({ tag: tag, name }))
+      .sort((a, b) => {
+        if (a.name === b.name) {
+          return 0;
+        } else {
+          return a.name > b.name ? 1 : -1;
+        }
+      });
   },
 
   isCurrentLanguage() {
@@ -363,20 +284,20 @@ Template.changeLanguagePopup.events({
 });
 
 Template.changeSettingsPopup.helpers({
-  hiddenSystemMessages() {
-    currentUser = Meteor.user();
+  rescueCardDescription() {
+    const currentUser = ReactiveCache.getCurrentUser();
     if (currentUser) {
-      return (currentUser.profile || {}).hasHiddenSystemMessages;
-    } else if (window.localStorage.getItem('hasHiddenSystemMessages')) {
+      return (currentUser.profile || {}).rescueCardDescription;
+    } else if (window.localStorage.getItem('rescueCardDescription')) {
       return true;
     } else {
       return false;
     }
   },
   showCardsCountAt() {
-    currentUser = Meteor.user();
+    const currentUser = ReactiveCache.getCurrentUser();
     if (currentUser) {
-      return Meteor.user().getLimitToShowCardsCount();
+      return currentUser.getLimitToShowCardsCount();
     } else {
       return window.localStorage.getItem('limitToShowCardsCount');
     }
@@ -395,7 +316,7 @@ Template.changeSettingsPopup.helpers({
     });
   },
   startDayOfWeek() {
-    currentUser = Meteor.user();
+    currentUser = ReactiveCache.getCurrentUser();
     if (currentUser) {
       return currentUser.getStartDayOfWeek();
     } else {
@@ -413,7 +334,7 @@ Template.changeSettingsPopup.events({
     return ret;
   },
   'click .js-toggle-desktop-drag-handles'() {
-    currentUser = Meteor.user();
+    const currentUser = ReactiveCache.getCurrentUser();
     if (currentUser) {
       Meteor.call('toggleDesktopDragHandles');
     } else if (window.localStorage.getItem('showDesktopDragHandles')) {
@@ -422,16 +343,9 @@ Template.changeSettingsPopup.events({
       window.localStorage.setItem('showDesktopDragHandles', 'true');
     }
   },
-  'click .js-toggle-system-messages'() {
-    currentUser = Meteor.user();
-    if (currentUser) {
-      Meteor.call('toggleSystemMessages');
-    } else if (window.localStorage.getItem('hasHiddenSystemMessages')) {
-      window.localStorage.removeItem('hasHiddenSystemMessages');
-    } else {
-      window.localStorage.setItem('hasHiddenSystemMessages', 'true');
-    }
-  },
+  'click .js-rescue-card-description'() {
+    Meteor.call('toggleRescueCardDescription')
+    },
   'click .js-apply-user-settings'(event, templateInstance) {
     event.preventDefault();
     let minLimit = parseInt(
@@ -442,7 +356,7 @@ Template.changeSettingsPopup.events({
       templateInstance.$('#start-day-of-week').val(),
       10,
     );
-    const currentUser = Meteor.user();
+    const currentUser = ReactiveCache.getCurrentUser();
     if (isNaN(minLimit) || minLimit < -1) {
       minLimit = -1;
     }

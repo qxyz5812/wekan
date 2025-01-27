@@ -1,3 +1,4 @@
+import { ReactiveCache } from '/imports/reactiveCache';
 import { MongoInternals } from 'meteor/mongo';
 
 // Sandstorm context is detected using the METEOR_SETTINGS environment variable
@@ -8,7 +9,7 @@ const isSandstorm =
 if (Meteor.isServer) {
   Meteor.methods({
     getStatistics() {
-      if (Meteor.user() && Meteor.user().isAdmin) {
+      if (ReactiveCache.getCurrentUser()?.isAdmin) {
         const os = require('os');
         const pjson = require('/package.json');
         const statistics = {};
@@ -86,6 +87,7 @@ if (Meteor.isServer) {
           mongoOplogEnabled = oplogEnabled;
         } catch (e) {
           try {
+            const { mongo } = MongoInternals.defaultRemoteCollectionDriver();
             const { version } = Promise.await(
               mongo.db.command({ buildinfo: 1 }),
             );
@@ -100,6 +102,11 @@ if (Meteor.isServer) {
           mongoVersion,
           mongoStorageEngine,
           mongoOplogEnabled,
+        };
+        const client = MongoInternals.defaultRemoteCollectionDriver()?.mongo?.client;
+        const sessionsCount = client?.s?.activeSessions?.size;
+        statistics.session = {
+          sessionsCount: sessionsCount,
         };
         return statistics;
       } else {

@@ -1,38 +1,12 @@
+import { ReactiveCache } from '/imports/reactiveCache';
+import { TAPi18n } from '/imports/i18n';
+import dragscroll from '@wekanteam/dragscroll';
+
 /*
 const DOWNCLS = 'fa-sort-down';
 const UPCLS = 'fa-sort-up';
 */
 const sortCardsBy = new ReactiveVar('');
-Template.boardMenuPopup.events({
-  'click .js-rename-board': Popup.open('boardChangeTitle'),
-  'click .js-custom-fields'() {
-    Sidebar.setView('customFields');
-    Popup.back();
-  },
-  'click .js-open-archives'() {
-    Sidebar.setView('archives');
-    Popup.back();
-  },
-  'click .js-change-board-color': Popup.open('boardChangeColor'),
-  'click .js-change-language': Popup.open('changeLanguage'),
-  'click .js-archive-board ': Popup.afterConfirm('archiveBoard', function() {
-    const currentBoard = Boards.findOne(Session.get('currentBoard'));
-    currentBoard.archive();
-    // XXX We should have some kind of notification on top of the page to
-    // confirm that the board was successfully archived.
-    FlowRouter.go('home');
-  }),
-  'click .js-delete-board': Popup.afterConfirm('deleteBoard', function() {
-    const currentBoard = Boards.findOne(Session.get('currentBoard'));
-    Popup.back();
-    Boards.remove(currentBoard._id);
-    FlowRouter.go('home');
-  }),
-  'click .js-outgoing-webhooks': Popup.open('outgoingWebhooks'),
-  'click .js-import-board': Popup.open('chooseBoardSource'),
-  'click .js-subtask-settings': Popup.open('boardSubtaskSettings'),
-  'click .js-card-settings': Popup.open('boardCardSettings'),
-});
 
 Template.boardChangeTitlePopup.events({
   submit(event, templateInstance) {
@@ -55,24 +29,24 @@ Template.boardChangeTitlePopup.events({
 
 BlazeComponent.extendComponent({
   watchLevel() {
-    const currentBoard = Boards.findOne(Session.get('currentBoard'));
+    const currentBoard = Utils.getCurrentBoard();
     return currentBoard && currentBoard.getWatchLevel(Meteor.userId());
   },
 
   isStarred() {
     const boardId = Session.get('currentBoard');
-    const user = Meteor.user();
+    const user = ReactiveCache.getCurrentUser();
     return user && user.hasStarred(boardId);
   },
 
   // Only show the star counter if the number of star is greater than 2
   showStarCounter() {
-    const currentBoard = Boards.findOne(Session.get('currentBoard'));
+    const currentBoard = Utils.getCurrentBoard();
     return currentBoard && currentBoard.stars >= 2;
   },
   /*
   showSort() {
-    return Meteor.user().hasSortBy();
+    return ReactiveCache.getCurrentUser().hasSortBy();
   },
   directionClass() {
     return this.currentDirection() === -1 ? DOWNCLS : UPCLS;
@@ -82,10 +56,10 @@ BlazeComponent.extendComponent({
     Meteor.call('setListSortBy', direction + this.currentListSortBy());
   },
   currentDirection() {
-    return Meteor.user().getListSortByDirection();
+    return ReactiveCache.getCurrentUser().getListSortByDirection();
   },
   currentListSortBy() {
-    return Meteor.user().getListSortBy();
+    return ReactiveCache.getCurrentUser().getListSortBy();
   },
   listSortShortDesc() {
     return `list-label-short-${this.currentListSortBy()}`;
@@ -96,7 +70,7 @@ BlazeComponent.extendComponent({
       {
         'click .js-edit-board-title': Popup.open('boardChangeTitle'),
         'click .js-star-board'() {
-          Meteor.user().toggleBoardStar(Session.get('currentBoard'));
+          ReactiveCache.getCurrentUser().toggleBoardStar(Session.get('currentBoard'));
         },
         'click .js-open-board-menu': Popup.open('boardMenu'),
         'click .js-change-visibility': Popup.open('boardChangeVisibility'),
@@ -155,13 +129,6 @@ BlazeComponent.extendComponent({
 }).register('boardHeaderBar');
 
 Template.boardHeaderBar.helpers({
-  canModifyBoard() {
-    return (
-      Meteor.user() &&
-      Meteor.user().isBoardMember() &&
-      !Meteor.user().isCommentOnly()
-    );
-  },
   boardView() {
     return Utils.boardView();
   },
@@ -310,7 +277,7 @@ const CreateBoard = BlazeComponent.extendComponent({
   onSubmit(event) {
     super.onSubmit(event);
     // Immediately star boards crated with the headerbar popup.
-    Meteor.user().toggleBoardStar(this.boardId.get());
+    ReactiveCache.getCurrentUser().toggleBoardStar(this.boardId.get());
   }
 }.register('headerBarCreateBoardPopup'));
 
@@ -319,12 +286,12 @@ BlazeComponent.extendComponent({
     return !TableVisibilityModeSettings.findOne('tableVisibilityMode-allowPrivateOnly').booleanValue;
   },
   visibilityCheck() {
-    const currentBoard = Boards.findOne(Session.get('currentBoard'));
+    const currentBoard = Utils.getCurrentBoard();
     return this.currentData() === currentBoard.permission;
   },
 
   selectBoardVisibility() {
-    const currentBoard = Boards.findOne(Session.get('currentBoard'));
+    const currentBoard = Utils.getCurrentBoard();
     const visibility = this.currentData();
     currentBoard.setVisibility(visibility);
     Popup.back();
@@ -341,7 +308,7 @@ BlazeComponent.extendComponent({
 
 BlazeComponent.extendComponent({
   watchLevel() {
-    const currentBoard = Boards.findOne(Session.get('currentBoard'));
+    const currentBoard = Utils.getCurrentBoard();
     return currentBoard.getWatchLevel(Meteor.userId());
   },
 
@@ -381,7 +348,7 @@ BlazeComponent.extendComponent({
   allowedSortValues() {
     const types = [];
     const pushed = {};
-    Meteor.user()
+    ReactiveCache.getCurrentUser()
       .getListSortTypes()
       .forEach(type => {
         const key = type.replace(/^-/, '');
@@ -397,16 +364,16 @@ BlazeComponent.extendComponent({
     return types;
   },
   Direction() {
-    return Meteor.user().getListSortByDirection() === -1
+    return ReactiveCache.getCurrentUser().getListSortByDirection() === -1
       ? this.downClass
       : this.upClass;
   },
   sortby() {
-    return Meteor.user().getListSortBy();
+    return ReactiveCache.getCurrentUser().getListSortBy();
   },
 
   setSortBy(type = null) {
-    const user = Meteor.user();
+    const user = ReactiveCache.getCurrentUser();
     if (type === null) {
       type = user._getListSortBy();
     } else {

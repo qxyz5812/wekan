@@ -25,7 +25,11 @@
       #---------------------------------------------
       # This is local port where Wekan Node.js runs, same as below on Caddyfile settings.
       export PORT=2000
-      #---------------------------------------------
+      #---------------------------------------------------------------
+      # ==== AFTER OIDC LOGIN, ADD USERS AUTOMATICALLY TO THIS BOARD ID ====
+      # https://github.com/wekan/wekan/pull/5098
+      #- DEFAULT_BOARD_ID=abcd1234
+      #---------------------------------------------------------------
       # ==== NUMBER OF SEARCH RESULTS PER PAGE BY DEFAULT ====
       #export RESULTS_PER_PAGE=20
       #---------------------------------------------
@@ -47,6 +51,16 @@
       # https://docs.meteor.com/api/accounts-multi.html#AccountsCommon-config
       # Defaults below. Uncomment to change. wekan/server/accounts-common.js
       # - ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS=90
+      #---------------------------------------------------------------
+      # ==== Allow configuration to validate uploaded attachments ====
+      #export ATTACHMENTS_UPLOAD_EXTERNAL_PROGRAM="/usr/local/bin/avscan {file}"
+      #export ATTACHMENTS_UPLOAD_MIME_TYPES="image/*,text/*"
+      #export ATTACHMENTS_UPLOAD_MAX_SIZE=5000000
+      #---------------------------------------------------------------
+      # ==== Allow configuration to validate uploaded avatars ====
+      #export AVATARS_UPLOAD_EXTERNAL_PROGRAM="/usr/local/bin/avscan {file}"
+      #export AVATARS_UPLOAD_MIME_TYPES="image/*"
+      #export AVATARS_UPLOAD_MAX_SIZE=500000
       #---------------------------------------------------------------
       # ==== RICH TEXT EDITOR IN CARD COMMENTS ====
       # https://github.com/wekan/wekan/pull/2560
@@ -140,6 +154,8 @@
       #export OAUTH2_ENABLED=true
       # Use OAuth2 ADFS additional changes. Also needs OAUTH2_ENABLED=true setting.
       #export OAUTH2_ADFS_ENABLED=false
+      # Azure AD B2C. https://github.com/wekan/wekan/issues/5242
+      #- OAUTH2_B2C_ENABLED=false
       # OAuth2 docs: https://github.com/wekan/wekan/wiki/OAuth2
       # OAuth2 login style: popup or redirect.
       #export OAUTH2_LOGIN_STYLE=redirect
@@ -195,7 +211,7 @@
       # OAUTH2 ID Token Whitelist Fields.
       #export OAUTH2_ID_TOKEN_WHITELIST_FIELDS=[]
       # OAUTH2 Request Permissions.
-      #export OAUTH2_REQUEST_PERMISSIONS='openid profile email'
+      #export OAUTH2_REQUEST_PERMISSIONS=openid profile email
       # OAuth2 ID Mapping
       #export OAUTH2_ID_MAP=
       # OAuth2 Username Mapping
@@ -395,6 +411,7 @@
       #export WAIT_SPINNER=Bounce
       #---------------------------------------------------------------------
 
+      # node --stack-size=65500 --max-old-space-size=8192 main.js & >> ~/repos/wekan.log
       node main.js & >> ~/repos/wekan.log
       cd ~/repos
 #done

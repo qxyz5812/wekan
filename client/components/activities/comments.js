@@ -1,3 +1,5 @@
+import { ReactiveCache } from '/imports/reactiveCache';
+
 const commentFormIsOpen = new ReactiveVar(false);
 
 BlazeComponent.extendComponent({
@@ -24,8 +26,10 @@ BlazeComponent.extendComponent({
           let boardId = card.boardId;
           let cardId = card._id;
           if (card.isLinkedCard()) {
-            boardId = Cards.findOne(card.linkedId).boardId;
+            boardId = ReactiveCache.getCard(card.linkedId).boardId;
             cardId = card.linkedId;
+          } else if (card.isLinkedBoard()) {
+            boardId = card.linkedId;
           }
           if (text) {
             CardComments.insert({
@@ -50,6 +54,41 @@ BlazeComponent.extendComponent({
     ];
   },
 }).register('commentForm');
+
+BlazeComponent.extendComponent({
+  getComments() {
+    const ret = this.data().comments();
+    return ret;
+  },
+}).register("comments");
+
+BlazeComponent.extendComponent({
+  events() {
+    return [
+      {
+        'click .js-delete-comment': Popup.afterConfirm('deleteComment', () => {
+          const commentId = this.data()._id;
+          CardComments.remove(commentId);
+          Popup.back();
+        }),
+        'submit .js-edit-comment'(evt) {
+          evt.preventDefault();
+          const commentText = this.currentComponent()
+            .getValue()
+            .trim();
+          const commentId = this.data()._id;
+          if (commentText) {
+            CardComments.update(commentId, {
+              $set: {
+                text: commentText,
+              },
+            });
+          }
+        },
+      },
+    ];
+  },
+}).register("comment");
 
 // XXX This should be a static method of the `commentForm` component
 function resetCommentInput(input) {

@@ -1,3 +1,5 @@
+import { TAPi18n } from '/imports/i18n';
+
 BlazeComponent.extendComponent({
   template() {
     return 'editCardSpentTime';
@@ -81,13 +83,3 @@ BlazeComponent.extendComponent({
     ];
   },
 }).register('cardSpentTime');
-
-Template.timeBadge.helpers({
-  canModifyCard() {
-    return (
-      Meteor.user() &&
-      Meteor.user().isBoardMember() &&
-      !Meteor.user().isCommentOnly()
-    );
-  },
-});

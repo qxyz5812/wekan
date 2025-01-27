@@ -1,5 +1,5 @@
 template(name="listHeader")
-  .list-header.js-list-header(
+  .list-header.js-list-header.nodragscroll(
     class="{{#if limitToShowCardsCount}}list-header-card-count{{/if}}"
     class=colorClass)
     +inlinedForm
@@ -8,19 +8,40 @@ template(name="listHeader")
       if isMiniScreen
         if currentList
           a.list-header-left-icon.fa.fa-angle-left.js-unselect-list
-      h2.list-header-name(
-        title="{{ moment modifiedAt 'LLL' }}"
-        class="{{#if currentUser.isBoardMember}}{{#unless currentUser.isCommentOnly}}{{#unless currentUser.isWorker}}js-open-inlined-form is-editable{{/unless}}{{/unless}}{{/if}}")
-        +viewer
-          = title
-        if wipLimit.enabled
-         |&nbsp;(
-         span(class="{{#if exceededWipLimit}}highlight{{/if}}") {{cards.count}}
-         |/#{wipLimit.value})
-
-      if showCardsCountForList cards.count
-        span.cardCount {{cardsCount}} {{cardsCountForListIsOne cards.count}}
-
+      else
+        if collapsed
+          a.js-collapse(title="{{_ 'uncollapse'}}")
+            i.fa.fa-arrow-left.list-header-uncollapse-left
+            i.fa.fa-arrow-right.list-header-uncollapse-right
+          if showCardsCountForList cards.length
+            br
+            span.cardCount {{cardsCount}}
+      if isMiniScreen
+        h2.list-header-name(
+          title="{{ moment modifiedAt 'LLL' }}"
+          class="{{#if currentUser.isBoardMember}}{{#unless currentUser.isCommentOnly}}{{#unless currentUser.isWorker}}js-open-inlined-form is-editable{{/unless}}{{/unless}}{{/if}}")
+          +viewer
+            = title
+          if wipLimit.enabled
+           |&nbsp;(
+           span(class="{{#if exceededWipLimit}}highlight{{/if}}") {{cards.length}}
+           |/#{wipLimit.value})
+        if showCardsCountForList cards.length
+          span.cardCount {{cardsCount}} {{cardsCountForListIsOne cards.length}}
+      else
+        div(class="{{#if collapsed}}list-rotated{{/if}}")
+          h2.list-header-name(
+            title="{{ moment modifiedAt 'LLL' }}"
+            class="{{#if currentUser.isBoardMember}}{{#unless currentUser.isCommentOnly}}{{#unless currentUser.isWorker}}js-open-inlined-form is-editable{{/unless}}{{/unless}}{{/if}}")
+            +viewer
+              = title
+            if wipLimit.enabled
+             |&nbsp;(
+             span(class="{{#if exceededWipLimit}}highlight{{/if}}") {{cards.length}}
+             |/#{wipLimit.value})
+        unless collapsed
+          if showCardsCountForList cards.length
+            span.cardCount {{cardsCount}} {{cardsCountForListIsOne cards.length}}
       if isMiniScreen
         if currentList
           if isWatching
@@ -36,16 +57,20 @@ template(name="listHeader")
       else if currentUser.isBoardMember
         if isWatching
           i.list-header-watch-icon.fa.fa-eye
-        div.list-header-menu
-          unless currentUser.isCommentOnly
-            //if isBoardAdmin
-            //  a.fa.js-list-star.list-header-plus-top(class="fa-star{{#unless starred}}-o{{/unless}}")
-            if canSeeAddCard
-              a.js-add-card.fa.fa-plus.list-header-plus-top(title="{{_ 'add-card-to-top-of-list'}}")
-            a.fa.fa-navicon.js-open-list-menu(title="{{_ 'listActionPopup-title'}}")
-          if currentUser.isBoardAdmin
-            if isShowDesktopDragHandles
-              a.list-header-handle.handle.fa.fa-arrows.js-list-handle
+        unless collapsed
+          div.list-header-menu
+            unless currentUser.isCommentOnly
+              //if isBoardAdmin
+              //  a.fa.js-list-star.list-header-plus-top(class="fa-star{{#unless starred}}-o{{/unless}}")
+              if canSeeAddCard
+                a.js-add-card.fa.fa-plus.list-header-plus-top(title="{{_ 'add-card-to-top-of-list'}}")
+                a.js-collapse(title="{{_ 'collapse'}}")
+                  i.fa.fa-arrow-right.list-header-collapse-right
+                  i.fa.fa-arrow-left.list-header-collapse-left
+                a.fa.fa-navicon.js-open-list-menu(title="{{_ 'listActionPopup-title'}}")
+            if currentUser.isBoardAdmin
+              if isTouchScreenOrShowDesktopDragHandles
+                a.list-header-handle.handle.fa.fa-arrows.js-list-handle
 
 template(name="editListTitleForm")
   .list-composer
@@ -64,6 +89,11 @@ template(name="listActionPopup")
   hr
   ul.pop-over-list
     li
+      a.js-set-list-width
+        i.fa.fa-arrows-h
+        |  {{_ 'set-list-width'}}
+  ul.pop-over-list
+    li
       a.js-toggle-watch-list
         if isWatching
           i.fa.fa-eye
@@ -79,7 +109,7 @@ template(name="listActionPopup")
             i.fa.fa-paint-brush
             | {{_ 'set-color-list'}}
     ul.pop-over-list
-      if cards.count
+      if cards.length
         li
           a.js-select-cards
             i.fa.fa-check-square
@@ -154,6 +184,25 @@ template(name="wipLimitErrorPopup")
   .wip-limit-invalid
     p {{_ 'wipLimitErrorPopup-dialog-pt1'}}
     p {{_ 'wipLimitErrorPopup-dialog-pt2'}}
+    button.full.js-back-view(type="submit") {{_ 'cancel'}}
+
+template(name="setListWidthPopup")
+  #js-list-width-edit
+    label {{_ 'set-list-width-value'}}
+      p
+        input.list-width-value(type="number" value="{{ listWidthValue }}" min="100")
+        input.list-constraint-value(type="number" value="{{ listConstraintValue }}" min="100")
+        input.list-width-apply(type="submit" value="{{_ 'apply'}}")
+        input.list-width-error
+        br
+        a.js-auto-width-board(
+          title="{{#if isAutoWidth}}{{_ 'click-to-disable-auto-width'}}{{else}}{{_ 'click-to-enable-auto-width'}}{{/if}}")
+          i.fa(class="fa-solid fa-{{#if isAutoWidth}}compress{{else}}expand{{/if}}")
+          span {{_ 'auto-list-width'}}
+
+template(name="listWidthErrorPopup")
+  .list-width-invalid
+    p {{_ 'list-width-error-message'}} '&gt;=100'
     button.full.js-back-view(type="submit") {{_ 'cancel'}}
 
 template(name="setListColorPopup")

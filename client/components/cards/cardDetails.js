@@ -1,3 +1,6 @@
+import { ReactiveCache } from '/imports/reactiveCache';
+import moment from 'moment/min/moment-with-locales';
+import { TAPi18n } from '/imports/i18n';
 import { DatePicker } from '/client/lib/datepicker';
 import Cards from '/models/cards';
 import Boards from '/models/boards';
@@ -7,8 +10,8 @@ import Users from '/models/users';
 import Lists from '/models/lists';
 import CardComments from '/models/cardComments';
 import { ALLOWED_COLORS } from '/config/const';
-import moment from 'moment';
 import { UserAvatar } from '../users/userAvatar';
+import { DialogWithBoardSwimlaneList } from '/client/lib/dialogWithBoardSwimlaneList';
 
 const subManager = new SubsManager();
 const { calculateIndexData } = Utils;
@@ -32,7 +35,7 @@ BlazeComponent.extendComponent({
   },
 
   onCreated() {
-    this.currentBoard = Boards.findOne(Session.get('currentBoard'));
+    this.currentBoard = Utils.getCurrentBoard();
     this.isLoaded = new ReactiveVar(false);
 
     if (this.parentComponent() && this.parentComponent().parentComponent()) {
@@ -60,70 +63,13 @@ BlazeComponent.extendComponent({
     return card.findWatcher(Meteor.userId());
   },
 
-  hiddenSystemMessages() {
-    return Meteor.user().hasHiddenSystemMessages();
-  },
-
   customFieldsGrid() {
-    return Meteor.user().hasCustomFieldsGrid();
+    return ReactiveCache.getCurrentUser().hasCustomFieldsGrid();
   },
 
 
   cardMaximized() {
-    return Meteor.user().hasCardMaximized();
-  },
-
-  canModifyCard() {
-    return (
-      Meteor.user() &&
-      Meteor.user().isBoardMember() &&
-      !Meteor.user().isCommentOnly() &&
-      !Meteor.user().isWorker()
-    );
-  },
-
-  scrollParentContainer() {
-    const cardPanelWidth = 600;
-    const parentComponent = this.parentComponent();
-    // TODO sometimes parentComponent is not available, maybe because it's not
-    // yet created?!
-    if (!parentComponent) return;
-    const bodyBoardComponent = parentComponent.parentComponent();
-    //On Mobile View Parent is Board, Not Board Body. I cant see how this funciton should work then.
-    if (bodyBoardComponent === null) return;
-    const $cardView = this.$(this.firstNode());
-    const $cardContainer = bodyBoardComponent.$('.js-swimlanes');
-    // TODO sometimes cardContainer is not available, maybe because it's not yet
-    // created?!
-    if (!$cardContainer) return;
-    const cardContainerScroll = $cardContainer.scrollLeft();
-    const cardContainerWidth = $cardContainer.width();
-
-    const cardViewStart = $cardView.offset().left;
-    const cardViewEnd = cardViewStart + cardPanelWidth;
-
-    let offset = false;
-    if (cardViewStart < 0) {
-      offset = cardViewStart;
-    } else if (cardViewEnd > cardContainerWidth) {
-      offset = cardViewEnd - cardContainerWidth;
-    }
-
-    if (offset) {
-      bodyBoardComponent.scrollLeft(cardContainerScroll + offset);
-    }
-
-    //Scroll top
-    const cardViewStartTop = $cardView.offset().top;
-    const cardContainerScrollTop = $cardContainer.scrollTop();
-
-    let topOffset = false;
-    if (cardViewStartTop !== 100) {
-      topOffset = cardViewStartTop - 100;
-    }
-    if (topOffset !== false) {
-      bodyBoardComponent.scrollTop(cardContainerScrollTop + topOffset);
-    }
+    return !Utils.getPopupCardId() && ReactiveCache.getCurrentUser().hasCardMaximized();
   },
 
   presentParentTask() {
@@ -138,7 +84,7 @@ BlazeComponent.extendComponent({
     const card = this.currentData();
     let result = '#';
     if (card) {
-      const board = Boards.findOne(card.boardId);
+      const board = ReactiveCache.getBoard(card.boardId);
       if (board) {
         result = FlowRouter.path('card', {
           boardId: card.boardId,
@@ -168,6 +114,20 @@ BlazeComponent.extendComponent({
     );
   },
 
+  isVerticalScrollbars() {
+    const user = ReactiveCache.getCurrentUser();
+    return user && user.isVerticalScrollbars();
+  },
+
+  /** returns if the list id is the current list id
+   * @param listId list id to check
+   * @return is the list id the current list id ?
+   */
+  isCurrentListId(listId) {
+    const ret = this.data().listId == listId;
+    return ret;
+  },
+
   onRendered() {
     if (Meteor.settings.public.CARD_OPENED_WEBHOOK_ENABLED) {
       // Send Webhook but not create Activities records ---
@@ -178,15 +138,15 @@ BlazeComponent.extendComponent({
         cardId: card._id,
         boardId: card.boardId,
         listId: card.listId,
-        user: Meteor.user().username,
+        user: ReactiveCache.getCurrentUser().username,
         url: '',
       };
 
-      const integrations = Integrations.find({
+      const integrations = ReactiveCache.getIntegrations({
         boardId: { $in: [card.boardId, Integrations.Const.GLOBAL_WEBHOOK_ID] },
         enabled: true,
         activities: { $in: ['CardDetailsRendered', 'all'] },
-      }).fetch();
+      });
 
       if (integrations.length > 0) {
         integrations.forEach((integration) => {
@@ -202,11 +162,6 @@ BlazeComponent.extendComponent({
       //-------------
     }
 
-    if (!Utils.isMiniScreen()) {
-      Meteor.setTimeout(() => {
-        this.scrollParentContainer();
-      }, 500);
-    }
     const $checklistsDom = this.$('.card-checklist-items');
 
     $checklistsDom.sortable({
@@ -278,7 +233,7 @@ BlazeComponent.extendComponent({
     });
 
     function userIsMember() {
-      return Meteor.user() && Meteor.user().isBoardMember();
+      return ReactiveCache.getCurrentUser()?.isBoardMember();
     }
 
     // Disable sorting if the current user is not a board member
@@ -289,7 +244,7 @@ BlazeComponent.extendComponent({
         $checklistsDom.data('sortable')
       ) {
         $checklistsDom.sortable('option', 'disabled', disabled);
-        if (Utils.isMiniScreenOrShowDesktopDragHandles()) {
+        if (Utils.isTouchScreenOrShowDesktopDragHandles()) {
           $checklistsDom.sortable({ handle: '.checklist-handle' });
         }
       }
@@ -379,6 +334,14 @@ BlazeComponent.extendComponent({
             card.move(card.boardId, card.swimlaneId, card.listId, sort);
           }
         },
+        'change .js-select-card-details-lists'(event) {
+          let card = this.data();
+          const listSelect = this.$('.js-select-card-details-lists')[0];
+          const listId = listSelect.options[listSelect.selectedIndex].value;
+
+          const minOrder = card.getMinSort(listId, card.swimlaneId);
+          card.move(card.boardId, card.swimlaneId, listId, minOrder - 1);
+        },
         'click .js-go-to-linked-card'() {
           Utils.goCardId(this.data().linkedId);
         },
@@ -415,8 +378,11 @@ BlazeComponent.extendComponent({
           Session.set('cardDetailsIsDragging', false);
           Session.set('cardDetailsIsMouseDown', false);
         },
-        'click #toggleButton'() {
-          Meteor.call('toggleSystemMessages');
+        'click #toggleShowActivitiesCard'() {
+          this.data().toggleShowActivities();
+        },
+        'click #toggleHideCheckedChecklistItems'() {
+          this.data().toggleHideCheckedChecklistItems();
         },
         'click #toggleCustomFieldsGridButton'() {
           Meteor.call('toggleCustomFieldsGrid');
@@ -624,15 +590,7 @@ Template.cardDetailsActionsPopup.helpers({
   },
 
   isBoardAdmin() {
-    return Meteor.user().isBoardAdmin();
-  },
-
-  canModifyCard() {
-    return (
-      Meteor.user() &&
-      Meteor.user().isBoardMember() &&
-      !Meteor.user().isCommentOnly()
-    );
+    return ReactiveCache.getCurrentUser().isBoardAdmin();
   },
 });
 
@@ -652,25 +610,17 @@ Template.cardDetailsActionsPopup.events({
   'click .js-move-card': Popup.open('moveCard'),
   'click .js-copy-card': Popup.open('copyCard'),
   'click .js-convert-checklist-item-to-card': Popup.open('convertChecklistItemToCard'),
-  'click .js-copy-checklist-cards': Popup.open('copyChecklistToManyCards'),
+  'click .js-copy-checklist-cards': Popup.open('copyManyCards'),
   'click .js-set-card-color': Popup.open('setCardColor'),
   'click .js-move-card-to-top'(event) {
     event.preventDefault();
-    const minOrder = _.min(
-      this.list()
-        .cardsUnfiltered(this.swimlaneId)
-        .map((c) => c.sort),
-    );
+    const minOrder = this.getMinSort();
     this.move(this.boardId, this.swimlaneId, this.listId, minOrder - 1);
     Popup.back();
   },
   'click .js-move-card-to-bottom'(event) {
     event.preventDefault();
-    const maxOrder = _.max(
-      this.list()
-        .cardsUnfiltered(this.swimlaneId)
-        .map((c) => c.sort),
-    );
+    const maxOrder = this.getMaxSort();
     this.move(this.boardId, this.swimlaneId, this.listId, maxOrder + 1);
     Popup.back();
   },
@@ -689,24 +639,35 @@ Template.cardDetailsActionsPopup.events({
   },
 });
 
-Template.editCardTitleForm.onRendered(function () {
-  autosize(this.$('.js-edit-card-title'));
-});
+BlazeComponent.extendComponent({
+  onRendered() {
+    autosize(this.$('textarea.js-edit-card-title'));
+  },
+  events() {
+    return [
+      {
+        'click a.fa.fa-copy'(event) {
+          const $editor = this.$('textarea');
+          const promise = Utils.copyTextToClipboard($editor[0].value);
+
+          const $tooltip = this.$('.copied-tooltip');
+          Utils.showCopied(promise, $tooltip);
+        },
+        'keydown .js-edit-card-title'(event) {
+          // If enter key was pressed, submit the data
+          // Unless the shift key is also being pressed
+          if (event.keyCode === 13 && !event.shiftKey) {
+            $('.js-submit-edit-card-title-form').click();
+          }
+        },
+      }
+    ];
+  }
+}).register('editCardTitleForm');
 
 Template.cardMembersPopup.onCreated(function () {
-  let currBoard = Boards.findOne(Session.get('currentBoard'));
+  let currBoard = Utils.getCurrentBoard();
   let members = currBoard.activeMembers();
-
-  // let query = {
-  //   "teams.teamId": { $in: currBoard.teams.map(t => t.teamId) },
-  // };
-
-  // let boardTeamUsers = Users.find(query, {
-  //   sort: { sort: 1 },
-  // });
-
-  // members = currBoard.activeMembers2(members, boardTeamUsers);
-
   this.members = new ReactiveVar(members);
 });
 
@@ -719,47 +680,27 @@ Template.cardMembersPopup.events({
 
 Template.cardMembersPopup.helpers({
   members() {
-    return Template.instance().members.get();
+    return _.sortBy(Template.instance().members.get(),'fullname');
   },
 });
 
 const filterMembers = (filterTerm) => {
-  let currBoard = Boards.findOne(Session.get('currentBoard'));
+  let currBoard = Utils.getCurrentBoard();
   let members = currBoard.activeMembers();
-
-  // let query = {
-  //   "teams.teamId": { $in: currBoard.teams.map(t => t.teamId) },
-  // };
-
-  // let boardTeamUsers = Users.find(query, {
-  //   sort: { sort: 1 },
-  // });
-
-  // members = currBoard.activeMembers2(members, boardTeamUsers);
 
   if (filterTerm) {
     members = members
       .map(member => ({
         member,
-        user: Users.findOne(member.userId)
+        user: ReactiveCache.getUser(member.userId)
       }))
       .filter(({ user }) =>
-      (user.profile.fullname !== undefined && user.profile.fullname.toLowerCase().indexOf(filterTerm.toLowerCase()) !== -1)
-      || user.profile.fullname === undefined && user.profile.username !== undefined && user.profile.username.toLowerCase().indexOf(filterTerm.toLowerCase()) !== -1)
+        (user.profile.fullname !== undefined && user.profile.fullname.toLowerCase().indexOf(filterTerm.toLowerCase()) !== -1)
+        || user.profile.fullname === undefined && user.profile.username !== undefined && user.profile.username.toLowerCase().indexOf(filterTerm.toLowerCase()) !== -1)
       .map(({ member }) => member);
   }
   return members;
 }
-
-Template.editCardTitleForm.events({
-  'keydown .js-edit-card-title'(event) {
-    // If enter key was pressed, submit the data
-    // Unless the shift key is also being pressed
-    if (event.keyCode === 13 && !event.shiftKey) {
-      $('.js-submit-edit-card-title-form').click();
-    }
-  },
-});
 
 Template.editCardRequesterForm.onRendered(function () {
   autosize(this.$('.js-edit-card-requester'));
@@ -787,111 +728,58 @@ Template.editCardAssignerForm.events({
   },
 });
 
-Template.moveCardPopup.events({
-  'click .js-done'() {
-    // XXX We should *not* get the currentCard from the global state, but
-    // instead from a “component” state.
-    const card = Utils.getCurrentCard();
-    const bSelect = $('.js-select-boards')[0];
-    let boardId;
-    // if we are a worker, we won't have a board select so we just use the
-    // current boardId of the card.
-    if (bSelect) boardId = bSelect.options[bSelect.selectedIndex].value;
-    else boardId = card.boardId;
-    const lSelect = $('.js-select-lists')[0];
-    const listId = lSelect.options[lSelect.selectedIndex].value;
-    const slSelect = $('.js-select-swimlanes')[0];
-    const swimlaneId = slSelect.options[slSelect.selectedIndex].value;
-    card.move(boardId, swimlaneId, listId, 0);
+/** Move Card Dialog */
+(class extends DialogWithBoardSwimlaneList {
+  getDialogOptions() {
+    const ret = ReactiveCache.getCurrentUser().getMoveAndCopyDialogOptions();
+    return ret;
+  }
+  setDone(boardId, swimlaneId, listId, options) {
+    ReactiveCache.getCurrentUser().setMoveAndCopyDialogOption(this.currentBoardId, options);
+    const card = this.data();
+    const minOrder = card.getMinSort(listId, swimlaneId);
+    card.move(boardId, swimlaneId, listId, minOrder - 1);
+  }
+}).register('moveCardPopup');
 
-    // set new id's to card object in case the card is moved to top by the comment "moveCard" after this command (.js-move-card)
-    this.boardId = boardId;
-    this.swimlaneId = swimlaneId;
-    this.listId = listId;
+/** Copy Card Dialog */
+(class extends DialogWithBoardSwimlaneList {
+  getDialogOptions() {
+    const ret = ReactiveCache.getCurrentUser().getMoveAndCopyDialogOptions();
+    return ret;
+  }
+  setDone(boardId, swimlaneId, listId, options) {
+    ReactiveCache.getCurrentUser().setMoveAndCopyDialogOption(this.currentBoardId, options);
+    const card = this.data();
 
-    Popup.back();
-  },
-});
-BlazeComponent.extendComponent({
-  onCreated() {
-    subManager.subscribe('board', Session.get('currentBoard'), false);
-    this.selectedBoardId = new ReactiveVar(Session.get('currentBoard'));
-  },
-
-  boards() {
-    return Boards.find(
-      {
-        archived: false,
-        'members.userId': Meteor.userId(),
-        _id: { $ne: Meteor.user().getTemplatesBoardId() },
-      },
-      {
-        sort: { sort: 1 /* boards default sorting */ },
-      },
-    );
-  },
-
-  swimlanes() {
-    const board = Boards.findOne(this.selectedBoardId.get());
-    return board.swimlanes();
-  },
-
-  aBoardLists() {
-    const board = Boards.findOne(this.selectedBoardId.get());
-    return board.lists();
-  },
-
-  events() {
-    return [
-      {
-        'change .js-select-boards'(event) {
-          this.selectedBoardId.set($(event.currentTarget).val());
-          subManager.subscribe('board', this.selectedBoardId.get(), false);
-        },
-      },
-    ];
-  },
-}).register('boardsAndLists');
-
-Template.copyCardPopup.events({
-  'click .js-done'() {
-    const card = Utils.getCurrentCard();
-    const lSelect = $('.js-select-lists')[0];
-    const listId = lSelect.options[lSelect.selectedIndex].value;
-    const slSelect = $('.js-select-swimlanes')[0];
-    const swimlaneId = slSelect.options[slSelect.selectedIndex].value;
-    const bSelect = $('.js-select-boards')[0];
-    const boardId = bSelect.options[bSelect.selectedIndex].value;
-    const textarea = $('#copy-card-title');
+    // const textarea = $('#copy-card-title');
+    const textarea = this.$('#copy-card-title');
     const title = textarea.val().trim();
-    // insert new card to the bottom of new list
-    card.sort = Lists.findOne(card.listId).cards().count();
 
     if (title) {
-      card.title = title;
-      card.coverId = '';
-      const _id = card.copy(boardId, swimlaneId, listId);
+      // insert new card to the top of new list
+      const newCardId = Meteor.call('copyCard', card._id, boardId, swimlaneId, listId, true, {title: title});
+
       // In case the filter is active we need to add the newly inserted card in
       // the list of exceptions -- cards that are not filtered. Otherwise the
       // card will disappear instantly.
       // See https://github.com/wekan/wekan/issues/80
-      Filter.addException(_id);
-
-      Popup.back();
+      Filter.addException(newCardId);
     }
-  },
-});
+  }
+}).register('copyCardPopup');
 
-Template.convertChecklistItemToCardPopup.events({
-  'click .js-done'() {
-    const card = Utils.getCurrentCard();
-    const lSelect = $('.js-select-lists')[0];
-    const listId = lSelect.options[lSelect.selectedIndex].value;
-    const slSelect = $('.js-select-swimlanes')[0];
-    const swimlaneId = slSelect.options[slSelect.selectedIndex].value;
-    const bSelect = $('.js-select-boards')[0];
-    const boardId = bSelect.options[bSelect.selectedIndex].value;
-    const textarea = $('#copy-card-title');
+/** Convert Checklist-Item to card dialog */
+(class extends DialogWithBoardSwimlaneList {
+  getDialogOptions() {
+    const ret = ReactiveCache.getCurrentUser().getMoveAndCopyDialogOptions();
+    return ret;
+  }
+  setDone(boardId, swimlaneId, listId, options) {
+    ReactiveCache.getCurrentUser().setMoveAndCopyDialogOption(this.currentBoardId, options);
+    const card = this.data();
+
+    const textarea = this.$('#copy-card-title');
     const title = textarea.val().trim();
 
     if (title) {
@@ -902,68 +790,42 @@ Template.convertChecklistItemToCardPopup.events({
         swimlaneId: swimlaneId,
         sort: 0,
       });
+      const card = ReactiveCache.getCard(_id);
+      const minOrder = card.getMinSort();
+      card.move(card.boardId, card.swimlaneId, card.listId, minOrder - 1);
+
       Filter.addException(_id);
-
-      Popup.back();
-
     }
-  },
-});
+  }
+}).register('convertChecklistItemToCardPopup');
 
-Template.copyChecklistToManyCardsPopup.events({
-  'click .js-done'() {
-    const card = Utils.getCurrentCard();
-    const oldId = card._id;
-    card._id = null;
-    const lSelect = $('.js-select-lists')[0];
-    card.listId = lSelect.options[lSelect.selectedIndex].value;
-    const slSelect = $('.js-select-swimlanes')[0];
-    card.swimlaneId = slSelect.options[slSelect.selectedIndex].value;
-    const bSelect = $('.js-select-boards')[0];
-    card.boardId = bSelect.options[bSelect.selectedIndex].value;
-    const textarea = $('#copy-card-title');
-    const titleEntry = textarea.val().trim();
-    // insert new card to the bottom of new list
-    card.sort = Lists.findOne(card.listId).cards().count();
+/** Copy many cards dialog */
+(class extends DialogWithBoardSwimlaneList {
+  getDialogOptions() {
+    const ret = ReactiveCache.getCurrentUser().getMoveAndCopyDialogOptions();
+    return ret;
+  }
+  setDone(boardId, swimlaneId, listId, options) {
+    ReactiveCache.getCurrentUser().setMoveAndCopyDialogOption(this.currentBoardId, options);
+    const card = this.data();
 
-    if (titleEntry) {
-      const titleList = JSON.parse(titleEntry);
-      for (let i = 0; i < titleList.length; i++) {
-        const obj = titleList[i];
-        card.title = obj.title;
-        card.description = obj.description;
-        card.coverId = '';
-        const _id = Cards.insert(card);
+    const textarea = this.$('#copy-card-title');
+    const title = textarea.val().trim();
+
+    if (title) {
+      const titleList = JSON.parse(title);
+      for (const obj of titleList) {
+        const newCardId = Meteor.call('copyCard', card._id, boardId, swimlaneId, listId, false, {title: obj.title, description: obj.description});
+
         // In case the filter is active we need to add the newly inserted card in
         // the list of exceptions -- cards that are not filtered. Otherwise the
         // card will disappear instantly.
         // See https://github.com/wekan/wekan/issues/80
-        Filter.addException(_id);
-
-        // copy checklists
-        Checklists.find({ cardId: oldId }).forEach((ch) => {
-          ch.copy(_id);
-        });
-
-        // copy subtasks
-        const cursor = Cards.find({ parentId: oldId });
-        cursor.forEach(function () {
-          'use strict';
-          const subtask = arguments[0];
-          subtask.parentId = _id;
-          subtask._id = null;
-          /* const newSubtaskId = */ Cards.insert(subtask);
-        });
-
-        // copy card comments
-        CardComments.find({ cardId: oldId }).forEach((cmt) => {
-          cmt.copy(_id);
-        });
+        Filter.addException(newCardId);
       }
-      Popup.back();
     }
-  },
-});
+  }
+}).register('copyManyCardsPopup');
 
 BlazeComponent.extendComponent({
   onCreated() {
@@ -988,13 +850,15 @@ BlazeComponent.extendComponent({
         'click .js-palette-color'() {
           this.currentColor.set(this.currentData().color);
         },
-        'click .js-submit'() {
+        'click .js-submit'(event) {
+          event.preventDefault();
           this.currentCard.setColor(this.currentColor.get());
-          Popup.close();
+          Popup.back();
         },
-        'click .js-remove-color'() {
+        'click .js-remove-color'(event) {
+          event.preventDefault();
           this.currentCard.setColor(null);
-          Popup.close();
+          Popup.back();
         },
       },
     ];
@@ -1016,27 +880,27 @@ BlazeComponent.extendComponent({
   },
 
   boards() {
-    return Boards.find(
+    const ret = ReactiveCache.getBoards(
       {
         archived: false,
         'members.userId': Meteor.userId(),
-        _id: {
-          $ne: Meteor.user().getTemplatesBoardId(),
-        },
+        _id: { $ne: ReactiveCache.getCurrentUser().getTemplatesBoardId() },
       },
       {
         sort: { sort: 1 /* boards default sorting */ },
       },
     );
+    return ret;
   },
 
   cards() {
     const currentId = Utils.getCurrentCardId();
     if (this.parentBoard.get()) {
-      return Cards.find({
+      const ret = ReactiveCache.getCards({
         boardId: this.parentBoard.get(),
         _id: { $ne: currentId },
       });
+      return ret;
     } else {
       return [];
     }
@@ -1060,7 +924,7 @@ BlazeComponent.extendComponent({
 
   setParentCardId(cardId) {
     if (cardId) {
-      this.parentCard = Cards.findOne(cardId);
+      this.parentCard = ReactiveCache.getCard(cardId);
     } else {
       this.parentCard = null;
     }
@@ -1079,7 +943,7 @@ BlazeComponent.extendComponent({
         'click .js-delete': Popup.afterConfirm('cardDelete', function () {
           Popup.close();
           // verify that there are no linked cards
-          if (Cards.find({ linkedId: this._id }).count() === 0) {
+          if (ReactiveCache.getCards({ linkedId: this._id }).length === 0) {
             Cards.remove(this._id);
           } else {
             // TODO: Maybe later we can list where the linked cards are.
@@ -1616,10 +1480,29 @@ BlazeComponent.extendComponent({
 EscapeActions.register(
   'detailsPane',
   () => {
+    // if card description diverges from database due to editing
+    // ask user whether changes should be applied
+    if (ReactiveCache.getCurrentUser()) {
+      if (ReactiveCache.getCurrentUser().profile.rescueCardDescription == true) {
+        currentDescription = document.getElementsByClassName("editor js-new-description-input").item(0)
+        if (currentDescription?.value && !(currentDescription.value === Utils.getCurrentCard().getDescription())) {
+          if (confirm(TAPi18n.__('rescue-card-description-dialogue'))) {
+            Utils.getCurrentCard().setDescription(document.getElementsByClassName("editor js-new-description-input").item(0).value);
+            // Save it!
+            console.log(document.getElementsByClassName("editor js-new-description-input").item(0).value);
+            console.log("current description", Utils.getCurrentCard().getDescription());
+          } else {
+            // Do nothing!
+            console.log('Description changes were not saved to the database.');
+          }
+        }
+      }
+    }
     if (Session.get('cardDetailsIsDragging')) {
       // Reset dragging status as the mouse landed outside the cardDetails template area and this will prevent a mousedown event from firing
       Session.set('cardDetailsIsDragging', false);
       Session.set('cardDetailsIsMouseDown', false);
+
     } else {
       // Prevent close card when the user is selecting text and moves the mouse cursor outside the card detail area
       Utils.goBoardId(Session.get('currentBoard'));
@@ -1634,19 +1517,8 @@ EscapeActions.register(
 );
 
 Template.cardAssigneesPopup.onCreated(function () {
-  let currBoard = Boards.findOne(Session.get('currentBoard'));
+  let currBoard = Utils.getCurrentBoard();
   let members = currBoard.activeMembers();
-
-  // let query = {
-  //   "teams.teamId": { $in: currBoard.teams.map(t => t.teamId) },
-  // };
-
-  // let boardTeamUsers = Users.find(query, {
-  //   sort: { sort: 1 },
-  // });
-
-  // members = currBoard.activeMembers2(members, boardTeamUsers);
-
   this.members = new ReactiveVar(members);
 });
 
@@ -1672,23 +1544,17 @@ Template.cardAssigneesPopup.helpers({
   },
 
   members() {
-    return Template.instance().members.get();
+    return _.sortBy(Template.instance().members.get(),'fullname');
   },
 
   user() {
-    return Users.findOne(this.userId);
+    return ReactiveCache.getUser(this.userId);
   },
 });
 
 Template.cardAssigneePopup.helpers({
   userData() {
-    // We need to handle a special case for the search results provided by the
-    // `matteodem:easy-search` package. Since these results gets published in a
-    // separate collection, and not in the standard Meteor.Users collection as
-    // expected, we use a component parameter ("property") to distinguish the
-    // two cases.
-    const userCollection = this.esSearch ? ESSearchResults : Users;
-    return userCollection.findOne(this.userId, {
+    return ReactiveCache.getUser(this.userId, {
       fields: {
         profile: 1,
         username: 1,
@@ -1697,18 +1563,8 @@ Template.cardAssigneePopup.helpers({
   },
 
   memberType() {
-    const user = Users.findOne(this.userId);
+    const user = ReactiveCache.getUser(this.userId);
     return user && user.isBoardAdmin() ? 'admin' : 'normal';
-  },
-
-  presenceStatusClassName() {
-    const user = Users.findOne(this.userId);
-    const userPresence = presences.findOne({ userId: this.userId });
-    if (user && user.isInvitedTo(Session.get('currentBoard'))) return 'pending';
-    else if (!userPresence) return 'disconnected';
-    else if (Session.equals('currentBoard', userPresence.state.currentBoardId))
-      return 'active';
-    else return 'idle';
   },
 
   isCardAssignee() {
@@ -1719,13 +1575,13 @@ Template.cardAssigneePopup.helpers({
   },
 
   user() {
-    return Users.findOne(this.userId);
+    return ReactiveCache.getUser(this.userId);
   },
 });
 
 Template.cardAssigneePopup.events({
   'click .js-remove-assignee'() {
-    Cards.findOne(this.cardId).unassignAssignee(this.userId);
+    ReactiveCache.getCard(this.cardId).unassignAssignee(this.userId);
     Popup.back();
   },
   'click .js-edit-profile': Popup.open('editProfile'),

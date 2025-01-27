@@ -1,15 +1,6 @@
+import moment from 'moment/min/moment-with-locales';
+import { TAPi18n } from '/imports/i18n';
 import { DatePicker } from '/client/lib/datepicker';
-
-Template.dateBadge.helpers({
-  canModifyCard() {
-    return (
-      Meteor.user() &&
-      Meteor.user().isBoardMember() &&
-      !Meteor.user().isCommentOnly() &&
-      !Meteor.user().isWorker()
-    );
-  },
-});
 
 // editCardReceivedDatePopup
 (class extends DatePicker {
@@ -117,6 +108,10 @@ const CardDate = BlazeComponent.extendComponent({
 
   showWeek() {
     return this.date.get().week().toString();
+  },
+
+  showWeekOfYear() {
+    return ReactiveCache.getCurrentUser().isShowWeekOfYear();
   },
 
   showDate() {
@@ -292,6 +287,10 @@ class CardCustomFieldDate extends CardDate {
     return this.date.get().week().toString();
   }
 
+  showWeekOfYear() {
+    return ReactiveCache.getCurrentUser().isShowWeekOfYear();
+  }
+
   showDate() {
     // this will start working once mquandalle:moment
     // is updated to at least moment.js 2.10.5
@@ -317,31 +316,31 @@ CardCustomFieldDate.register('cardCustomFieldDate');
 
 (class extends CardReceivedDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('L');
   }
 }.register('minicardReceivedDate'));
 
 (class extends CardStartDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('L');
   }
 }.register('minicardStartDate'));
 
 (class extends CardDueDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('L');
   }
 }.register('minicardDueDate'));
 
 (class extends CardEndDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('L');
   }
 }.register('minicardEndDate'));
 
 (class extends CardCustomFieldDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('L');
   }
 }.register('minicardCustomFieldDate'));
 
@@ -358,7 +357,7 @@ class VoteEndDate extends CardDate {
     return classes;
   }
   showDate() {
-    return this.date.get().format('l LT');
+    return this.date.get().format('L LT');
   }
   showTitle() {
     return `${TAPi18n.__('card-end-on')} ${this.date.get().format('LLLL')}`;

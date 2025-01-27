@@ -1,3 +1,5 @@
+import moment from 'moment/min/moment-with-locales';
+import { TAPi18n } from '/imports/i18n';
 import {
   OPERATOR_ASSIGNEE,
   OPERATOR_BOARD,
@@ -46,7 +48,6 @@ import {
   PREDICATE_YEAR,
 } from './search-const';
 import Boards from '../models/boards';
-import moment from 'moment';
 
 export class QueryDebug {
   predicate = null;
@@ -539,11 +540,14 @@ export class Query {
             }
           } else if (operator === OPERATOR_LIMIT) {
             const limit = parseInt(value, 10);
-            if (isNaN(limit) || limit < 1) {
+            if (isNaN(limit) || limit < 0) {
               this.addError(OPERATOR_LIMIT, {
                 tag: 'operator-limit-invalid',
                 value,
               });
+              continue;
+            } else if (limit == 0) {
+              // no limit
               continue;
             } else {
               value = limit;
