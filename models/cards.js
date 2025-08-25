@@ -3302,6 +3302,27 @@ if (Meteor.isServer) {
   });
 
   /**
+   * @operation get_card_by_id
+   * @summary Get a Card by Card ID
+   *
+   * @param {string} cardId the card ID
+   * @return_type Cards
+   */
+  JsonRoutes.add(
+    'GET',
+    '/api/cards/:cardId',
+    function(req, res) {
+      const paramCardId = req.params.cardId;
+      card = ReactiveCache.getCard(paramCardId)
+      Authentication.checkBoardAccess(req.userId, card.boardId);
+      JsonRoutes.sendResult(res, {
+        code: 200,
+        data: card,
+      });
+    },
+  );
+
+  /**
    * @operation get_card
    * @summary Get a Card
    *
@@ -4042,7 +4063,7 @@ JsonRoutes.add('GET', '/api/boards/:boardId/cards_count', function(
   * @param {string} cardId the ID of the card
   * @param {string} customFieldId the ID of the custom field
   * @param {string} value the new custom field value
-  * @return_type {_id: string, customFields: object}
+  * @return_type {_id: string, customFields: [{_id: string, value: object}]}
   */
   JsonRoutes.add(
     'POST',

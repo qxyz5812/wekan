@@ -1,14 +1,15 @@
 ## Issue
 
+UPGRADE: https://wekan.fi/upgrade/
+
+Pull requests welcome to fix any broken links at docs directory, and organizing docs/Features and their screenshots to subdirectories of each feature.
+
 Please report these issues elsewhere:
 
 - SECURITY ISSUES, PGP EMAIL: https://github.com/wekan/wekan/blob/main/SECURITY.md
 - UCS: https://github.com/wekan/univention/issues
 
 If WeKan Snap is slow, try this: https://github.com/wekan/wekan/wiki/Cron
-
-**[PLEASE UPGRADE](https://github.com/wekan/wekan/wiki/Backup)** to the newest
-WeKan ® before reporting an issue, if possible.
 
 Please search existing Open and Closed issues, most questions have already been answered.
 
