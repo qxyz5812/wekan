@@ -2,26 +2,10126 @@
 
 Newest WeKan at these platforms:
 
-- [bundle zip at releases](https://github.com/wekan/wekan/releases), docs at
-  - [Linux amd64, arm64, s390x](https://github.com/wekan/wekan/blob/main/docs/Platforms/FOSS/RaspberryPi/Raspberry-Pi.md)
-  - [Windows amd64, works also at Windows arm64](https://github.com/wekan/wekan/blob/main/docs/Platforms/Propietary/Windows/Offline.md)
-  - [Mac amd64, works also with Rosetta2 at Apple Silicon](https://github.com/wekan/wekan/blob/main/docs/Platforms/Propietary/Mac.md)
-- https://wekan.fi/install/
-  - Snap Candidate amd64
-  - Docker amd64
-  - Kubernetes Docker amd64
+- [Install](https://wekan.fi/install/)
+- [Upgrade WeKan](https://wekan.fi/upgrade/)
+- [Docs](https://wekan.fi/docs/)
 
-Fixing other platforms In Progress.
+Versions:
 
-- Node.js 14.x at https://github.com/wekan/node-v14-esm/releases/tag/v14.21.4 and https://nodejs.org/dist/latest-v14.x/
-- MongoDB 6.x and 7.x, or FerretDB/PostgreSQL https://blog.ferretdb.io/building-project-management-stack-wekan-ferretdb/
+- WeKan 8.75 and newer uses Meteor 3.5
+- WeKan 8.43 upgraded to Meteor 3.x, huge thanks to harryadel:
+  - https://harryadel.com/dev-diary-24/
+  - https://harryadel.com/dev-diary-25/
+  - https://harryadel.com/dev-diary-26/
+- WeKan 8.00-8.24 used Colorful Unicode Emoji Icons, versions before and after use mostly Font Awesome 4.7 icons.
+- WeKan 8.00-8.06 had wrong raw database directory setting /var/snap/wekan/common/wekan and some cards were not visible,
+  it was fixed at WeKan 8.07 where database directory is back to /var/snap/wekan/common and all cards are visible.
 
-[How to upgrade WeKan](https://github.com/wekan/wekan/issues/4585)
+# TODO Later
 
-- Question: Broadcom to discontinue free Bitnami Helm charts. WeKan uses Bitnami MongoDB.
-  What to do? Help and PRs welcome at https://github.com/wekan/charts/issues/43 . Thanks!
+Carried to a future release — investigated this session but not finished, with findings recorded for whoever picks
+them up next.
 
-# Upcoming WeKan ® release
+- **Need specific infrastructure we cannot reproduce/verify here (left for environment owners):**
+  [#4560](https://github.com/wekan/wekan/issues/4560) (LDAP→OIDC), [#3707](https://github.com/wekan/wekan/issues/3707)
+  & [#3700](https://github.com/wekan/wekan/issues/3700) (LDAP), [#3575](https://github.com/wekan/wekan/issues/3575)
+  (WebHooks), [#1192](https://github.com/wekan/wekan/issues/1192) (Sandstorm).
+- **LDAP security/config that needs a real LDAP directory to verify safely (an unverified auth change could lock users out):**
+  [#4419](https://github.com/wekan/wekan/issues/4419) (after password→LDAP migration the old local password still
+  works — the safe fix is a `validateLoginAttempt` hook that rejects password-service logins for `authenticationMethod:'ldap'`
+  users, or `$unset services.password` on migration; both must be tested against a directory before shipping),
+  [#4158](https://github.com/wekan/wekan/issues/4158) (LDAP_ENCRYPTION naming/docs: accept `starttls`/`true`, deprecate
+  `tls`/`ssl`, validate unknown values).
+- **Need the running app to reproduce/verify (runtime UI or publication/mergebox state), not unit-testable here:**
+  [#4959](https://github.com/wekan/wekan/issues/4959) & [#4825](https://github.com/wekan/wekan/issues/4825) (per-list
+  card counts on the All Boards page — the `boardLists`/`boardMembers` helpers in `client/components/boards/boardsList.js`
+  were deliberately stubbed to `[]` to stop the #4214 "icons random dance"; re-enabling needs a non-reactive count source
+  and a lists/cards subscription for the dashboard, verified live so #4214 does not return),
+  [#4822](https://github.com/wekan/wekan/issues/4822) (maximized card mis-positioned after scrolling in swimlanes view),
+  [#3826](https://github.com/wekan/wekan/issues/3826) (cannot reorder cards in a list full of subtask cards — drag-drop,
+  data-loss risk), [#5282](https://github.com/wekan/wekan/issues/5282) & [#3252](https://github.com/wekan/wekan/issues/3252)
+  ("Removed nonexistent document" on attachment / comment / checklist delete — a publication/mergebox double-remove, same
+  class as the fixed #5685, not the delete itself),
+  [#4897](https://github.com/wekan/wekan/issues/4897) (OAuth2 users intermittently show stale/missing data — caching/
+  publication timing), [#3276](https://github.com/wekan/wekan/issues/3276) (excessive-time card colour does not refresh to
+  red until focus leaves the card — reactive re-render), [#3189](https://github.com/wekan/wekan/issues/3189) (Worker-role
+  user cannot re-assign a card to themselves after a prior assignee was removed — role/deny permission),
+  [#3576](https://github.com/wekan/wekan/issues/3576) (mobile back button after search returns to settings, not the board),
+  [#3453](https://github.com/wekan/wekan/issues/3453) (cross-board subtask full-path label vanishes after refresh — router),
+  [#3378](https://github.com/wekan/wekan/issues/3378) (SyncedCron "duplicate key" in cronHistory for notification_cleanup —
+  scheduler/dev-reload timing), [#3199](https://github.com/wekan/wekan/issues/3199) (Archive Restore/Delete links need
+  visual separation from neighbouring cards — CSS refinement),
+  [#3144](https://github.com/wekan/wekan/issues/3144) (archived-card activities render "undefined" in board settings —
+  the card lookup returns nothing once the card is archived/unpublished; needs the activity to carry a stored card title
+  or the feed to fall back to "{title} [archived]", verified live),
+  [#3114](https://github.com/wekan/wekan/issues/3114) (mobile card view stays open but blank after another client
+  deletes/moves the card — reactive close-on-remove), [#3037](https://github.com/wekan/wekan/issues/3037) (after moving a
+  card between boards via the REST API, opening it bounces back to the old board — the raw boardId/listId update does not
+  go through the full Card.move() re-home; the dedicated REST move/sort/date/archive path was fixed in #5398/#5399/#5537/
+  #5546, so use that rather than a raw field update), [#3070](https://github.com/wekan/wekan/issues/3070) (using a
+  template from Add Board / the top bar — issue body would not load; needs the app to reproduce).
+- **Already correct in the current code (could not reproduce; endpoint/logic verified by reading):**
+  [#4774](https://github.com/wekan/wekan/issues/4774) (`POST /users/register` is a native handler that returns 403 only
+  when registration is disabled via `forbidClientAccountCreation`; it works by default),
+  [#4055](https://github.com/wekan/wekan/issues/4055) (ISO week number — the native DST-safe `getISOWeek()` is correct;
+  a regression test was added this release).
+- **Incomplete report (no reproduction details provided by the reporter):**
+  [#4593](https://github.com/wekan/wekan/issues/4593) (new team member permissions — issue body empty).
+- **Feature requests / behaviour-by-design rather than bugs:**
+  [#5547](https://github.com/wekan/wekan/issues/5547), [#3843](https://github.com/wekan/wekan/issues/3843)
+  (attachments added in comments not shown in the card attachment list),
+  [#3828](https://github.com/wekan/wekan/issues/3828) (board members seeing all cards on a board is by design — WeKan has
+  no per-card visibility model), [#3823](https://github.com/wekan/wekan/issues/3823),
+  [#3748](https://github.com/wekan/wekan/issues/3748) (linked cards mirror the original rather than owning their own
+  labels/custom fields), [#4023](https://github.com/wekan/wekan/issues/4023) (Japanese font alignment → per-board font
+  request), [#4043](https://github.com/wekan/wekan/issues/4043) (invitation email occasionally sent without a valid
+  code), [#3138](https://github.com/wekan/wekan/issues/3138),
+  [#2204](https://github.com/wekan/wekan/issues/2204) (restrict permanent delete to the Admin role).
+- **Needs a maintainer decision on the intended contract (partly already works):**
+  [#4912](https://github.com/wekan/wekan/issues/4912) (a global `act-editCard` webhook — card title/description edits
+  ALREADY reach the global webhook via `Activities.after.insert` as `act-a-changedTitle` / `act-a-changedDescription`
+  from #3619/#5482; a single consolidated `act-editCard` action needs a decision on which fields count and whether it
+  supplements or replaces the existing per-field events, to avoid duplicate webhook deliveries),
+  [#3113](https://github.com/wekan/wekan/issues/3113) (webhook `user` field shows the full name, not the username — the
+  same `params.user` feeds both the e-mail notification text, where the full name is intended, and the webhook payload,
+  where a username is expected; the safe change is to ADD a `username` field to the webhook rather than repurpose `user`).
+
+# v10.10 2026-07-21 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix: on the phone All Boards layout, board titles were cut off the right edge and
+  workspace names were hard-cut in the narrow menu. The board column now shrinks to
+  its track (min-width:0) so the tiles and titles fit on screen, the mobile tile's
+  drag handle is smaller so more of the title shows, and workspace names truncate with
+  an ellipsis instead of mid-word](https://github.com/wekan/wekan/commit/576f44ff592cdae7d3bae65f0486a33d248f1980).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their
+translations.
+
+# v10.09 2026-07-21 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix: on phone-sized touch screens the All Boards page put the board icons BELOW
+  the left menu and search bar (a single stacked column), and because dragscroll
+  does not work over the menu / search area you could not drag-scroll down to the
+  boards below the fold. The board icons now stay in their own column on the RIGHT
+  (narrow left menu, boards right) in both mobile and desktop mode, and BOTH columns
+  are their own drag-scrollable areas — a tall left menu and the boards can each be
+  scrolled down to. In RTL languages the layout mirrors automatically (menu on the
+  right, boards on the left) via the direction-aware grid and logical
+  borders](https://github.com/wekan/wekan/commit/b3d0eb33fe3a7528ef802e7addc7df70c5abdcf1).
+  Thanks to xet7.
+- [Fix: the Files admin report (Admin Panel / Reports / Files) was stuck on the
+  loading spinner and never listed its files. An `await` in the `attachmentsList`
+  publication never resolved (a ReactiveCache read / the ostrio FilesCollection
+  cursor's old-CFS backward-compatibility fallback), so `this.ready()` never ran and
+  the subscription never became ready — and the report template only renders once
+  ready. The publication now signals readiness UP FRONT (then streams the page rows,
+  which appear reactively), and computes its data by querying the Boards / Cards /
+  `Attachments.collection` collections directly with `fetchAsync` instead of through
+  ReactiveCache, so it always resolves. The client helpers are also defensive so a
+  data error can never blank the
+  report](https://github.com/wekan/wekan/commit/00ad2c5a688d500e3a22f43b0625498234ef0f6c).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their
+translations.
+
+# v10.08 2026-07-21 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Verified that list widths on public boards (#5659) are fixed: uncustomized
+  lists render the one shared default width for logged-out public-board visitors
+  and members alike, board-wide widths apply to everyone, and anonymous viewers
+  customize via localStorage. The `listWidthDefaults.test.cjs` regression test
+  existed but was never wired into `npm run test:unit:node`, so it did not run; it
+  is now wired in so the fix stays
+  verified](https://github.com/wekan/wekan/commit/88642c3bd439c816e783f62281b651d6839a04a4).
+  Thanks to NadavTasher and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their
+translations.
+
+# v10.07 2026-07-20 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix: the Statistics board view never rendered. `statsView.jade` / `.js` / `.css`
+  were not imported anywhere in the client build, so the `statsView` Blaze template
+  was never registered — switching a board to the Statistics view left the board
+  canvas empty (the header still showed "Statistics", which only reflects the saved
+  board view). The three files are now imported alongside the other board views, so
+  the view renders its board counts and time
+  summary](https://github.com/wekan/wekan/commit/616304e2d0f043afbd03cd5d2af52ca7eeb79361).
+  Thanks to xet7.
+- [Fix: on phones the All Boards list grew to the full height of all its boards
+  instead of staying a bounded, scrollable region, so boards below the fold were
+  clipped by the surrounding `overflow:hidden` and could not be reached. Two
+  leftover `.board-list.mobile-view` rules (`min-height: 100vh` and a phantom
+  `::after`) re-introduced the exact bug an earlier fix removed elsewhere; removing
+  them lets the bounded height take effect and the two-column list
+  scrolls](https://github.com/wekan/wekan/commit/6ca11cdf8360f8f777fbe9fed22c027d934191cd).
+  Thanks to xet7.
+- [Files admin report (Admin Panel / Reports / Files): read the underlying reactive
+  `Attachments.collection` instead of the ostrio FilesCollection wrapper, whose
+  FilesCursor does not reliably re-run in a Blaze
+  helper](https://github.com/wekan/wekan/commit/5b4443df23e42c11c73da1f664fc1d30daf59948).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their
+translations.
+
+# v10.06 2026-07-20 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix: force `changeStreams` out of the reactivity order for FerretDB on all
+  platforms, not only the snap. FerretDB v1 does not implement MongoDB change
+  streams, so a `$changeStream` aggregate returns "not implemented" and Meteor
+  busy-loops retrying it (high FerretDB CPU, cards not opening). The snap fix
+  already stripped `changeStreams` from `METEOR_REACTIVITY_ORDER`; the same strip
+  is now applied to the remaining FerretDB run-paths — the standalone FerretDB
+  release `start-wekan.sh`, the FerretDB Docker image `wekan-entrypoint.sh`, and
+  the Windows `start-wekan.bat` — so `changeStreams` can never enter the order
+  however it was passed in (OpLog + polling only). The Docker compose files
+  already hardcode safe values, and the real-MongoDB `start-wekan.sh` /
+  `start-wekan.bat` are unchanged (#6492, #6493, #6480)](https://github.com/wekan/wekan/commit/0376665882267d0e77116a1182010a4f35882a3f).
+  Thanks to uusijani, mueschel and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their
+translations.
+
+# v10.05 2026-07-20 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix: FerretDB high CPU and cards not opening — FerretDB v1 does not implement
+  MongoDB change streams, but the snap default reactivity order put `changeStreams`
+  first, so Meteor issued $changeStream aggregates that FerretDB rejected thousands of
+  times per second (a busy-loop pinning FerretDB CPU at 100-390% — the "aggregate=…"
+  that dominated the operations summary — and starving board/card loading so cards
+  would not open). The snap now forces `changeStreams` out of the reactivity order for
+  FerretDB (oplog + polling only); real MongoDB is unchanged (#6492, #6493, #6480)](https://github.com/wekan/wekan/commit/383b3dd432194d157c84b5ed30972098883cd2fd).
+  Thanks to uusijani, mueschel and xet7.
+- [Fix: switching the board view now persists — the setBoardView method did not await
+  the profile write, so the client reloaded before it was saved (and a rejected write
+  was invisible), making view switching (e.g. to the new Statistics view) unreliable;
+  and All Boards on phones now lays the board icons out as a real 2-column CSS grid so
+  at least 2 show per row, where the earlier float rule did not (#6488)](https://github.com/wekan/wekan/commit/f79c320d121b6f59265a1180d555c6e376255d97).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their
+translations.
+
+# v10.04 2026-07-20 WeKan ® release
+
+This release adds the following new features:
+
+- [Safe filename handling everywhere: attachment and avatar names are always shown
+  clean — URL-decoded, normalized to generally-used characters (Unicode NFKC plus
+  confusable-homoglyph folding, so a typosquatting `pаypal.exe` with a Cyrillic `а` is
+  shown as `paypal.exe`), invisible/control/bidi characters removed and HTML/JS/XML
+  markup stripped. Uploads are hardened (exploit and EICAR virus-test filenames
+  rejected, extension corrected to the real detected type, length capped to a portable
+  30 chars), SVG JavaScript and XML-loop content is sanitized at a staging path before
+  storage, existing files can be corrected/sanitized on the fly, storage moves check
+  free disk space, and migrations fix + disambiguate names. One general `cleanFileName`
+  function via `{{cleanFilename}}` / `{{downloadFilename}}`. Design at
+  docs/Features/Filename/Filename.md](https://github.com/wekan/wekan/commit/81dbecfb8719ff99dac367e9921e44282c8b3ded).
+  Thanks to xet7.
+- [Log every filename/content sanitization to Admin Panel / Problems: whenever a name
+  or file required sanitization (upload, migration, existing-file corrector, viewing),
+  the Security report records WHEN, WHO uploaded it, FOR WHAT REASON (URL-encoding,
+  invisible characters, typosquatting, the exploit kind such as JavaScript / XML code /
+  XML loop, wrong file type, too long), the filename from → to, and WHERE (board ›
+  swimlane › list › card, plus organization and team)](https://github.com/wekan/wekan/commit/fdb683892d11ec1ab2b2c75fa865ac2abea6bfe4).
+  Thanks to xet7.
+- [CPU-usage monitor + governor + Admin Panel / Problems / CPU usage report: watch
+  system-wide CPU, record only the START and END of each sustained high-CPU period
+  with what WeKan/FerretDB were doing, the automatic mitigation taken and whether it
+  helped; a governor pauses long batch operations to yield the CPU. On high CPU WeKan
+  asks the bundled FerretDB (via its `throttle` command) to slow down in an adaptive
+  feedback loop, FerretDB also self-regulates on its own and reports its own process
+  CPU% so a core-peg is visible even when system-wide CPU looks moderate. Design at
+  docs/Features/Admin-Panel/Problems/CPU-usage.md](https://github.com/wekan/wekan/commit/1c636f09b35eb48f777bef847f4df5f40c0df969).
+  Thanks to xet7.
+- [Automatic adaptive card loading (no admin toggle): WeKan decides per board by size —
+  a board over the threshold (default 500 cards, `CARDS_LOADING_LAZY_THRESHOLD`) loads
+  only the visible cards (infinite-scroll windows) plus a live count, so very large
+  boards stay fast; smaller boards keep loading every card. The board publication also
+  publishes comments/attachments with one board-level cursor instead of one per card
+  (an N+1 that pinned FerretDB CPU), with supporting indexes](https://github.com/wekan/wekan/commit/96c7faa87254529cf2531ff2c6027efd136ee753).
+  Thanks to xet7.
+- [Statistics board view (Finnish: Tilastot): a full-width board view alongside
+  Swimlanes / Lists / Calendar / Gantt / Table showing the board's card-loading mode,
+  counts (swimlanes, lists, cards, archived cards, labels, members, custom fields) and
+  a time-spent summary; counts come from the server so they are accurate even in lazy
+  mode, and its text can be selected and copied with mouse or finger. Design at
+  docs/Features/Board/Sidebar/Status.md](https://github.com/wekan/wekan/commit/3aefa94a66dd9542e690bccd5aedac73d8a50c11).
+  Thanks to xet7.
+- [Admin Panel / Problems documentation reorganized under Admin-Panel/Problems/ with new
+  RAM-usage and Disk-usage design specs (log how much RAM+swap / disk is used and record
+  only the start and end of each sustained high-usage period, mirroring the CPU-usage
+  monitor)](https://github.com/wekan/wekan/commit/f306061273e12958d715452f27d19c8001925a2c).
+  Thanks to xet7.
+- [Admin Panel report improvements: paginated, searchable report tables (Files, Rules,
+  Boards, Cards, Impersonation) that load one page at a time via index-backed sorts
+  instead of the whole collection, theme-following buttons, and the Files report shows
+  every filename decoded and cleaned](https://github.com/wekan/wekan/commit/dd21cfdc0519bb433737976ea3155f9db18143e0).
+  Thanks to xet7.
+- [Organize docs/Features into categories (Admin-Panel, Board, Cards, Editor, Reports,
+  Automation, Lists, Troubleshooting) and update all links](https://github.com/wekan/wekan/commit/54cc0ec614fcbb2abf059dd07b75894cf7ea4fe6).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix: removing a member from a board now visibly works — the sidebar member list kept
+  showing removed members (removeMember keeps the entry with isActive:false), so
+  "Remove from board" looked like it did nothing; the list now shows only active members
+  (#6479)](https://github.com/wekan/wekan/commit/4a3800973a3f93321a7c2f92ade95d91ffb29153).
+  Thanks to mueschel and xet7.
+- [Fix: opening a board no longer pins FerretDB CPU / takes minutes — the board
+  publication opened one live comments cursor and one attachments cursor per card (an
+  N+1 that pinned FerretDB/SQLite CPU), now one board-level cursor each plus indexes;
+  FerretDB also reports its own process CPU% so Problems shows a core-peg (#6480)](https://github.com/wekan/wekan/commit/5d56af56cd419ef09b69ed9cdcbdb30ad1b56ba1).
+  Thanks to mueschel and xet7.
+- [Fix: All Boards on mobile is scrollable again and shows at least 2 board icons per
+  row — the list was forced min-height:100vh so it grew to fit and was clipped by the
+  overflow:hidden wrapper; it now has a bounded height + overflow-y:auto, and the left
+  menu is narrowed so the boards get room (#6488)](https://github.com/wekan/wekan/commit/b4fd7d851f887930c0640a687847bf49223ee2ab).
+  Thanks to mimZD and xet7.
+- [Fix: Rules → Workflow view can create rules again — rulesWorkflow.js used TAPi18n
+  without importing it, so building a rule threw ReferenceError and the Add Rule handler
+  aborted before saving (#6489)](https://github.com/wekan/wekan/commit/e424fb1bba82d168afa6e0cafae57a4fb4ad6b58).
+  Thanks to xet7.
+- [Fix: Rules list — Delete and "View rule" act on the clicked rule, not the first — the
+  buttons live in the rulesList child template but their handlers on the parent
+  rulesMain used Template.currentData(), so the rule id was null (delete failed with
+  "Match failed", View always opened the first rule); the buttons now carry an explicit
+  data-rule-id (#6490)](https://github.com/wekan/wekan/commit/25f9b468256279d8f483657372e70da379c9e604).
+  Thanks to xet7.
+- [Fix: a rule's action never executed even though its trigger matched — the trigger
+  match required fields a moveCard trigger omits (oldListName), and a Mongo $in does not
+  match a missing field unless null is in the list, so the rule silently never fired;
+  null is now included for every field, like the cardTitle handling (#6491)](https://github.com/wekan/wekan/commit/e6b001320c27a11fdbd15e17f2ad230bdeab2290).
+  Thanks to xet7.
+- [Fix: admin reports load on FerretDB — the paginated report publications returned a
+  sorted+limited live cursor, whose limited live observe hangs on FerretDB's OpLog, so
+  the report was stuck on the loading spinner; they now publish the page manually so
+  ready always fires](https://github.com/wekan/wekan/commit/dded8ed47695092a698ab3e34a8abc5c6f567607).
+  Thanks to xet7.
+- [Fix: the paginated admin reports never get stuck on the loading spinner if a report
+  subscription fails — they now handle onStop, clearing the spinner and surfacing the
+  error](https://github.com/wekan/wekan/commit/5949e85cfd9996651e1844fa6238d5a0f2da793e).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their
+translations.
+
+# v10.03 2026-07-19 WeKan ® release
+
+This release fixes the following CRITICAL VULNERABILITIES, all reported by meifukun:
+[RedirectBleed](https://wekan.fi/hall-of-fame/redirectbleed/),
+[SourceBleed](https://wekan.fi/hall-of-fame/sourcebleed/),
+[LiveBleed](https://wekan.fi/hall-of-fame/livebleed/),
+[CasBleed](https://wekan.fi/hall-of-fame/casbleed/),
+[MetricsBleed](https://wekan.fi/hall-of-fame/metricsbleed/),
+[ImpersonateBleed](https://wekan.fi/hall-of-fame/impersonatebleed/) and
+[InviteBleed](https://wekan.fi/hall-of-fame/invitebleed/):
+
+- [Fix RedirectBleed: avatar localization validated only the original host and then followed redirects with native fetch, so a public avatar URL could 302 to a loopback/private/metadata address (SSRF). Avatars are now fetched via the DNS-pinned, redirect-rejecting fetchSafe, and profile.avatarUrl is scheme-validated (http/https/data:image/local) at write time](https://github.com/wekan/wekan/commit/1669a1af196ba48395e01376b3a0fc784ad42cc3).
+  Thanks to meifukun and xet7.
+- [Fix SourceBleed: a Trello board imported with a javascript: url was stored as an activity source.url and rendered as a clickable activity-sidebar link, so a board admin clicking it ran attacker JavaScript (stored XSS, Meteor.loginToken theft). Only http(s) source URLs are now stored and linked](https://github.com/wekan/wekan/commit/1669a1af196ba48395e01376b3a0fc784ad42cc3).
+  Thanks to meifukun and xet7.
+- [Fix LiveBleed: the live Trello import fetched attacker-controlled attachment/background/avatar URLs with bare fetch (no SSRF guard) and stored the response for read-back through the attachment API (non-blind SSRF). Every live-import download is now gated by validateAttachmentUrl, matching the offline import path](https://github.com/wekan/wekan/commit/1669a1af196ba48395e01376b3a0fc784ad42cc3).
+  Thanks to meifukun and xet7.
+- [Fix CasBleed: CAS login stored validated user data in a module-global (_userData) shared across concurrent logins, so two logins could race and issue an attacker a session for a victim's account. The user data is now bound per credential token](https://github.com/wekan/wekan/commit/1669a1af196ba48395e01376b3a0fc784ad42cc3).
+  Thanks to meifukun and xet7.
+- [Fix MetricsBleed: the /metrics endpoint trusted a client-supplied X-Forwarded-For header unconditionally, so anyone could forge a whitelisted IP and read operational metrics. XFF is now trusted only when METRICS_TRUST_PROXY is set (parsed spoof-resistantly from the right); otherwise the real socket address is used](https://github.com/wekan/wekan/commit/1669a1af196ba48395e01376b3a0fc784ad42cc3).
+  Thanks to meifukun and xet7.
+- [Fix ImpersonateBleed: several board export endpoints treated any historical ImpersonatedUsers record as an authorization bypass (canExport || impersonateDone), so a demoted former admin could export private boards forever. The impersonation bypass is removed; export requires real board visibility (canExport) only](https://github.com/wekan/wekan/commit/1669a1af196ba48395e01376b3a0fc784ad42cc3).
+  Thanks to meifukun and xet7.
+- [Fix InviteBleed: invitation registration used a 6-digit Math.random() code (~900k keyspace) with no throttling, brute-forceable to hijack an invited account and its private boards. Codes are now a 128-bit crypto.randomBytes value and account creation is rate-limited (DDPRateLimiter)](https://github.com/wekan/wekan/commit/1669a1af196ba48395e01376b3a0fc784ad42cc3).
+  Thanks to meifukun and xet7.
+
+The OIDC login shared-serviceData race from the same report was already fixed earlier
+(#4897 moved the per-login `profile`/`serviceData`/`userinfo` objects inside the OAuth
+callback); the new source-guard test verifies it stays that way. Thanks to meifukun and xet7.
+
+and adds the following new features:
+
+- [Added an automatic security/speed/tests remediation-logging subsystem (design docs docs/Security/Remediation/WeKan.md and FerretDB.md). WeKan's runtime guards (SSRF, upload/avatar rejection and sanitization, forged X-Forwarded-For, export authz, invite rate-limit, …) now record each block/sanitize/remediate event into the existing WeKan database (a single `eventlog` collection, stream security/speed/tests) via normal Meteor JavaScript queries — no new files or databases under WRITABLE_PATH, so it works the same on FerretDB and MongoDB. FerretDB reports its problems to WeKan, which records them. Events use general category names plus the hall-of-fame *Bleed names](https://github.com/wekan/wekan/commit/1d82ef8eae344ca0565d0858fc697f470e471dd7).
+  Thanks to xet7.
+- [Added Admin Panel → Problems (a new button on the 2nd header bar to the right of the Info/version button, with a warning icon that turns red when there are new problems). The old Reports button is removed and its page becomes the Problems page: a left menu with Summary, Security, Speed and Tests above the moved Broken Cards/Files/Rules/Boards/Cards/Impersonation reports. Summary is a checkbox list of problem areas with one Acknowledge button (the only place to acknowledge, which resets the per-area new-problem count); Security/Speed/Tests are read-only, paginated, searchable event tables](https://github.com/wekan/wekan/commit/0085f7fbfa81e820ce0736dd28b2b0786ac6e41c).
+  Thanks to xet7.
+
+and adds the following updates:
+
+- [Reworked the Admin Panel → Problems pagination tables (Files/Rules/Boards/
+  Cards/Impersonation and the Security/Speed/Tests event tables): the search field
+  and pagination controls now sit in one row (pagination on the right, RTL-aware),
+  the redundant Search button is gone (typing + Enter searches), and the controls
+  follow the current theme — they use var(--theme-accent), so Member Settings →
+  Change color recolors them](https://github.com/wekan/wekan/commit/4f1afed25).
+  Thanks to xet7.
+- [Made buttons follow the theme: the global button base and the primary buttons
+  (forms.css) plus the admin and People-panel buttons now use var(--theme-accent,
+  <original>), so a Change-color theme override recolors buttons across the app
+  while the default look is unchanged](https://github.com/wekan/wekan/commit/c94c313a7).
+  Thanks to xet7.
+- [Admin Panel → Files report: URL-encoded filenames (e.g. "%D0%93%D1%80") are
+  decoded for display, filenames are always shown as plain text (never markdown/
+  HTML), a name hiding invisible/zero-width/bidi characters gets a red warning
+  triangle on the left and each invisible character is replaced inline by its red
+  Unicode name (e.g. "evil[U+200B ZERO WIDTH SPACE].png"), and a filter lists only
+  such names](https://github.com/wekan/wekan/commit/a4aa2f877).
+  Thanks to xet7.
+- [Removed clickable column-header sorting from the board Table view and the Admin
+  Panel → People → Domains table; both now show a stable fixed order (and keep
+  their search + pagination). Sorting a server-paginated table means sorting the
+  whole set, which fights the per-page perf fix](https://github.com/wekan/wekan/commit/db68996cc).
+  Thanks to xet7.
+- [Enabled FerretDB OpLog tailing by default so Meteor stops poll-and-diff, the
+  main fix for FerretDB sitting at 100–390% CPU on busy boards. With FerretDB
+  there is no MongoDB oplog, so Meteor re-ran every live query on a timer;
+  FerretDB v1 now ships an OpLog (auto-created capped local.oplog.rs + replica-set
+  hello handshake), so every FerretDB launch path starts ferretdb with
+  --repl-set-name=rs0 and points WeKan at it via MONGO_OPLOG_URL, and Meteor
+  TAILS the OpLog instead of polling. OpLog is used ONLY when tailing actually
+  works: every platform that defaults to FerretDB — Snap, Sandstorm, the Docker
+  image/compose and the prebuilt bundle — starts ferretdb with --repl-set-name and
+  sets METEOR_REACTIVITY_ORDER=oplog,polling, so Meteor falls back to polling if the
+  OpLog cannot be established (a broken/absent OpLog never blocks startup).
+  Kill-switch WEKAN_FERRETDB_OPLOG=false reverts to
+  polling only. Admin Panel → Version shows which driver is actually live
+  ("Reactivity mode") next to the configured METEOR_REACTIVITY_ORDER and
+  DDP_TRANSPORT, so you can confirm OpLog came up rather than fell back. Also
+  trimmed the client activity feed page from 500 to 50 rows (infinite scroll
+  still loads more on demand)](https://github.com/wekan/wekan/commit/1039b2e3286135a1749aeab9526b52d40fb82e43).
+  Thanks to uusijani, Nissulya and xet7.
+- [Updated SECURITY.md](https://github.com/wekan/wekan/commit/eebccaf291c2751154f127095d5b7610399f0f2d).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix the Admin Panel → Problems → Cards report spinning while it loaded on big
+  sites: it paginates, but sorted by an unindexed { boardId, sort }, so every page
+  full-sorted all cards (11761+) in memory. It now sorts by the existing
+  { boardId, createdAt } index, so one page is a bounded index scan; also added a
+  { stream, at } index for the Security/Speed/Tests
+  tables](https://github.com/wekan/wekan/commit/fab8c1035).
+  Thanks to xet7.
+- [Fix the Admin Panel → Translation page loading the ENTIRE Translations
+  collection at once: it subscribed with a hardcoded limit of 0 (= no limit). It
+  now uses the infinite-scroll window, loading a page at a
+  time](https://github.com/wekan/wekan/commit/e88665316).
+  Thanks to xet7.
+- [Fix the Board Archive → Boards list loading every archived board at once: it now
+  pages server-side (30 per page) with a search box and prev/next controls, so only
+  the current page is loaded](https://github.com/wekan/wekan/commit/da99baf68).
+  Thanks to xet7.
+- [Fix "Did not check() all arguments" server-log spam from the Admin Panel →
+  Problems detail pages: the eventLogCount/eventLogPage methods awaited the admin
+  check before check()ing their arguments, so a non-admin call (or one before
+  admin status resolved) made Meteor's audit-argument-checks mask the real error.
+  check() now runs first in every argument-taking event-log
+  method](https://github.com/wekan/wekan/commit/7da21c46b).
+  Thanks to xet7.
+- [Fix MongoDB 3.x → FerretDB v1 migration failing on non-finite numbers: cards
+  whose `sort` was ±Infinity or NaN (written by old WeKan before #6472) were
+  rejected by FerretDB/SQLite ("infinity values are not allowed") and dropped,
+  so boards stayed stuck on the loading spinner. The migration now clamps every
+  non-finite double to a finite 0 before insert, and a new `nonfinite-sort-repair`
+  startup schema-upgrade step heals the same corruption in an already-running
+  database (MongoDB or FerretDB)](https://github.com/wekan/wekan/commit/2f7b49d8def4bb03d233b83671ac6c78308124ea).
+  Thanks to Nissulya and xet7.
+- [Fix LDAP `mail` → `email` field mapping returning undefined (regression since
+  the ldapjs → ldapts move): the sync read the mapped attribute case-sensitively
+  while the rest of wekan-ldap reads it case-insensitively, so a directory that
+  returns the attribute with a different case synced no email address. It is now
+  read via getLDAPValue() like everywhere else](https://github.com/wekan/wekan/commit/2f7b49d8def4bb03d233b83671ac6c78308124ea).
+  Thanks to Nissulya and xet7.
+- [Fix a memory/listener leak in board and CSV export: each write paused on
+  socket backpressure leaked one 'error' listener on the response
+  ("MaxListenersExceededWarning: 11 error listeners added to [ServerResponse]"),
+  which on a large export grew unbounded. Both listeners are now removed once the
+  write settles](https://github.com/wekan/wekan/commit/2f7b49d8def4bb03d233b83671ac6c78308124ea).
+  Thanks to uusijani and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v10.02 2026-07-19 WeKan ® release
+
+This release adds a new developer documentation set and release automation.
+
+It adds the following documentation, a new `docs/Design/Autoupdate/` set describing
+how software is installed and updated — manually and automatically (Snap-like) — on
+every operating system, and how to release WeKan to more platforms:
+
+- [Added why the ppc64el/s390x snap builds fail on core24 (the QEMU multiarch action caps at core22), moved to Autoupdate/Forks/Snap-Core.md](https://github.com/wekan/wekan/commit/742fc9221a6671dbf072e06a15cd3fd8bf409f32).
+  Thanks to xet7.
+- [Added Windows install/update platform comparison (manual vs automatic, like Snap)](https://github.com/wekan/wekan/commit/3bfc6cce56e167e0b61ea674cd5e13b51c81092c).
+  Thanks to xet7.
+- [Added macOS install/update platform comparison](https://github.com/wekan/wekan/commit/2a878d55e7d4cf04ba5896e87e6f49ab338dda69).
+  Thanks to xet7.
+- [Added per-OS install/update comparison docs for all operating systems (Linux, BSD, Haiku, Amiga, RISC OS, Solaris/illumos, AIX, HP-UX, OpenVMS, z/OS, ArcaOS, ReactOS, FreeDOS, Plan 9, Redox, SerenityOS, Android, iOS, ChromeOS, HarmonyOS, Ubuntu Touch, Sailfish, postmarketOS, KaiOS, Tizen, webOS and TV/streaming OSes), plus the Snap-Ondra-Gantt.md variant-snap spec](https://github.com/wekan/wekan/commit/cf1823b510b4abd67c8c32f605ddcfc956ea8802).
+  Thanks to xet7.
+- [Added UCS.md: releasing the Docker WeKan UCS App Center app with automatic MongoDB 3.x to FerretDB v1 SQLite migration](https://github.com/wekan/wekan/commit/58c0e6d1f8bfabc624c870c9e91c6a54f0877cda).
+  Thanks to xet7.
+- [Added Nextcloud.md: building WeKan as a Nextcloud ExApp, App Store publishing, and AI (Task Processing API) / Deck / OIDC SSO integrations](https://github.com/wekan/wekan/commit/8ae0ee54460444f6517fbe5a63f6ba143d5b6277).
+  Thanks to xet7.
+
+and the following documentation reorganization:
+
+- [Moved Mac.md into docs/Platforms/Propietary/Mac/ and updated all links](https://github.com/wekan/wekan/commit/8cf7dd68cc3a6cf16362dc58ba789cff1d361564).
+  Thanks to xet7.
+- [Moved the auto-update dev docs into docs/Design/Autoupdate/](https://github.com/wekan/wekan/commit/48a60a1141cafdb077239f619b8d03fb4d1f8a97).
+  Thanks to xet7.
+- [Moved the per-OS comparison docs into Autoupdate/OS/](https://github.com/wekan/wekan/commit/c1ffed59a7a54bc3b28d94a243522eee20d0b791).
+  Thanks to xet7.
+- [Moved Autoupdate/Snap.md to Autoupdate/Forks/Snap-Core.md and repointed links](https://github.com/wekan/wekan/commit/cf55da122ac31ae14c17780ea027c119e00f3abf).
+  Thanks to xet7.
+
+and the following release automation:
+
+- [Added guarded snap-variants / ucs / nextcloud publish jobs to release-all.yml (dormant until their secrets are set, so ordinary releases are unaffected)](https://github.com/wekan/wekan/commit/2054ea2b54a193b9e53267b3dc3fbe15056c9e1e).
+  Thanks to xet7.
+
+and adds the following updates:
+
+- [Upgraded filesize from 11.0.17 to 11.0.22](https://github.com/wekan/wekan/commit/ccb7a8e91c2b1e3fe3e8db86007cc3f92d11f85a).
+  Thanks to dependabot.
+- [Upgraded dompurify from 3.4.11 to 3.4.12](https://github.com/wekan/wekan/commit/963f72ac88df708d225cd756aec1408a114d77c7).
+  Thanks to dependabot.
+- [Upgraded @aws-sdk/client-s3 from 3.1085.0 to 3.1090.0](https://github.com/wekan/wekan/commit/144bed0eda0a860acbfa44e4036bbd784c17f8fc).
+  Thanks to dependabot.
+- [Upgraded actions/setup-node from 6 to 7](https://github.com/wekan/wekan/commit/1f11ad26027aed362b3dfc23126ef7af88a01b01).
+  Thanks to dependabot.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v10.01 2026-07-18 WeKan ® release
+
+This release adds the following features:
+
+- **Member Settings — optional "Submit editors with Enter"**. A new per-user setting in the Member Settings
+  (Change Settings) popup, saved to `profile.submitOnEnter` and **off by default**: when on, plain **Enter** saves
+  the card title, description and other inline editors and **Shift+Enter** inserts a new line; when off, behaviour is
+  unchanged (Ctrl/Cmd+Enter saves). This restores the fast Enter-to-save workflow for users who prefer it without
+  regressing #4236. [Setting](https://github.com/wekan/wekan/commit/bb6b0d5477368a97ba5cc1c01bdb598dcbe68cd2), [translated to all languages](https://github.com/wekan/wekan/commit/b8bb00465037389eb5829157441f2b75819353d9). Thanks to **xet7**.
+
+- **Right board sidebar — drag the edge to resize its width** (desktop). Drag the sidebar's edge like a spreadsheet
+  column; the width is saved to `profile.sidebarWidth` for logged-in users and to browser `localStorage` for
+  anonymous users on a public board, then re-applied on load. The handle uses logical positioning, so in LTR it is
+  the left edge of the right-docked sidebar and in RTL the right edge of the left-docked sidebar (drag direction
+  inverts); on phones the sidebar stays full width. [Feature](https://github.com/wekan/wekan/commit/354b7804b577c2ca92b479b7bd2ef595cc9212d3),
+  [tooltip translated to all languages](https://github.com/wekan/wekan/commit/1284afc588d6a52f89fdbb80d6f6ede9bc6bdfeb). Thanks to **xet7**.
+
+and fixes the following bugs:
+
+- **Upgrade migration no longer drops cards/activities whose exported data holds `NaN` or `Infinity`**
+  ([#6481](https://github.com/wekan/wekan/issues/6481)). mongo 3.x `mongoexport` emits non-finite doubles as the bare
+  tokens `NaN`/`+Infinity` (e.g. a card's `"sort":+Infinity`, an activity's `"value":NaN`), which are not valid JSON,
+  so `EJSON.parse` threw and the whole document was dropped — leaving boards/cards missing after an otherwise
+  "successful" 6.09 → 10.x migration. Those bare tokens are now rewritten (outside string literals) to the canonical
+  EJSON `{"$numberDouble":"…"}` form so the document migrates instead of being lost. [Fix](https://github.com/wekan/wekan/commit/e0991d6602c915e13d77776af36ecac410965909). Thanks to
+  **Nissulya** and **xet7**.
+
+- **Add List — the inline composer's previous options are back**
+  ([#6465](https://github.com/wekan/wekan/issues/6465)). The per-list-header inline Add List composer had been
+  reduced to just a title input; the **"add after which list" position selector** (pre-selecting the list whose
+  header opened it) and the **"or template"** link are restored. [Fix](https://github.com/wekan/wekan/commit/b71461d90c6a7d9ef9a835cf151181e15c84526d). Thanks to **csonkaoszimt**
+  and **xet7**.
+
+- **Right sidebar width no longer doubles on wide screens, and its input fields fill the width**. The sidebar used
+  `width: 30vw`, so it grew unbounded on very wide screens (looking right only at mid widths); it is now clamped. The
+  filter text inputs (Filter List by Title, Filter by card title, …) had no width and rendered narrow with a big gap
+  on the right; they now fill the padded content width with equal spacing on both sides.
+  [Fix](https://github.com/wekan/wekan/commit/b8a21e4ce3acca427a25f11bcb8c0fdf6bc26ee3). Thanks to **xet7**.
+
+- **The Multi-Selection sidebar "Copy selection" button showed its raw translation key**. The `copy-selection` key
+  was missing from every language file — including the English source — so i18next had no value to fall back to. It
+  was added ("Copy selection") and translated to all languages. [Fix](https://github.com/wekan/wekan/commit/72042b7d796ce66c9f9da637c90e84493b67b3c1). Thanks to **xet7**.
+
+- **Follow-up fixes surfaced by the full test run.** Now that generic Chinese (`zh`) is its own registered language,
+  a bare `zh` browser tag resolves to that entry (Simplified Chinese) instead of the old `zh → zh-Hans` alias, which
+  is removed; and the board-actions end-to-end test opens the board menu from the right sidebar (the header Board
+  Settings cog was removed). [Fix](https://github.com/wekan/wekan/commit/08cfe2d7881aee399dd0e0a05629096e3027b9b2).
+  Thanks to **xet7**.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v10.00 2026-07-18 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated Sandstorm Backup docs](https://github.com/wekan/wekan/commit/50dd05ceee9aa954bb09c239ed057334de63015a). Thanks to robertdahlem and xet7.
+
+and adds the following features:
+
+- **WeKan has been translated to 154 languages. Thanks to xet7.** Every language file in
+  `imports/i18n/data/` is now filled in (previously most were largely English). Each language matches its own
+  existing terminology as a glossary plus standard Kanban terms; product/brand names, acronyms, placeholders and
+  markup are preserved; regional variants were seeded from their base language; and a few wrong ones were corrected
+  (Wu Chinese `wuu-Hans` was registered; the `wa-RR` file is Waray/`war`, not a Walloon variant, so it was
+  re-translated; Wolof/Malay display names were fixed) so that **all languages are browser-detectable and visible in
+  the Change Language popup**. `releases/translations/push-all-translations.sh` force-pushes every language to
+  Transifex. Commits:
+  - [Finnish: translate newest UI strings (theme, font, size, colors, Sandstorm)](https://github.com/wekan/wekan/commit/061eba8b7aa4c96e356c46c0e47fb22b1b773f8d)
+  - [i18n: translate new admin/import-export strings to Finnish](https://github.com/wekan/wekan/commit/687a4af8617c0b06f98e20b283b0a2fd329a76a3)
+  - [releases: add translations-push-all-translations.sh (force-push all languages)](https://github.com/wekan/wekan/commit/a9f2e9f50cbb55eb865478ac14ce2ac1d80b5913)
+  - [i18n: translate untranslated strings (wave 1: zh-TW, pt-BR, da, he, sv)](https://github.com/wekan/wekan/commit/63bda22faacd430f4680c9cbe0ce521129096a5e)
+  - [i18n: translate untranslated strings (wave 2: 15 major languages)](https://github.com/wekan/wekan/commit/7691829cdb293796eab7794eae6c0cb4ec829e6b)
+  - [i18n: seed 32 regional variants from their translated base languages](https://github.com/wekan/wekan/commit/ea4a10c212c8037b833ece0010032f6a8d52b9a8)
+  - [i18n: seed close-relative lects as baselines (cmn, wuu, yue, ja-Hira, vls, ary)](https://github.com/wekan/wekan/commit/c795d13450fc7fea5f9cc55fbdc1ac843aeafb6d)
+  - [i18n: register generic Chinese (zh) so it is selectable and browser-detectable](https://github.com/wekan/wekan/commit/75ec34e83726f7792240edef70de59648c96ef35)
+  - [i18n: translate untranslated strings (wave 4: 15 languages + 9 variants)](https://github.com/wekan/wekan/commit/a184a3a717331239f38203fc56ed78cc9a04f11e)
+  - [i18n: translate untranslated strings (wave 5: 15 languages + 5 variants)](https://github.com/wekan/wekan/commit/97feb986a88f2f6128fd6bf74be922bed83c104e)
+  - [i18n: translate untranslated strings (wave 6: 15 languages + 2 variants)](https://github.com/wekan/wekan/commit/91ccef062b5ec866aec8ac4660235e46e14e55ab)
+  - [i18n: translate untranslated strings (wave 7, final: 14 languages + 5 variants)](https://github.com/wekan/wekan/commit/219011e5eb3ef3994a074fed9cc441faa734fada)
+  - [WeKan has been translated to 154 languages](https://github.com/wekan/wekan/commit/01d55828d23a645e1c8a841bb4e6357223399d47)
+  - [i18n: register wuu-Hans, fix Wolof/Malay names, add wuu browser alias](https://github.com/wekan/wekan/commit/d55c5e2c3cd544c0ad94538b689b63fe50cd6a41)
+  - [Changelog: WeKan translated to 154 languages, with commit links](https://github.com/wekan/wekan/commit/5b3394af2f3fad92286260d8e94158988e2f3196)
+  - [Moved translation script to correct directory. Thanks to xet7](https://github.com/wekan/wekan/commit/95552881fc7e7256edadf51aa84b6b4436cb0e24)
+  - [i18n: fix wa-RR — translate as Waray (war), not Walloon](https://github.com/wekan/wekan/commit/c00f24d668df1bfc1979a37172dadc1f2d9a77e4)
+  - [Changelog: add Part 12 (Waray wa-RR fix) to the 154-languages entry](https://github.com/wekan/wekan/commit/2cf878215d5cb09f8bfa7f8368e9cc36be3931d3)
+  - [releases: fix push-all-translations.sh cd depth for its translations/ location](https://github.com/wekan/wekan/commit/2be92538391e1e2b92c87ab4e2217ce2e9e39ec0)
+
+- **Member menu / Change Color — global theme override, visible swatches, applies everywhere, no Save button**
+  ([#5778](https://github.com/wekan/wekan/issues/5778), `docs/Theme/Theme.md`). The member menu gets a **Change
+  Color** entry that works like Board Settings / Change Color but is a **per-user global override** saved to your
+  profile, so the chosen theme applies to the **whole UI** — All Boards, Search, Admin Panel, My Cards, Due Cards
+  and board pages — via a `board-color-<name>` class on `<body>`/header (while you are on a board, that board's own
+  color still wins). This makes a **dark theme everywhere** possible. **Done differently from the first cut:** the
+  picker was initially built as **two-level dropdowns** (category then theme); that was replaced by **visible color
+  swatches grouped by category** (Flat / Clear / Dark / Special, category name above each group), and the **Save
+  button was removed — clicking a swatch applies immediately**. **Flat** themes allow **1 custom color** and
+  **clear** themes **2** (a gradient) via the native color wheel; **dark**/**special** are fixed. Custom colors are
+  validated server-side as `#rrggbb` and applied as CSS variables (`--theme-accent` / `--theme-accent-2`). Category
+  titles are left-aligned and the popup has a title. Thanks to **xet7**. Commits:
+  - [Member Menu / Change Color: global per-user theme override (#5778)](https://github.com/wekan/wekan/commit/eab1546b885336502549d9c4fcc45feec661310a)
+  - [Select Color: theme categories core + design doc (docs/Theme/Theme.md)](https://github.com/wekan/wekan/commit/49285dad1950a3019972dbf08d40201b256719ca)
+  - [Select Color: two-level dropdown picker + custom colors (#5778)](https://github.com/wekan/wekan/commit/d0a1e43f364d8ad0caef725e5d48db507887a962)
+  - [Select Color: global override applies everywhere + visible grouped swatches (#5778)](https://github.com/wekan/wekan/commit/1cd32001d474bed977d56ff0fdbcfbc090191974)
+  - [Change Color popup: immediate apply (no Save), left-aligned titles, title, spacing](https://github.com/wekan/wekan/commit/772ae061f109478a875fc6e570f0afe26e572148)
+  - [Change Color popup: remove the "Preview" text from the custom-color preview swatch](https://github.com/wekan/wekan/commit/0f87c3bf8b33241927ff5437c222907986ab37df)
+
+- **Member Settings / Font — pick an installed UI font, size and text colors**
+  (part of [#4759](https://github.com/wekan/wekan/issues/4759)). A new **Font** member-menu entry lets you choose a
+  UI font that **already exists in your browser** (canvas-detected; names are plain text, never HTML/markdown,
+  validated server-side against a curated whitelist — only a known font name and a preset percentage ever reach the
+  DOM), a font **size**, and custom **text** and **text-background** colors (each unsettable). **Done differently
+  from the first cut:** the font and size were first built as **dropdowns**; that was replaced by **buttons** — one
+  **font-name button per detected font, each rendered in its own font**, and a row of **size buttons** (smaller …
+  100% in the middle … larger) — that **apply immediately on click** (no Save). A **preview pangram** shows below
+  the font buttons, the **Unset** links are styled as buttons, and the popup has a title. Stored as `profile.uiFont`
+  / `profile.uiFontSize` / `profile.uiTextColor` / `profile.uiTextBgColor`. (Only the font part of #4759, so the
+  issue stays open.) Thanks to **xet7**. Commits:
+  - [Member Settings / Font: pick an installed font + preset size (#4759)](https://github.com/wekan/wekan/commit/3c9524f61a43cbf92f856f0fb2ff1f9b291d4e05)
+  - [Member Settings / Font / Color: custom text + background color (#4759)](https://github.com/wekan/wekan/commit/22c7d5376bcf7990890c7254c80c1e2dfd9e419c)
+  - [Fix #4759 regression: uiTextColor/uiTextBgColor custom() rejected every user insert](https://github.com/wekan/wekan/commit/437c64c9a0c05dbf3d12a8e45e0b8281f3c326e6)
+  - [Member Settings / Font popup: add a title (changeFontPopup-title)](https://github.com/wekan/wekan/commit/969f96d74219061e05093d5dff7061a684d22f65)
+  - [Member Settings / Font: font-name + size buttons, immediate apply (no dropdowns)](https://github.com/wekan/wekan/commit/bd8e417be18837b2e4600b3b25fa605a83910a2f)
+  - [Member Settings / Font: show the preview pangram below the font-name buttons](https://github.com/wekan/wekan/commit/aa15e726829a8e070634d7c04698bd251f817f08)
+  - [Font popup: style the "Unset" colour reset links as buttons](https://github.com/wekan/wekan/commit/3d190ca0222d657827ed03993ba542279148482a)
+
+- **Soft delete + Undo/Redo + change-History — deleting is reversible, and moves can be undone**
+  ([#1023](https://github.com/wekan/wekan/issues/1023), [#6478](https://github.com/wekan/wekan/issues/6478),
+  `docs/Features/Undo/Undo.md`). Deleting a **list** no longer destroys it: the list and its cards are **marked**
+  deleted (`deletedAt`/`deletedBy`/`deleteBatchId`), hidden from the board, and restorable via **`lists.restore`**
+  or **`Ctrl+Z`** — the first slice of a general "no permanent delete in ordinary use" principle (physical deletion
+  limited to GDPR/account erasure and an explicit Global-Admin purge behind an off-by-default **Admin Panel /
+  Features / Delete** flag). Card/list/swimlane **moves** are now undoable/redoable with `Ctrl+Z` / `Ctrl+Y` (the
+  `userPositionHistory` collection was silently **not recording** — its guard checked an un-imported global — and had
+  no redo or key bindings; all fixed, selection logic unit-tested). Design unifies this into one universal
+  change-History with scoped views. Activities were confirmed to already load progressively. Thanks to **xet7**.
+  Commits:
+  - [Soft delete for lists: delete = mark, restorable + undoable (#1023)](https://github.com/wekan/wekan/commit/46924985f88b473e054158ecae68af6d7cce3556)
+  - [Undo docs: soft-delete design (delete = mark, never destroy)](https://github.com/wekan/wekan/commit/58344db0d7e3ed9e4f8ca638e0b3e00d2813ac63)
+  - [#6478: undo/redo for card/list/swimlane moves + confirm high-impact list move on touch](https://github.com/wekan/wekan/commit/4ca33d29f78bd81cecc931faa5164f862823ad52)
+  - [Docs: design for per-group card History (view + restore)](https://github.com/wekan/wekan/commit/3d1276fc1fbd063f1c7b79467b788f13a5e62435)
+  - [Docs: undo/redo + high-impact confirmation feature doc](https://github.com/wekan/wekan/commit/f3354f5cc8577cda46d2789230e8d30939bd927d)
+  - [Docs: unify undo/redo into one universal change-History (every change) with many scoped views](https://github.com/wekan/wekan/commit/9be41ab34b1bd596a82b95f088e49e94da8b988c)
+  - [Activities already load progressively (infinite scroll), like visible cards](https://github.com/wekan/wekan/commit/e246403bb6969f402e066d01e256e2c56f10ff1c)
+
+- **Home board — set a board that opens automatically after login**
+  ([#2220](https://github.com/wekan/wekan/issues/2220)). A per-user default "home" board (`profile.defaultBoardId`)
+  opens automatically after login on **all deployments** (a once-per-session router redirect), and on **Sandstorm** a
+  grain with exactly one board again opens straight into it (**without saving anything**; a saved Home board wins, a
+  many-board grain with no choice shows All Boards). You **set the Home board from the All Boards page via
+  Multi-Selection**: turn Multi-Selection on, select a board, and click the **home** action in the new
+  **"Selected:"** row (which also has a **star** action); the Home board then shows a **home badge** and sits at the
+  **top of Starred**. **Done differently:** the earlier per-board-tile home toggle was hidden, but setting a Home
+  board was brought back through the Multi-Selection "Selected:" action — so the feature is **available, not
+  disabled, and not Sandstorm-only** — and the initial Sandstorm "save the single-board choice" was changed to
+  **no-save**. Thanks to **xet7**. Commits:
+  - [Feature #2220: mark a board to open automatically after login (home board)](https://github.com/wekan/wekan/commit/e8ced84172ec7950800becfee9860c33e964034e)
+  - [Sandstorm: auto-open a single-board grain (no save) (#2220)](https://github.com/wekan/wekan/commit/9a0c0613a5909f9a37f6afb20890894b8e5082bd)
+  - [All Boards: hide Home-board icons and disable setting a Home board (#2220)](https://github.com/wekan/wekan/commit/ac20cd64424ebe356fcd7ccb3a4f60370580e7a3)
+  - [All Boards: "Selected:" star/home actions + Home board badge (#2220)](https://github.com/wekan/wekan/commit/d67d27f0d872c4fc6e990262d3d3577a28783eee)
+  - [Tests: cover the remaining Upcoming changes (#2220 default board, #6465 UI, #6478 confirm)](https://github.com/wekan/wekan/commit/8287865b238f3ed90e60e4624e98b383e896beee)
+
+- **Add List moved from a standing column to a per-list header button**
+  ([#6465](https://github.com/wekan/wekan/issues/6465)). The Swimlanes/Lists views no longer show a permanent "Add
+  List" composer column; each list header has a far-right add-list button that opens the composer as a column
+  **immediately after that list** (right in LTR, left in RTL), and an **empty** swimlane/board shows a **+** button.
+  Also fixes the composer's Save doing nothing (`createListAfter`'s `check()` used a non-`Optional` matcher for
+  `nextListId`, so the inline composer 400'd with "Match failed"). *(First cut — desktop/main views.)* Thanks to
+  **csonkaoszimt** (report) and **xet7**. Commits:
+  - [#6465: Add List as a per-list header button + inline composer, not a standing column](https://github.com/wekan/wekan/commit/765d04bf7c678a9f28b663beadae7b07fd79f339)
+  - [Fix add-list: Save did nothing (Match failed) + empty-swimlane + button (#6465)](https://github.com/wekan/wekan/commit/0535215225a41bfe16d936a9a1b447fc77f9122e)
+
+- **All Boards, board header, top bar and popups — a large batch of layout/theming polish.** Highlights: the
+  right-sidebar **hamburger is pinned to the right edge** at every width with an ~8px gap, and the duplicate **Board
+  Settings cog was removed**; the All Boards **My Boards toolbar wraps** (order Multi-Selection then Sort then
+  Search), the **Multi-Selection button matches the Swimlanes view**, the empty grey band was removed, **"+ Add …"
+  tiles match board-tile height**, the board-tile **drag handle sits at the right middle** (transparent, icon only),
+  and the **search box is half width** with the multi-selection hint beneath it; the **mobile/desktop toggle and
+  zoom** swapped places; the **Change Language** popup shows **multiple columns**; the **Change Avatar** upload
+  button and the **Search All Boards** / **Archived boards** buttons follow the **theme colors**; the **Archived
+  boards modal** is full width and starts below the header; the **Notifications drawer** is full width with a black
+  hamburger + X and black menu icons; and the member menu's duplicate **Notifications** entry was removed. **Done
+  differently:** an "icons only — always hide button text labels" board-header change was tried and then
+  **reverted**, so button **text labels stay**. Thanks to **xet7**. Commits:
+  - [Board header: keep the sidebar hamburger pinned to the right edge at all widths](https://github.com/wekan/wekan/commit/7718118654f35a214ea5f9b2147642eabf4a6702)
+  - [Board header: remove empty space around the sidebar hamburger button](https://github.com/wekan/wekan/commit/e33e50d9c84cc9125ac6e8d5e491a7419bbae883)
+  - [Board header: hamburger right gap matches the user-name gap (~8px)](https://github.com/wekan/wekan/commit/bd72f5d64c58ad0861f370a17969f6ee482c466c)
+  - [Board header: hide button text labels on narrow windows (icons only)](https://github.com/wekan/wekan/commit/cfd53cc9698bbc759bef55152ea8f74ca00f3afc)
+  - [Board header: remove the Board Settings cog (it is already in the right sidebar)](https://github.com/wekan/wekan/commit/68723ff43b324dda1b584e5ba4eb5d90d0490124)
+  - [Board header: icons only — always hide button text labels](https://github.com/wekan/wekan/commit/97b0240ca4bb5f2bf02020e94eb6d7ffc278acd9)
+  - [Revert board-header icons-only; update CHANGELOG Upcoming with newest changes](https://github.com/wekan/wekan/commit/834698bb5e3e926213676e499bf4338713bc43da)
+  - [Header/All Boards: reorder Multi-Selection/Sort/Search and swap mobile-toggle/zoom](https://github.com/wekan/wekan/commit/15e756f4e0b265a020b659fea2dc3339b2c2e767)
+  - [All Boards: + Add Board / + Add Template Container tile same height as board icons](https://github.com/wekan/wekan/commit/10085615179dbdd56bd5d630ee526e82a1451ef6)
+  - [All Boards: remove empty .board-list-header dead grey space above the layout](https://github.com/wekan/wekan/commit/1312fefb1234d6fcdcda930d93fd189e57befd37)
+  - [All Boards: My Boards bar wraps so Sort/Multi-Selection/Clear stay visible](https://github.com/wekan/wekan/commit/7699cc1e90f18b599f294fba774403f3b17e3749)
+  - [All Boards: Multi-Selection button looks the same as in Swimlanes View](https://github.com/wekan/wekan/commit/c6aa769bc0a8b01706e0f45a19b8ba8c66c77498)
+  - [All Boards: move board tile drag handle to the right middle](https://github.com/wekan/wekan/commit/aafe71fd191a8633012d838d00aa96abd3f092a2)
+  - [All Boards: transparent board tile drag-handle background (icon only)](https://github.com/wekan/wekan/commit/197254fe16c2dd2c266f2a1797d80feffccfc914)
+  - [All Boards: vertically center the Search boards input text](https://github.com/wekan/wekan/commit/035195f2b4b7a8601964d54645ec7d139e65dd41)
+  - [All Boards: move the Search boards input text 4px further down (top: 6px)](https://github.com/wekan/wekan/commit/cb80198d9748b2fbd7dee392e235f882785420c7)
+  - [All Boards: move the Search boards input text 2px further down (top: 8px)](https://github.com/wekan/wekan/commit/c21edb160bddfb2a9e635d5c2154c037dc464698)
+  - [All Boards: move "+ Add Board" text 4px up (keep tile height)](https://github.com/wekan/wekan/commit/3f5173b9602e14de3201ebc0052b2751e522f100)
+  - [All Boards: move "+ Add Board" text 2px further up (padding 18/8/24/8)](https://github.com/wekan/wekan/commit/519c04b8ef46497d526f4586432b132887335487)
+  - [All Boards: move "+ Add Template Container" text 2px down (separate from Add Board)](https://github.com/wekan/wekan/commit/cd7f9f7bc9e48c6f54b007deec13194b90d4d33b)
+  - [All Boards: half-width search, hint below Multi-Selection, title beside icon](https://github.com/wekan/wekan/commit/3736f8431a4b0b8224c0b7315ac8e596aa4426fa)
+  - [Change Language popup: show languages in multiple columns when there is width](https://github.com/wekan/wekan/commit/fc0649a756d0f6e6caf2feef659786a9908397b1)
+  - [Change Avatar popup: Upload button uses theme colors (blue bg, white text)](https://github.com/wekan/wekan/commit/08a2e5525e8e7b099d766643b09616e75f750fc9)
+  - [Archived boards modal: full width + extends to the bottom of the window](https://github.com/wekan/wekan/commit/b027594ca8ad6d9f781214e8c26aac572ed20c25)
+  - [Archived boards modal: start below the header bar so its top is visible](https://github.com/wekan/wekan/commit/1c8ba2afc3a51d5a0b71f5777d1e189dca5525e4)
+  - [Archived boards: Restore/Delete buttons follow the theme override colors](https://github.com/wekan/wekan/commit/4dc09c62b9719cbb3dd126420239f7d9da5bea55)
+  - [Search All Boards: new-search button follows theme override colors](https://github.com/wekan/wekan/commit/98a03bf045668a95f58ae2cfe15f6d39591c89de)
+  - [Search All Boards: label the clear button "Clear" using existing trello-clear-job key](https://github.com/wekan/wekan/commit/a4cc0c2182b9c4da74325bb5e21d7f13f64e9484)
+  - [Member menu: remove the Notifications entry (duplicates the header bell icon)](https://github.com/wekan/wekan/commit/8cb4050cf21a1fce10c08872cb8f4a4bb270565b)
+  - [Notifications drawer header: black X + hamburger, X near the top-right edge](https://github.com/wekan/wekan/commit/8dd6bd9db5a8f427f6863f033e7236ae80ead336)
+  - [Notifications drawer: full width + robust flex header (black hamburger + X)](https://github.com/wekan/wekan/commit/c87b4cb5103aa2e010f0c40b0554e4cf84126059)
+  - [Notifications drawer: fix X position — cancel the global absolute .close rule](https://github.com/wekan/wekan/commit/5e014d0967ec8d622857348a264f3522a7e9769d)
+  - [Notifications menu: make the dropdown item icons black](https://github.com/wekan/wekan/commit/01088ea9d4583301446cb021ecd8772e4d3cde6d)
+
+- **Denser default layout: thinner lists, board tiles and card dock; taller-looking minicards**
+  ([#6465](https://github.com/wekan/wekan/issues/6465)). List width default 272 to **220px** (minimum 270 to
+  **200px**), All Boards board tiles min-height 100 to **72px**, and the card-detail right dock max-width 800 to
+  **520px** — all overridable, user customizations untouched. Minicards no longer reserve a tall empty band under a
+  one-line title (the title viewer gets `min-height: 0`), and the swimlane header no longer clips at non-100% zoom.
+  Thanks to **csonkaoszimt** (report) and **xet7**. Commits:
+  - [#6465: denser defaults - thinner lists (220px), board tiles and card dock (520px)](https://github.com/wekan/wekan/commit/99299c2a91827f88f0bf091e810b8ce9d6211784)
+  - [Fix #6465: minicards wasted half their height on empty white space](https://github.com/wekan/wekan/commit/a76f7d28e33f79b79f89eebffcb2a2946205f5f0)
+  - [#6465: swimlane header bar no longer clips at non-100% board zoom](https://github.com/wekan/wekan/commit/7b7fada1b89fa21e35ebaeca26d3f85299afb33d)
+  - [Test: update fixed-list-width e2e for the lowered 200px minimum (#6465)](https://github.com/wekan/wekan/commit/ae29555862089cd85111aa417a892888d48124bd)
+
+and fixes the following bugs:
+
+- [Confirmation dialogs work again](https://github.com/wekan/wekan/commit/f6f021f8cc8de452593f499e1306dca021679325) — clicking any `.js-confirm` button (e.g. "Remove Member") did
+  nothing because `Popup.afterConfirm()` stashed the pending action on the Blaze **data context** (an immutable
+  Minimongo doc that Blaze re-creates on re-render); it is now stored on the Popup **instance**
+  ([#6479](https://github.com/wekan/wekan/issues/6479)). Thanks to **mueschel** (report) and **xet7**.
+- [Moving a card between swimlanes is no longer broken with long lists](https://github.com/wekan/wekan/commit/6d5a594b0709ad3456f91afc31d821304539a262) — jQuery UI sortable cached
+  geometry at drag-start and never re-cached on WeKan's manual auto-scroll, so the drop re-homed the card in the
+  source swimlane; fixed with `sortable('refreshPositions')` after a scroll
+  ([#6477](https://github.com/wekan/wekan/issues/6477)). Thanks to **mueschel** (report) and **xet7**.
+- [Filter by date -> Overdue no longer lists cards with no due date](https://github.com/wekan/wekan/commit/b1d33c536239d45ae5df6139beb6b5548f7e03c0) — `$lte`/range selectors
+  matched `null` under both FerretDB and minimongo; `DateFilter._getMongoSelector` now adds `$ne: null` (reported by
+  email). Thanks to the reporter and **xet7**.
+- [A board-wide list no longer disappears from other swimlanes when nudged](https://github.com/wekan/wekan/commit/c29cf3b985abb670222ec25c76a055e0ff9ba53a) — the drop handler
+  treated any small drag of a board-wide list (`swimlaneId === null`) as a swimlane change; it now also requires an
+  original swimlane (reported by email). Thanks to the reporter and **xet7**.
+
+- **FerretDB (bundled) — #6476 crash-loop root cause fixed, and label/title/date filters pushed down to SQLite**
+  ([#6476](https://github.com/wekan/wekan/issues/6476)). A startup SyncedCron upsert hit an orphaned-table error
+  (`table "…connections_<hash>" already exists`) that became an unhandledRejection and crash-looped WeKan so its
+  port never opened; the bundled FerretDB now creates tables/indexes with `IF NOT EXISTS`. It also pushes label
+  (`$in`), title (`$regex`) and `dueAt` range filters down to SQLite instead of scanning every card in Go. (Details
+  in the fork's own CHANGELOG.) Thanks to **uusijani**, **a1bert01** and **xet7**. Changelog commits:
+  - [Changelog: #6476 real root cause (FerretDB orphaned-table crash loop) and the bundled FerretDB fix](https://github.com/wekan/wekan/commit/41c747ef5f7e3fac4ae37714e65e1f7b4703ab80)
+  - [Changelog: bundled FerretDB now pushes label ($in) and title ($regex) filters down](https://github.com/wekan/wekan/commit/b29a47778ffb3025d8c26d67427e022a6a137076)
+  - [Changelog: bundled FerretDB now pushes date range filters down too](https://github.com/wekan/wekan/commit/5730f7dcc54e551ca5b4cc6ede307ebe7e078310)
+
+- **Snap release, CI and dev tooling.** The exotic `ppc64el`/`s390x` snaps now build on **GitHub Actions under
+  QEMU** instead of Launchpad (which returned exit 0 with no artifact); `rebuild-wekan.sh` CURRENT-IP detection is
+  subnet-agnostic (no more `http://:3000`); and the **Playwright E2E workflow was disabled**. Commits:
+  - [Snap release: build ppc64el and s390x under QEMU on GitHub Actions, not Launchpad](https://github.com/wekan/wekan/commit/d7f36d70a04ee96669d75c2dea675cf7e7b76d7a)
+  - [rebuild-wekan.sh: robust CURRENT-IP detection (fix http://:3000 Invalid URL)](https://github.com/wekan/wekan/commit/c6f960bbe10d5ff36a92314c0a21380e914a89e3)
+  - [ci: disable Playwright E2E Tests workflow](https://github.com/wekan/wekan/commit/ef81c25232c7f5f26b6b33d9e9b945b8e769dd35)
+
+- **Changelog, docs and test housekeeping.** Commits:
+  - [Changelog: move post-v9.99 changes to an Upcoming section above v9.99](https://github.com/wekan/wekan/commit/c4784225d51f2d13f2f50b2fe172cb156feab861)
+  - [Updated ChangeLog](https://github.com/wekan/wekan/commit/26319c974b180cc2a59b55705bc5d5128f23f438)
+  - [Changelog: drop bogus #6483/#6484 issue links (those bugs were reported by email)](https://github.com/wekan/wekan/commit/e9e70717445afbf124fe5c536f4199ef97d8ff5b)
+  - [Updates](https://github.com/wekan/wekan/commit/176c5ef2d8a31f85cb41e52a85003e3560e818cc)
+  - [Test: de-flake webkit swimlane-add popup wait (6s -> 15s)](https://github.com/wekan/wekan/commit/8aacc2236052108576e9b0e1ac0ca68f9339463e)
+  - [Updates](https://github.com/wekan/wekan/commit/861ded439e08dfe16e65f19a3e150d83bbd8286f)
+  - [Updated ChangeLog](https://github.com/wekan/wekan/commit/66a2f8ddc8f4bc95fe08478f1d0eeda08f87cf82)
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.99 2026-07-17 WeKan ® release
+
+This release fixes the following BUG:
+
+- **LDAP connection leak: WeKan exhausted the directory server with "too many open connections"**
+  ([#6467](https://github.com/wekan/wekan/issues/6467), [#6469](https://github.com/wekan/wekan/issues/6469)).
+  Operators reported that after an update WeKan "dies really quickly", that restarting the server did not
+  help, and that it "kills our openldap server with too many open connections"; others saw logins hang for
+  minutes and then fail with *"Must be logged in"*. Root cause: every LDAP login attempt
+  (`packages/wekan-ldap/server/loginHandler.js`) and every background sync run
+  (`packages/wekan-ldap/server/sync.js`) created a fresh `new LDAP()` and called `connect()`, but the code
+  **never called `disconnect()` on any path** — success, failure, or fallback. Each login attempt (including
+  every *failed* one) and each background-sync tick (every minute by default) therefore leaked one socket to
+  the LDAP/AD server. Over time this grew without bound until the directory server hit its per-client
+  connection limit and started refusing connections, which took it — and, with it, every WeKan login — down.
+  - **Fixed** by guaranteeing the connection is always released:
+    - A small shared helper `packages/wekan-ldap/server/connectionGuard.js` (`runWithLdapDisconnect(ldap, fn)`)
+      runs the work and `disconnect()`s in a `finally`, on every exit path. The disconnect is best-effort and
+      never masks the original result or error.
+    - The LDAP login handler now runs its whole flow through `runWithLdapDisconnect`, so `connect()` is always
+      paired with a `disconnect()` — on a successful login, a thrown `Meteor.Error`, or a fallback to the
+      default account system.
+    - The background `sync()` releases its connection in a `finally`, and `importNewUsers()` disconnects only
+      the connection it opened itself (never a connection borrowed from `sync()`).
+    - The admin `ldap_test_connection` method (`packages/wekan-ldap/server/testConnection.js`), which had the
+      same leak, now disconnects on both the success and failure paths, so repeated "Test Connection" clicks
+      no longer leak either.
+    - `LDAP.disconnect()` is now a safe no-op when `connect()` was never reached, so cleanup can never throw.
+  - **Tests** (`tests/ldapConnectionRelease.test.cjs`, added to `test:unit:node`): behavioural coverage of the
+    guard (disconnects after success and returns the result; disconnects exactly once; disconnects *and*
+    re-throws when the work throws — the failed-login path that exhausted OpenLDAP), negative cases (a failing
+    disconnect never turns a success into a failure nor hides the real error; a missing/`null` ldap is
+    tolerated), plus source-level guards that the leak-prone call sites actually route through the guard and
+    that `connect()` lives inside the guarded region.
+  - Thanks to the reporting operators and **xet7** (fix).
+
+This release also updates the bundled FerretDB (see the fork's own CHANGELOG Upcoming): the SQLite backend
+connection pool no longer caps `MaxOpenConns` at 16, which had starved WeKan's cursor-heavy load and made
+boards take minutes to load and logins fail with *"Must be logged in"* ([#6467](https://github.com/wekan/wekan/issues/6467),
+[#6469](https://github.com/wekan/wekan/issues/6469)).
+
+- **Snap: FerretDB never becoming ready made WeKan hang with no web port and no explanation**
+  ([#6476](https://github.com/wekan/wekan/issues/6476)). With `database=ferretdb`, `snap-src/bin/wekan-control`
+  waits for FerretDB to accept connections *before* starting WeKan — WeKan does not open its HTTP port until
+  the database answers. That wait loop had **no timeout and no diagnostics**: if FerretDB never started
+  listening (a crashed or CPU/architecture-incompatible per-arch binary, a locked or corrupt SQLite database,
+  or the FerretDB service left disabled by a failed migration hand-off), WeKan blocked there forever. The
+  service showed as `active`, but the port never opened and the only symptom was a silent
+  `FerretDB not ready yet, retrying in 5 seconds` repeating — exactly what #6476 reported (Apache proxy could
+  not connect to port 3333). The reporter's `wekan.log` stopped right after the startup env dump, confirming
+  control never reached `node main.js`.
+  - **Fixed** by mirroring the MongoDB branch: after `WEKAN_DB_WAIT_TIMEOUT` seconds (default 120,
+    overridable) the FerretDB wait loop now prints an actionable hint **once** and keeps retrying — pointing to
+    `snap logs <snap>.ferretdb` for the real error, naming the SQLite directory to check for locks/corruption,
+    the arch-mismatch (`exec format error`) case, the `snap start --enable <snap>.ferretdb` recovery, and the
+    `snap set <snap> database=mongodb` fallback to keep working meanwhile. This turns "port never opens, no
+    clue why" into a clear message. Regression test: `tests/ferretdbWaitTimeout.test.cjs`, including a negative
+    guard that the FerretDB wait is not a silent unbounded loop again.
+  - This is a robustness/diagnostics fix; the underlying reason FerretDB was not accepting connections is
+    environment-specific and lives in the FerretDB service log.
+  - Thanks to **uusijani** (report) and **xet7** (fix).
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.98 2026-07-17 WeKan ® release
+
+This release fixes the following SECURITY ISSUES found by GitHub CodeQL code scanning:
+
+- **[EscapeBleed](https://wekan.fi/hall-of-fame/escapebleed/): incomplete string escaping when
+  building a regular expression** (GitHub CodeQL code scanning alert #423, rule
+  `js/incomplete-sanitization`, CWE-116 Improper Encoding or Escaping of Output;
+  `tests/maximizedCardPosition.test.cjs`). Code that turned a CSS declaration into a
+  `RegExp` escaped only parentheses (`str.replace(/[()]/g, '\\$&')`) instead of the full
+  regex metacharacter set — an input containing other metacharacters (including a backslash)
+  would not be escaped correctly, so the generated pattern could match the wrong thing.
+  - **Fixed** by escaping the complete metacharacter set
+    (`str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')`), matching the correct pattern already used
+    elsewhere in the tests. This is test-only code with a fixed, trusted input list, so there
+    was no injection exposure, but the incomplete escape was genuinely wrong.
+  - Thanks to **GitHub CodeQL** (code scanning alert #423) and **xet7** (fix).
+
+- **[RandomBleed](https://wekan.fi/hall-of-fame/randombleed/): biased random ids from a
+  cryptographically secure source** (GitHub CodeQL code scanning alert #422, rule
+  `js/biased-cryptographic-random`, CWE-1204 / weak randomness; `server/lib/schemaUpgradeSteps.js`).
+  The startup schema upgrade generates Meteor-style document ids with
+  `crypto.randomBytes(len)` mapped through `byte % ID_CHARS.length`. Because 256 is not a
+  multiple of the 55-character alphabet, that modulo skews generated ids toward the first 36
+  characters of the alphabet (each ~1.4% more likely than the rest) — reducing entropy of the
+  ids used for the swimlanes/lists/checklist-items the upgrade creates.
+  - **Fixed** with rejection sampling: bytes at or above the largest multiple of the alphabet
+    size (220) are discarded and resampled, so every character is exactly equally likely; ids
+    stay Meteor-style 17 characters (and exact-length for custom lengths). A negative
+    regression test pins that out-of-range bytes are never wrapped.
+  - Thanks to **GitHub CodeQL** (code scanning alert #422) and **xet7** (fix).
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.97 2026-07-17 WeKan ® release
+
+This release adds the following new features:
+
+- **Snap: SELF-HEALING attachments — the fixes below apply themselves automatically on
+  upgrade, no commands needed** ([#6473](https://github.com/wekan/wekan/issues/6473),
+  `snap-src/bin/attachment-repair` (new), `snap-src/bin/wekan-control`,
+  `snap-src/bin/migration-control`, `snap-src/bin/wekan-force-migrate`,
+  `releases/migrate-mongodb-to-ferretdb.mjs`, `snap-src/bin/migrate-mongo3-to-ferretdb.mjs`,
+  `snapcraft.yaml`, `snapcraft-core26.yaml`). The snap auto-refreshes on ~15k servers, so a fix
+  that needs `snap run wekan.migrate` typed by hand does not reach most of them — and a full
+  re-migration would be WRONG anyway, because it rebuilds FerretDB from the frozen MongoDB
+  source and would lose boards/cards users created on FerretDB since migrating. Instead, on
+  every start on FerretDB, `wekan-control` now launches `attachment-repair` in the
+  **background**: it starts a temporary source mongod (7.x or the bundled 3.2 reader — the
+  MongoDB data was never modified, so everything is recoverable) and runs the migration
+  importer in a new **incremental FILES_ONLY mode** that **checks what is already migrated
+  and migrates only what is missing**: text collections are never touched, every attachment/
+  avatar whose target record is on `fs` with the file actually on disk is verified and
+  skipped, records deleted by users since the migration are never resurrected, and only the
+  missing binaries/records are extracted — so on healthy servers the repair is a fast no-op
+  and on #6473-affected servers the attachments simply appear, live, while WeKan runs. It
+  runs **once** (marker `$SNAP_COMMON/.attachments-files-v2-done`; a fresh successful
+  migration pre-writes it, `snap run wekan.migrate` clears it, failures retry on the next
+  start without ever blocking WeKan from starting), and a manual
+  `snap run wekan.repair-attachments` command is registered too. The importer itself now
+  stamps the migration marker with `filesVersion` (currently 2) and, when it finds a marker
+  with an older `filesVersion` — or `FILES_ONLY=true` in the environment — automatically
+  switches to this incremental repair, so **Docker/source installs get the same self-healing**
+  by simply re-running the same importer command they migrated with. Verified end-to-end
+  against two live FerretDB instances with the real importer: a broken-migration target
+  (missing CollectionFS record, gridFsFileId-only record, marker without filesVersion) was
+  repaired — record re-created with its card linkage, binary extracted, record repointed —
+  while a board renamed on FerretDB after the migration stayed untouched, and the second run
+  exited immediately as already-migrated. Behavioral tests (positive + negative) drive the
+  real bash script with stubbed snap tooling: `tests/attachmentRepair.test.cjs`. Thanks to
+  mueschel and xet7.
+
+- **All platforms: startup schema upgrade — WeKan now CHECKS on start that data from EVERY old
+  WeKan version has been migrated to the newest database structure, and migrates only what is
+  missing** ([#6473](https://github.com/wekan/wekan/issues/6473) follow-up,
+  [#1959](https://github.com/wekan/wekan/issues/1959), [#1971](https://github.com/wekan/wekan/issues/1971),
+  `server/lib/schemaUpgradeSteps.js` (new), `server/startupSchemaUpgrade.js` (new),
+  `server/migrations/ensureValidSwimlaneIds.js`, `server/imports.js`). WeKan v0.9–v8.00 ran
+  startup migrations; v8.01 disabled them (large databases meant long downtime) in favour of
+  read-time compatibility — which covers the swimlane era but not everything, so text data
+  from old versions could sit invisible in the database. The new startup upgrade reinstates
+  the safety net without the downtime: **version-gated** (the `_wekan_migration` marker stores
+  the WeKan version and datetime of the previous successful re-check, so while the version is
+  unchanged a boot costs ONE `findOne` — a full re-check is mandatory only after a new WeKan
+  release, or `WEKAN_FORCE_SCHEMA_UPGRADE=true`; opt out with `WEKAN_SKIP_SCHEMA_UPGRADE=true`),
+  **non-blocking** (runs in the background, WeKan serves immediately), with a **live migration
+  dashboard at `/schema-upgrade-status`** on every platform that shows the Admin Panel product
+  name when one is set (not "WeKan") plus per-step progress, and **fast on big databases**
+  (bounded existence probes, `distinct()` set-joins instead of card scans, and server-side
+  `updateMany` batches instead of per-document round trips — thousands of cards never mean
+  thousands of queries). Steps, each verified against `git show v8.00:server/migrations.js`
+  and each idempotent: `archived-flag-backfill` (docs missing `archived` never match the
+  `archived: false` view queries — whole boards/lists/cards were invisible in the Swimlanes
+  and Lists views), `swimlane-structure` (every board gets a visible swimlane, every list/card
+  a `swimlaneId`, cards with a dangling `listId` are rescued to a visible list — and, fixing
+  #1959 and #1971, unarchived cards whose swimlane was DELETED, ARCHIVED or belongs to another
+  board are reassigned to the board's first visible swimlane, so everything is visible in both
+  the Swimlanes view and the Lists view; the card-insert hook now also validates
+  client-supplied swimlaneIds so new cards can never land under a deleted/archived swimlane
+  again), `checklist-items-embedded` (pre-v0.79 embedded `checklist.items[]` extracted to the
+  `ChecklistItems` collection — the text was in the database but never shown),
+  `customfields-boardIds` (pre-v2.49 scalar `boardId` → `boardIds` array — old custom field
+  definitions and their card values were orphaned), `board-allows-defaults` (the ~33
+  defaultValue-true `allows*` flags backfilled — a missing flag rendered as false and HID
+  existing descriptions/checklists/comments/attachments), `board-members-isactive` (members
+  without `isActive` were denied board access), `board-permission-lowercase` ('PUBLIC' boards
+  had silently become member-only), and `fs-path-heal` (filesystem attachments/avatars whose
+  recorded path predates the current WRITABLE_PATH layout — v6.10-18 `uploads/<coll>`,
+  v6.19-v8.4x `WRITABLE_PATH/<coll>`, CFS→ostrio temp files — are located and repointed/copied
+  into the current layout). A step that fails or leaves unresolved work never blocks WeKan
+  from starting and keeps the version un-stamped so the next boot re-checks. 36+ unit tests
+  with negative cases (`tests/schemaUpgradeSteps.test.cjs`), plus verified end-to-end against
+  a live FerretDB (SQLite) with old-shape seed data: all 8 steps migrate correctly and the
+  second boot is gated to a no-op. Thanks to mueschel and xet7.
+
+- **Migration speed: batched writes and preloaded lookups instead of per-document round trips**
+  (5-hour migrations reported; `releases/migrate-mongodb-to-ferretdb.mjs`). The text phase now
+  copies each batch with ONE unordered `insertMany` round trip (falling back to per-document
+  `replaceOne` upserts only for batches that hit duplicates on resumed/re-run migrations), and
+  the attachment/avatar phases preload the target's metadata records once per bucket instead
+  of one `findOne` per file (bounded: collections over 100k records fall back to per-file
+  lookups). The startup schema upgrade uses the same philosophy (`distinct()`/`updateMany`).
+  Thanks to mueschel and xet7.
+
+and fixes the following bugs:
+
+- **OAuth2/OIDC: `OAUTH2_LOGIN_STYLE=redirect` was ignored — a popup always opened**
+  ([#5695](https://github.com/wekan/wekan/issues/5695), `packages/wekan-oidc/oidc_client.js`,
+  `server/authentication.js`, `server/models/settings.js`, `client/components/main/layouts.js`).
+  The setting was stored correctly in the OIDC service configuration, but the login button
+  always passed `loginStyle: 'popup'`, and Meteor's `OAuth._loginStyle` gives the caller's
+  option precedence — so the admin's redirect setting silently lost on every login (and the
+  Meteor-internal `loginStyle` option even leaked into the provider's authorization URL). The
+  client now honors a configured `loginStyle: 'redirect'` over the button's generic popup
+  default (explicit caller choices still win; Safari-private-mode popup fallback kept) and no
+  longer leaks the option to the provider. Also repaired the existing
+  `OIDC_REDIRECTION_ENABLED=true` "go straight to the provider" feature, which was doubly
+  broken since the Meteor 3 port: `isOidcRedirectionEnabled` inspected a Promise (always
+  false), and the client handler assigned an undeclared variable (strict-mode ReferenceError).
+  Behavioral tests drive the real client code in a VM against Meteor's loginStyle precedence:
+  `tests/oauth2LoginStyle.test.cjs` (12 tests, positive + negative). Thanks to ArturRuta and
+  xet7.
+
+- **Deleting a user left "ghost users" on boards and cards**
+  ([#1289](https://github.com/wekan/wekan/issues/1289), `models/users.js`, new
+  `models/lib/userDeletionCleanup.js`): every deletion path (admin method, self-service
+  delete, `DELETE /api/users/:userId`) removed only the user document, leaving dangling
+  references — empty-avatar board members that could not be removed, stale card
+  members/assignees/watchers, orphaned avatar files — reproducible for 8 years. A server-side
+  `Users.after.remove` hook now prunes `boards.members/watchers`,
+  `cards.members/assignees/watchers`, `lists.watchers` and the user's avatar files on every
+  deletion path; activities and comments are deliberately kept for history (their rendering
+  is already null-guarded). Tests: `tests/userDeletionCleanup.test.cjs` (6). Thanks to
+  chotaire and xet7.
+- **Swimlanes jumped up and down when starting/ending a card drag**
+  ([#2877](https://github.com/wekan/wekan/issues/2877), `client/components/boards/boardBody.css`):
+  drag start hid every list's "+ Add Card" composer link with `display: none`, collapsing its
+  row — lists shrank, auto-height swimlanes shrank, and every swimlane below jumped up ~23px
+  (and back down on drop), shifting the drop target under the cursor mid-drag (root cause
+  proven by frame-diffing the issue's own GIF). The composer now hides with
+  `visibility: hidden`, keeping its layout box, so nothing moves; collapsed multi-selection
+  cards stay collapsed intentionally (they preview the post-drop list). Tests:
+  `tests/swimlaneDragJump.test.cjs` (8). Thanks to xet7.
+- **Dragging a card toward an off-screen list never auto-scrolled the board**
+  ([#443](https://github.com/wekan/wekan/issues/443), `client/components/lists/list.js`, new
+  `imports/lib/boardAutoScroll.js`): the horizontal auto-scroll targeted `.board-canvas`,
+  which only overflows vertically since the swimlane layout — its scrollLeftMax was always 0,
+  so the guard never fired and users had to drop on an intermediate list and scroll by hand.
+  Edge-proximity auto-scroll now drives the `.js-lists` lane actually under the pointer
+  (clamped, overshoot-safe), with vertical scrolling kept on the canvas. Tests:
+  `tests/boardAutoScroll.test.cjs` (15, incl. a proof the old no-overflow target could never
+  scroll). Thanks to anhenghuang, AlexanderS and xet7.
+- **Board Rules: the Card Title Filter did nothing on several triggers — and rules created
+  via the REST API never fired at all** ([#2345](https://github.com/wekan/wekan/issues/2345),
+  [#2674](https://github.com/wekan/wekan/issues/2674),
+  `client/components/rules/triggers/boardTriggers.js`, `.jade`, `server/rulesHelper.js`,
+  `server/models/rules.js`, new `models/lib/ruleCardTitleFilter.js`, `docs/API/Rules.md`,
+  `docs/API/REST-API.md`, `api.py`): the generic moved/archive trigger builders never saved
+  the filter (and a trigger doc MISSING the field can never satisfy the matcher's `$in`, so
+  those rules fired for nothing); a set filter never showed in the rule details; archive
+  activities carry no card title so their filters compared against undefined; and REST-created
+  rules skipped the wildcard defaulting entirely — the exact "remove user when moved away"
+  rule from #2674 silently never ran. Filters are now stored (empty → `*`), shown in the rule
+  description, matched with the title resolved from the card when the activity lacks it,
+  legacy field-less triggers keep matching, the API normalizes missing matching fields to
+  wildcards and validates types, and the rule actions no longer crash on unresolvable
+  usernames or member-less cards. The Rules REST API is now documented (`docs/API/Rules.md`)
+  and listed in api.py's help with the #2674 two-rule example. Tests:
+  `tests/rulesCardTitleFilter.test.cjs` (12) and `tests/rulesApiTriggerNormalize.test.cjs`
+  (19). Thanks to InfoSec812, sfahrenholz and xet7.
+- **Sandstorm: username uniqueness probe was case-sensitive and raced concurrent logins**
+  ([#574](https://github.com/wekan/wekan/issues/574), `sandstorm.js`, new
+  `models/lib/sandstormUsername.js`): deriving `max`, `max1`, … from the preferred handle
+  matched exact case only (an existing `Max` did not stop a new `max`) and the check-then-set
+  window let a concurrent insert claim the name first, aborting the hook with E11000. The
+  probe is now an anchored, escaped, case-insensitive regex and the claim retries the next
+  number on a duplicate-key loss. Tests: `tests/sandstormUsername.test.cjs` (11). Thanks to
+  mitar and xet7.
+- **Inviting a second user whose email shares a local part failed with a bare "403"**
+  ([#619](https://github.com/wekan/wekan/issues/619), `server/models/users.js`, new
+  `models/lib/inviteeUsername.js`): inviting `cats@foo.com` creates user "cats"; inviting
+  `cats@facebook.com` then crashed into Meteor's raw `403 Username already exists`. The
+  invitee's username now probes `cats`, `cats1`, `cats2`, … to the first free variant, and
+  exhaustion raises the translated `error-username-taken` instead of a number. Tests:
+  `tests/inviteeUsername.test.cjs` (11, incl. the literal reported scenario). Thanks to
+  lemoer and xet7.
+- **Date pickers ignored the configured default time and stored 12:00**
+  ([#1502](https://github.com/wekan/wekan/issues/1502), `client/lib/datepicker.js`, new
+  `imports/lib/datePickerTime.js`): the due-date picker configures a 17:00 default (and
+  now() for received/start/end), but an inverted guard applied it only when the card ALREADY
+  had a date — exactly when it is unnecessary — so empty time fields fell back to a
+  hard-coded 12:00 on save. The default now pre-fills empty pickers and backs the submit
+  fallback; existing dates keep their own time. The issue's original AM/PM parse mismatch was
+  already resolved by the native date/time inputs (79b94824e). Tests:
+  `tests/datePickerDefaultTime.test.cjs` (10). Thanks to Vlasterx, saschafoerster,
+  suncobran and xet7.
+- **Dragging a card while someone added a card to the target list dropped it into the WRONG
+  swimlane** ([#2769](https://github.com/wekan/wekan/issues/2769), new
+  `client/lib/cardDragGeometry.js`, `client/components/lists/listBody.js`): jQuery UI sortable
+  snapshots container geometry at drag start; a mid-drag DOM insertion (another user's new
+  card, or the drag's own composer auto-close) shifted every swimlane below while the cached
+  rectangles stayed put — the drop landed in the neighbouring swimlane with no visible
+  placeholder. A MutationObserver now refreshes the active drag's geometry on real mid-drag
+  layout changes (sortable's own churn filtered out). Tests:
+  `tests/cardDragGeometry.test.cjs` (13). Thanks to hever and xet7.
+- **Board import lost card dates** ([#1992](https://github.com/wekan/wekan/issues/1992),
+  `models/wekanCreator.js`, new `models/lib/importedCardDates.js`): the importer derived
+  `createdAt` only from a `createCard` activity (absent in Sandstorm/pruned exports — dates
+  silently reset to import time) and never imported `receivedAt`/`endAt` at all. All five date
+  fields now restore with sane fallbacks (activity → the card's own exported date → import
+  time), and the card creator falls back to the exported userId. The missing-cards half of the
+  report was already fixed by 68e0032c6. Tests: `tests/importedCardDates.test.cjs` (13).
+  Thanks to xet7.
+- **Archiving a swimlane made its cards disappear — and restore brought back an empty
+  swimlane** ([#2292](https://github.com/wekan/wekan/issues/2292), `models/swimlanes.js`, new
+  `models/lib/swimlaneArchive.js`): only the swimlane document was flagged; its unarchived
+  cards became invisible everywhere (board views render unarchived swimlanes, Archive lists
+  archived docs). Archiving a swimlane now archives its cards (mirroring lists), and restore
+  brings back exactly the cards archived WITH it — individually archived cards stay archived.
+  Tests: `tests/archiveSwimlaneCards.test.cjs` (11). Thanks to Cactusbone and xet7.
+- **"Move/Copy selection to board" wrote `sort: NaN` to every card**
+  ([#2494](https://github.com/wekan/wekan/issues/2494), `imports/reactiveCache.js`): the
+  client-side `noCache` card lookup returned a PROMISE since the Meteor 3 port, so the max-sort
+  read was `undefined` and every moved card got NaN — cards appeared and disappeared and could
+  not be reordered. The uncached client path is synchronous minimongo again. Tests:
+  `tests/reactiveCacheNoCacheCard.test.cjs` (8, incl. a proof the pre-fix routing yields NaN).
+  Thanks to Vermeille and xet7.
+- **Subtask "View it" did nothing when the subtask lives on another board**
+  ([#1853](https://github.com/wekan/wekan/issues/1853),
+  `client/components/cards/subtaskViewHelpers.js`, `subtasks.js`): the original crash
+  (`board._id` of undefined) had become a silent no-op guard — when the deposit board is not
+  in minimongo the button just did nothing. Navigation now falls back to the subtask's own
+  boardId (the route loads the board), and truly broken subtasks warn instead of dying.
+  Tests: `tests/subtaskViewNavigation.test.cjs` (11). Thanks to Vanclief and xet7.
+- **Labels/members could not be dragged onto cards added after the board rendered**
+  ([#1554](https://github.com/wekan/wekan/issues/1554), `client/components/lists/list.js`):
+  the droppable-initializing autorun lost its reactive dependency in 7673c77c5 (2023), so it
+  ran once per list render and later-added minicards silently rejected sidebar drags until the
+  board was re-entered ("works after search-and-back"). Dependency restored via the
+  ReactiveCache. Tests: `tests/labelDragDroppable.test.cjs` (3). Thanks to Miffe and xet7.
+- **"Add filtered cards to selection" swept cards from OTHER boards into bulk actions**
+  ([#2306](https://github.com/wekan/wekan/issues/2306), `client/lib/filter.js`,
+  `client/lib/multiSelection.js`, new `models/lib/boardScopedSelection.js`): the filter
+  selector carried no boardId, and minimongo legitimately holds foreign-board cards (linked
+  boards, dialogs, notifications) — a bulk archive could silently mutate other boards. The
+  selection and its bulk-action selector are now board-scoped, and foreign ids are rejected at
+  insertion. Tests: `tests/boardScopedSelection.test.cjs` (17, incl. the exact reported
+  repro). Thanks to IcedQuinn and xet7.
+- **REST API: login tokens could never be revoked** ([#1437](https://github.com/wekan/wekan/issues/1437),
+  `server/apiAuthRoutes.js`, new `models/lib/apiLogout.js`): every `POST /users/login` minted
+  another ~90-day resume token with no way to invalidate any of them. New `POST /users/logout`
+  revokes the presented token (or all of the user's tokens with `{"all": true}`), always scoped
+  to the authenticated user. Tests: `tests/apiLogout.test.cjs` (12). Thanks to
+  ppouliot and xet7.
+- **Editing one checklist item and clicking another left BOTH edit forms open — and
+  submitting overwrote the new item's title with the previous item's text**
+  ([#2418](https://github.com/wekan/wekan/issues/2418), `client/lib/inlinedform.js`, new
+  `client/lib/inlinedFormManager.js`): since a 2021 change, the "close the previously opened
+  inline form" call was a silent no-op (the escape action is disabled for click execution),
+  and the submit handlers grab the template's FIRST textarea — with two forms open the wrong
+  form's text was saved. Subtasks reproduced the full bug; checklists' workaround corrupted
+  the open-form tracker so Escape closed the whole card pane. A small state manager restores
+  the single-open-form invariant (opening a form closes the previous one, without closing
+  popups — preserving the 2021 intent). Tests: `tests/inlinedFormSingleOpen.test.cjs`
+  (9, incl. the exact reported repro chain). Thanks to Beebo89 and xet7.
+- **Advanced Filter never matched date custom fields** ([#2989](https://github.com/wekan/wekan/issues/2989),
+  `client/lib/filter.js`, new `imports/lib/advancedFilter.js`): the tokenizer treated every `/`
+  as a regex delimiter even inside quotes, so `'Date de fin' == '06/04/2020'` broke tokenizing
+  and the filter silently did nothing; and date custom fields store Date OBJECTS while the
+  selectors compared strings/parseInt — `==`/`<`/`>` could never match and `!=` matched
+  everything. Dates typed in the user's date format (day-first respected) now build half-open
+  Date-range selectors (`==` means "that day"), with the legacy behavior untouched for
+  non-date fields. Tests: `tests/advancedFilterDate.test.cjs` (14, incl. a proof the old
+  selector shape never matched a stored Date). Thanks to k1ng440 and xet7.
+- **Cards could not be reordered by drag in lists full of subtask cards — with silent
+  data loss on multi-selection drops** ([#3826](https://github.com/wekan/wekan/issues/3826),
+  `server/models/cards.js`, `client/components/lists/list.js`, new
+  `models/lib/cardSortRepair.js`): `addSubtaskCard` inserted EVERY subtask card with the
+  constant `sort: -1`, so such lists contained only tied sorts; dropping between two equal
+  sorts computes a zero increment, the move modifier came out empty and the card snapped
+  back — and a multi-selection drop wrote the SAME sort to every selected card, permanently
+  destroying their order. Subtask cards now append with a unique sort, and the drop handler
+  detects degenerate (tied/inverted) gaps and repairs the siblings' sorts to a strict order
+  before recomputing the drop index. Tests: `tests/subtaskCardReorder.test.cjs` (14).
+  Thanks to jayki and xet7.
+- **Cross-board subtask full path disappeared after refresh**
+  ([#3453](https://github.com/wekan/wekan/issues/3453), `server/publications/boards.js`, new
+  `server/lib/subtaskAncestors.js`): the board publication shipped only the DIRECT parent
+  cards, while the full-path label walks the whole ancestor chain client-side — after F5 the
+  grandparents were missing from minimongo and the path truncated/vanished. The publication
+  now walks and publishes the full ancestor chain (batched per level, cycle-safe, tolerant of
+  deleted ancestors). Tests: `tests/subtaskAncestors.test.cjs` (11). Thanks to
+  MPeti1 and xet7.
+- **Linked cards: phantom empty custom-field rows and a template TypeError on every render**
+  (from [#3748](https://github.com/wekan/wekan/issues/3748), `models/cards.js`, new
+  `models/lib/customFieldsWD.js`): a linked card keeps the ORIGINAL board's custom-field
+  snapshot; unresolvable definitions rendered as empty `{}` placeholders — a phantom row per
+  entry and `Cannot read properties of undefined (reading 'type')` from the card details
+  template (also reachable on normal cards with deleted definitions). Unmatched entries are
+  now skipped. The rest of #3748 is by design: linked cards are pointers that mirror the
+  original; label/custom-field ids are board-scoped, and name-based inheritance is the COPY
+  feature. Tests: `tests/customFieldsWD.test.cjs` (9). Thanks to peterbecich and xet7.
+- **Archive sidebar: Restore/Delete links floated ambiguously between two archived cards**
+  ([#3199](https://github.com/wekan/wekan/issues/3199),
+  `client/components/sidebar/sidebarArchives.jade`, `sidebar.css`): each card and its links
+  were loose siblings with near-equal spacing above and below, so the links seemed to belong
+  to the card underneath. Each archived card is now grouped with its own links in one
+  container with a clear separator gap below (RTL-safe logical properties, theme-neutral).
+  Tests: `tests/archiveLinkGrouping.test.cjs` (9). Thanks to fxkr and xet7.
+- **Attachments uploaded inside card comments: listing in the card's Attachments section is
+  now guaranteed and regression-locked** ([#3843](https://github.com/wekan/wekan/issues/3843),
+  new `models/lib/attachmentMeta.js`, `client/lib/utils.js`): the rich comment editor already
+  uploads into the same Attachments collection with the same card meta as the Attachments
+  popup, so they DO list — but nothing pinned that invariant and the meta was built in two
+  places. One shared, null-safe builder now feeds both paths, with tests pinning that gallery
+  queries key on `meta.cardId` with no source filter (and that board backgrounds stay
+  excluded). Tests: `tests/commentAttachmentsList.test.cjs` (12). Thanks to
+  jghaanstra and xet7.
+- **Maximized card rendered at the wrong place after scrolling in Swimlanes view**
+  ([#4822](https://github.com/wekan/wekan/issues/4822), `client/components/cards/cardDetails.css`):
+  the legacy maximized-pane CSS had no `position` of its own, so the pane stayed an in-flow
+  item inside the scrolled board canvas (off-screen after scrolling down); the desktop-mode
+  floating-window rules also out-specified every maximize geometry rule, and inline drag
+  offsets survived maximizing. The maximized pane is now viewport-`fixed` with explicit insets
+  that beat both the floating-window rules and stale drag offsets (drag position is restored
+  on minimize), RTL-safe via logical properties. A cascade-resolver regression test pins the
+  behavior against the real stylesheet and fails on the pre-fix CSS:
+  `tests/maximizedCardPosition.test.cjs` (11 tests). Thanks to pravdomil and xet7.
+- **LDAP group filter locked out admins and rejected multiple groups**
+  ([#4036](https://github.com/wekan/wekan/issues/4036), `packages/wekan-ldap/server/ldap.js`):
+  with `LDAP_GROUP_FILTER_ENABLE=true`, only members of the single
+  `LDAP_GROUP_FILTER_GROUP_NAME` group could log in — an admin who was only in
+  `LDAP_SYNC_ADMIN_GROUPS` could not log in at all, and a comma-separated group list produced
+  the literal filter `(cn=A,B)` that matches nothing. The filter now ORs across every
+  comma-separated group name and, when admin sync is enabled, also admits the admin-sync
+  groups. Thanks to zeisss-mercedes and xet7.
+- **Board invitation emails could carry a dead invitation code — and signup then failed with
+  "The invitation code doesn't exist"** ([#4043](https://github.com/wekan/wekan/issues/4043),
+  `server/models/settings.js`, `server/models/users.js`, new `models/lib/invitationCodeEmail.js`):
+  re-inviting an unregistered user re-sent the SAME stale code (invalidated by an earlier
+  OAuth2 signup or deleted account) instead of regenerating it; a failed SMTP send deleted a
+  previously delivered, still-valid code; codes were mailed without checking they exist and
+  are valid; the invitee address was only lowercased client-side; and the signup hook deleted
+  the code BEFORE the account insert was committed, so a failed insert burned the code for
+  every retry. Re-invites now regenerate stale codes (still-valid ones are kept so earlier
+  emails keep working), sends fail loudly on unusable codes, rollback only removes codes the
+  failed send itself created, and consumption happens only after a successful signup. Tests:
+  `tests/invitationCodeEmail.test.cjs` (14). Thanks to jkoenig134 and xet7.
+- **Japanese/Chinese UI: the add-card button and footer links wrapped mid-word**
+  ([#4023](https://github.com/wekan/wekan/issues/4023), `client/components/forms/forms.css`):
+  CJK text has no spaces, so the narrow add-card composer footer broke 追加 / リンク / 検索 /
+  テンプレート between any two characters. The composer/edit footers now use
+  `word-break: keep-all` with `flex-wrap: wrap` (wrapping between links, never inside a word)
+  and `white-space: nowrap` on the button and each link group; Latin wrapping is unchanged and
+  the negative tests pin that no global word-break was introduced. Tests:
+  `tests/cjkLabelWrap.test.cjs` (9). Thanks to yuki-snow1823, Sylvain2703 and xet7.
+- **Users added to a team AFTER the team was assigned to a board never became board members —
+  and the Admin Panel bulk team add/remove silently did nothing**
+  ([#4593](https://github.com/wekan/wekan/issues/4593), `server/models/users.js`,
+  `client/components/settings/peopleBody.js`, new `models/lib/teamBoardMemberSync.js`):
+  assigning a team to a board snapshotted its then-current members, so later joiners could see
+  the board via publications but every authority gate (`hasMember`, card/list mutations,
+  attachment downloads, export) denied them; and the Admin Panel "Add/Remove team to selected
+  users" used a direct client-side `Users.update` that server permissions silently deny.
+  `editUser`/`createUser` now add new team members to all boards their teams are assigned to
+  (never touching existing member entries, skipping template boards), and the bulk actions go
+  through the admin `editUser` method. Tests: `tests/teamBoardMemberSync.test.cjs` (13).
+  Thanks to szymonsztuka and xet7.
+- **LDAP background sync only worked once per user** ([#4654](https://github.com/wekan/wekan/issues/4654),
+  `packages/wekan-ldap/server/ldap.js`, `sync.js`, new `userIdFilter.js`): `getUserById` crashed or built the
+  invalid filter `(|(=user))` when `LDAP_UNIQUE_IDENTIFIER_FIELD` was unset/empty (it never consulted
+  `LDAP_USER_SEARCH_FIELD`, where the stored id actually comes from), and the username sync passed `$set` as
+  query OPTIONS to `findOneAsync` — logging "Syncing user username" while writing nothing. New shared
+  `buildUserIdFilter()` ORs across both configured fields, `idAttribute` is persisted on new LDAP users, and
+  the username sync actually updates. Tests: `tests/ldapUserIdFilter.test.cjs` (11). Thanks to fabianrbz and xet7.
+- **All Boards page: per-list card counts and member avatars never showed** ([#5174](https://github.com/wekan/wekan/issues/5174),
+  [#4825](https://github.com/wekan/wekan/issues/4825), new `models/lib/boardTileData.js`,
+  `server/publications/boards.js`, `client/components/boards/boardsList.js`, `.jade`): the helpers were stubbed
+  to `[]` to stop the #4214 reactive "icons dance", and the gating flags were never published. New non-reactive
+  `getAllBoardsTileData` method (one boards query, one lists query, one grouped card count) fetched once per
+  page visit; per-board "Show card count per list"/"Show Board members avatars" settings enforced strictly both
+  ways. Tests: `tests/boardTileData.test.cjs` (17). Thanks to mueschel, Miuler and xet7.
+- **Lists rendered with different widths by default** ([#5659](https://github.com/wekan/wekan/issues/5659),
+  new `models/lib/listWidth.js`, `client/components/lists/list.js`, `listHeader.js`, `models/users.js`): the
+  default width was duplicated in four resolution paths that disagreed (270 vs 272), so lists on the same
+  (public) board could differ with no customization. Single source of truth (272), all paths normalize
+  out-of-range values the same way; customized widths still win. Tests: `tests/listWidthDefaults.test.cjs` (12).
+  Thanks to butteredCat-2021 and xet7.
+- **Declining a board invitation kept the board active in the member's overview** ([#4730](https://github.com/wekan/wekan/issues/4730),
+  `server/models/boards.js`, new `models/lib/boardInvites.js`): the decline flow called `quitBoard` (deactivate)
+  then `acceptInvite`, which unconditionally REACTIVATED membership — it also let any removed member re-add
+  themselves. `quitBoard` now clears the pending invitation (and works for stale-invite-only users);
+  `acceptInvite` only activates when an invitation actually exists. Tests: `tests/boardInvites.test.cjs` (11).
+  Thanks to Griiimm and xet7.
+- **After migrating a user from password to LDAP, the old local password still logged in**
+  ([#4419](https://github.com/wekan/wekan/issues/4419), new `server/lib/ldapPasswordLoginGuard.js`,
+  `server/authentication.js`): a `validateLoginAttempt` hook now rejects password-service logins for
+  `authenticationMethod: 'ldap'` users while LDAP is enabled — respecting the `LDAP_LOGIN_FALLBACK=true`
+  feature, never touching other services or session resumes, and opt-out-able with
+  `LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN=true` so no deployment is hard-locked. Tests:
+  `tests/ldapPasswordLoginGuard.test.cjs` (12). Thanks to preciousamorc and xet7.
+- **`LDAP_ENCRYPTION=true` (the documented value) silently connected WITHOUT encryption**
+  ([#4158](https://github.com/wekan/wekan/issues/4158), new `packages/wekan-ldap/server/encryptionSetting.js`,
+  `ldap.js`, `docs/Login/LDAP.md`): only the undocumented `ssl`/`tls` values did anything, and any other value
+  (including `true`, which JSON-parses to a boolean) meant silent plaintext. Now `true`→LDAPS,
+  `starttls`→STARTTLS, legacy `ssl`/`tls` keep their historical meanings with a deprecation notice, and unknown
+  values log a clear warning listing the accepted ones. Tests: `tests/ldapEncryptionSetting.test.cjs` (22).
+  Thanks to farwayer and xet7.
+- **OIDC login onto an existing account wiped the profile — avatars and templates disappeared**
+  ([#4560](https://github.com/wekan/wekan/issues/4560), `server/models/users.js`): the
+  `OAUTH2_MERGE_EXISTING_USERS` merge path replaced the whole `profile` with the OIDC-derived one, losing
+  `avatarUrl`, `templatesBoardId` (+ template swimlanes), language and preferences. The merge now preserves the
+  stored profile and only fills gaps/updates the asserted fullname; the fail-closed linking rules
+  (GHSA-mp7g-hj5q-gxhq) are untouched. Tests: `tests/oidcProfileMerge.test.cjs` (7, fails on pre-fix code).
+  Thanks to LeoLu-eng and xet7.
+
+- **OAuth2/OIDC: concurrent logins could contaminate each other's user data — users saw stale
+  or missing emails/username/teams, and the database could disagree with the UI**
+  ([#4897](https://github.com/wekan/wekan/issues/4897), `packages/wekan-oidc/oidc_server.js`,
+  `packages/wekan-oidc/loginHandler.js`). The OIDC server flow kept `profile`, `serviceData`
+  and `userinfo` as MODULE-SCOPE variables shared by every login of every user: fields the
+  current login did not overwrite leaked from the previous user's login (refreshToken,
+  whitelisted id-token claims, branch-dependent email), and because the handler awaits the
+  token/userinfo requests, two interleaved logins wrote into the SAME objects — a login could
+  complete carrying another user's id/email/username, updating the wrong user document. The
+  `PROPAGATE_OIDC_DATA` group/attribute path additionally ran on implicit GLOBALS
+  (`teamArray`, `isAdmin`, `user_email`, …) with awaits between assignment and use, so
+  concurrent logins could write one user's email/teams/admin flag onto another user's document
+  — real database corruption, matching the "web interface shows different data vs mongodb"
+  report. All login state is now per-login locals, the login handler compares actual values
+  (the old username/fullname comparisons compared a string to an object, always true), and a
+  regression test proves isolation under concurrent logins and fails against the pre-fix code:
+  `tests/oidcLoginStateIsolation.test.cjs` (11 tests, positive + negative). Thanks to
+  gerardo-junior and xet7.
+
+- **Snap/Docker: after the MongoDB → FerretDB migration ALL CollectionFS-era attachments were
+  missing** ([#6473](https://github.com/wekan/wekan/issues/6473),
+  `releases/migrate-mongodb-to-ferretdb.mjs`, `snap-src/bin/migrate-mongo3-to-ferretdb.mjs`,
+  `snap-src/bin/migrate-gridfs-to-fs.mjs`). Real CollectionFS (old WeKan's
+  `FS.Store.GridFS('attachments')`) stores each file's GridFS id at **`copies.<bucket>.key`**
+  (`copies.attachments.key` / `copies.avatars.key`) — but the importers only looked at
+  `original.gridFsFileId`, `gridFsFileId` and `copies.gridfs.key`, none of which exist in that
+  layout. So the modern importer "skipped" every file **silently** and the MongoDB 3.x importer
+  extracted the binaries but never created an attachment record (and the records it did create
+  lost their `meta.cardId`/`boardId`, which CollectionFS keeps at the record's TOP level — an
+  attachment without `meta.cardId` shows on no card). Either way the migration reported success
+  with zero attachments visible. A new shared `resolveCfsGridFsId()` resolves the id from all
+  four layouts (`original.gridFsFileId`, `gridFsFileId`, `copies.<bucket>.key`,
+  `copies.gridfs.key`, then any `copies.*.key`), the modern importer now **drives extraction
+  from `cfs_gridfs.<bucket>.files` itself** (so a missing/empty `cfs.<bucket>.filerecord`
+  collection no longer skips everything — binaries without a filerecord are still extracted to
+  disk), the mongo3 importer copies the top-level `boardId`/`cardId`/`listId`/`swimlaneId`/
+  `userId` into `meta`, and filerecords whose binary cannot be located are **reported as
+  errors** on the migration dashboard instead of being silently dropped. If you already
+  migrated and attachments are missing, run the migration again: `snap run wekan.migrate`
+  (the source MongoDB data was never modified). Behavioral positive/negative tests:
+  `tests/migrationAttachmentExtraction.test.cjs`. Thanks to mueschel and xet7.
+
+- **Snap/Docker: Meteor-Files attachments stored in GridFS without a `storage: 'gridfs'` flag
+  were left pointing at a GridFS that no longer exists after migration**
+  ([#6473](https://github.com/wekan/wekan/issues/6473), `releases/migrate-mongodb-to-ferretdb.mjs`,
+  `snap-src/bin/migrate-gridfs-to-fs.mjs`). WeKan's own `getFileStrategy` serves a version from
+  GridFS when its storage flag says `'gridfs'` **or** it carries a
+  `versions.*.meta.gridFsFileId` reference — those reference-only records worked fine on
+  MongoDB, but the migration's file phase only matched `versions.original.storage: 'gridfs'`,
+  so their binaries were never extracted and the record kept pointing into the void (404 after
+  the switch). The record scan now matches both forms (and every version, not just
+  `original`), and a **second, bucket-driven sweep** walks `<bucket>.files` by its
+  `metadata.fileId` back-reference (the way WeKan writes GridFS uploads), recovering binaries
+  even when the record's flags say nothing about GridFS. Any GridFS-flagged version whose
+  binary genuinely cannot be located is reported on the dashboard. Thanks to mueschel and xet7.
+
+- **Admin Panel > Attachments showed "/data" as the Filesystem Storage path on every
+  platform** ([#6473](https://github.com/wekan/wekan/issues/6473),
+  `client/components/settings/attachments.js`, `client/components/settings/settingBody.js`,
+  `server/models/attachmentStorageSettings.js`, `models/lib/attachmentStoragePath.js`). The
+  Blaze helpers computed the path from `process.env.WRITABLE_PATH` **in the browser**, where
+  `process.env` never has it, so the page always fell back to "/data" — a path that does not
+  exist on a Snap install (the real path is `/var/snap/wekan/common/files/attachments`),
+  sending admins hunting for a directory that was never there. The client now asks the server
+  via a new admin-only `getAttachmentStoragePaths` method, whose Snap-aware computation
+  (shared, dependency-free `models/lib/attachmentStoragePath.js` — WRITABLE_PATH already ends
+  in `/files` on Snap, `/files` is appended elsewhere) is also used for the settings document's
+  default filesystem path, which pointed at `/data/attachments` instead of
+  `/data/files/attachments` on Docker. Unit tests with negative cases:
+  `tests/attachmentStoragePath.test.cjs`. Thanks to mueschel and xet7.
+
+- **Snap: `snap run wekan.database ferretdb` looked like it re-ran the migration — it only
+  switches databases** ([#6473](https://github.com/wekan/wekan/issues/6473),
+  `snap-src/bin/wekan-database`). Running it while already on FerretDB printed "WeKan now uses
+  FerretDB (SQLite)." and users reasonably read that as "migration done" while their
+  attachments stayed missing. It now says when nothing was switched, states that the command
+  does NOT migrate data, and names the command that does: `snap run wekan.migrate`. Thanks to
+  mueschel and xet7.
+
+- **FerretDB (SQLite) rejected documents with literal dotted field names, silently dropping
+  them during migration** ([#6473](https://github.com/wekan/wekan/issues/6473),
+  [wekan/FerretDB](https://github.com/wekan/FerretDB) `internal/types/document_validation.go`).
+  MongoDB has accepted documents with literal `.` in field names since 3.6, and data migrated
+  from a real MongoDB can legitimately contain them — but FerretDB v1's document validation
+  rejected every such document (*"invalid key: … (key must not contain '.' sign)"*), and since
+  per-item migration errors are deliberately non-fatal (#6466), those documents simply went
+  missing. Fixed in the bundled wekan/FerretDB fork: dotted keys are stored and round-tripped
+  literally with MongoDB's own semantics (query/update paths still treat `.` as a path
+  separator), while the other key rules (`$` prefix, duplicates, UTF-8) still reject. Verified
+  end-to-end against a live FerretDB (SQLite): insert, nested `$set`, round-trip, and the
+  negative cases. Thanks to mueschel and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.96 2026-07-16 WeKan ® release
+
+This release adds the following updates:
+
+- **Releases now include the Sandstorm .spk package** (`.github/workflows/release-all.yml`).
+  The release-all workflow got a new `build-sandstorm` job that runs after the GitHub Release
+  is created: it builds the Sandstorm package from the release tag with the same steps as the
+  standalone sandstorm.yml workflow and attaches `wekan-<version>-sandstorm.spk` to the
+  Release. The job is non-blocking (`continue-on-error`), so the experimental Sandstorm build
+  never fails or delays the rest of the release. The standalone sandstorm.yml workflow still
+  exists for building and testing the .spk on its own without doing a full release. Thanks
+  to xet7.
+
+- [Bump websocket-driver from 0.7.4 to 0.7.5](https://github.com/wekan/wekan/pull/6462).
+  Thanks to dependabot.
+
+- **New general `cpu-exec` + bundled qemu-user: every WeKan platform now runs binaries that need
+  missing CPU features through emulation automatically**
+  ([#6458](https://github.com/wekan/wekan/issues/6458), `snap-src/bin/cpu-exec`,
+  `snap-src/bin/mongodb-control`, `snap-src/bin/migration-control`, `.github/workflows/release-all.yml`,
+  `.github/workflows/sandstorm.yml`, `sandstorm-src/build-deps.sh`, `releases/ferretdb/start-wekan.sh`,
+  `releases/ferretdb/wekan-entrypoint.sh`, `docs/Databases/mongodb-avx-qemu.md`,
+  `docs/Databases/mongodb-raspi4-qemu.md`). The #6458 report turned out to run inside a hypervisor
+  that MASKS AVX — and the snap's old per-tool AVX wrappers (amd64-only, PATH-based) were bypassed
+  by every absolute-path `mongod` invocation. The new `cpu-exec` helper is one general mechanism
+  for all scripts, sandboxes, platforms and CPUs: `cpu-exec --features x86_64=avx,aarch64=atomics
+  <binary> [args]` checks `/proc/cpuinfo` and, when a required feature is missing, transparently
+  re-runs the binary through a same-architecture qemu-user (bundled first, then system); with no
+  declared features it is a plain zero-overhead exec, so every binary can be routed through it
+  (`WEKAN_REQUIRED_CPU_FEATURES` declares requirements externally). The Snap's mongodb-control and
+  migration-control now run every mongod 7 through it — so MongoDB works (slower) on CPUs without
+  AVX and the migration can READ modern MongoDB data there, with the FerretDB switch/migration
+  fallbacks unchanged; `aarch64=atomics` covers MongoDB's ARMv8.2-A requirement (Raspberry Pi 4
+  and older lack it). release-all.yml now ships `cpu-exec` plus this-arch's static qemu-user in
+  every Linux bundle .zip (amd64/arm64/ppc64le/s390x/riscv64 — stripped from the Windows/macOS
+  bundles, where qemu-user does not exist), which flows into the Docker image and the Snap
+  automatically, and the Sandstorm .spk gets both via build-deps.sh; the bundle launcher and
+  Docker entrypoint route node/ferretdb through it. Thanks to a1bert01 and xet7.
+
+- **Added regression tests, with negative cases, for all of the fixes below** (`tests/htmljsArrayContent.test.cjs`,
+  `tests/cardDescriptionDraft.test.cjs`, `tests/commentDraft.test.cjs`, `tests/attachmentDeleteGuard.test.cjs`,
+  `tests/ruleMoveAction.test.cjs`, `tests/snapMigrationRecovery.test.cjs`, `tests/ferretdbPolling.test.cjs`,
+  `tests/uiDensity.test.cjs`, `tests/cpuExec.test.cjs` — a BEHAVIORAL test that executes the real
+  cpu-exec against fake /proc/cpuinfo files and a fake qemu-user, covering direct exec, qemu fallback,
+  missing-qemu error, per-arch scoping and env overrides —, `tests/cpuExecWiring.test.cjs` — pins the
+  cpu-exec DELIVERY pipeline: every Linux bundle in release-all.yml embeds cpu-exec plus its own
+  arch's qemu-user (arm64/extra arches replace the inherited amd64 one, tolerantly), the Windows and
+  macOS bundles strip both, qemu-user-static is installed in every bundle-building job, the Sandstorm
+  .spk ships both via build-deps.sh, the Docker entrypoint and bundle launcher route ferretdb/node
+  through cpu-exec WITH direct-exec fallbacks for bundles that lack it, and the snap ships it via the
+  snap-src helpers part —, `tests/subtasksDefaultBoard.test.cjs` (see the #6456 entry below), and `tests/ferretdbHasData.test.cjs` — a BEHAVIORAL test executing the real snap-src/bin/ferretdb-has-data guard (the check that gates every switch to FerretDB) against crafted directories: non-empty .sqlite passes with no -wal sidecar required, while a 0-byte .sqlite from a failed migration, sidecar-only leftovers, a directory named *.sqlite, and empty/missing directories are all rejected — all
+  wired into `test:unit:node` in `package.json`; plus Go table tests in the wekan/FerretDB fork's
+  `internal/backends/sqlite/query_test.go` and the fork's integration-test fixes (OTel exporter
+  skipped with a single log line when no collector is listening, and valid span contexts without a
+  collector so `TestOtelComment` passes — details in the fork's own CHANGELOG Upcoming). The htmljs test exercises the vendored
+  compiler's Tag constructor directly (array content vs. attributes, #6459) and the draft tests run the real
+  extracted `normalize`/`normalizeTrigger` functions; the UI tests guard the #6465 density fixes in the repo's
+  CSS-guard style (base font 14px, card details docking right of the board instead of over its own card, compact
+  admin table headers, un-clipped zoom pill, one-click board settings cog). The FerretDB Go tests pin the SQLite
+  filter-pushdown semantics: which strings are pushdown-safe, exact WHERE/args for `_id` and top-level equality
+  filters, and that dotted paths, operators, non-strings and unsafe strings stay with the in-Go filter. Thanks
+  to xet7.
+
+and fixes the following bugs:
+
+- **Subtasks: creating a subtask crashed with "Exception while invoking method 'addSubtaskCard'"**
+  ([#6456](https://github.com/wekan/wekan/issues/6456), `models/boards.js`,
+  `tests/subtasksDefaultBoard.test.cjs`). The lazily-creating getters for the default subtasks
+  helper board and its landing list still used the SYNC `Boards.insert` / `Swimlanes.insert` /
+  `Lists.insert` / `Boards.update` APIs, which Meteor 3 removed from the server — so the
+  `addSubtaskCard` method's async path crashed with *"insert is not available on the server.
+  Please use insertAsync() instead"* the first time a board needed its `^Board^` helper board
+  created (the list creator additionally read `getDefaultSwimline()._id`, which on the Meteor 3
+  server is a Promise, so it could never have worked). The sync getters are now PURE (no
+  creation — also matching the #3868/#2256 rule that only the server may create these), and the
+  server-side lazy creation lives in `getDefaultSubtasksBoardAsync`/`getDefaultSubtasksListAsync`
+  using the async APIs. The never-called date-settings twins, which had the same sync calls and
+  no server-only guard at all, are pure getters now too. With a regression test guarding that no
+  sync collection writes come back to `models/boards.js`. Thanks to sjohnen and xet7.
+
+- **GUI: the "More" menu of cards was completely empty, so cards could not be deleted from it**
+  ([#6459](https://github.com/wekan/wekan/issues/6459),
+  `npm-packages/meteor-jade-loader/lib/vendor/htmljs.js`, `client/components/lists/listHeader.jade`).
+  A WeKan-local vm-sandbox patch in the vendored jade compiler's htmljs made
+  `isConstructedObject(Array)` return `false` (upstream returns `true`), so a tag whose inline text
+  compiles to an ARRAY — the `label {{_ 'source-board'}}:` and `label {{_ 'parent-card'}}:` lines in
+  cardMorePopup — got its content array mis-assigned as the tag's *attributes*. At runtime Blaze then
+  found a template view object inside the attributes and threw *"The basic TransformingVisitor does
+  not support foreign objects in attributes"* on every render, killing the whole popup — including
+  the card Delete link. The tag constructor now treats an array first-argument as content, like
+  upstream htmljs. Also fixed the list "More" popup's copy-link input, which was always empty because
+  it referenced a `rootUrl` helper that does not exist (now `absoluteUrl`). Board and swimlane menus
+  intentionally offer archive (delete lives in Sidebar → Archive), so only the card menu was actually
+  broken. Thanks to thku and xet7.
+
+- **Cards: the "You have an unsaved description" warning could never be cleared by saving**
+  ([#6455](https://github.com/wekan/wekan/issues/6455), reincarnation of
+  [#1287](https://github.com/wekan/wekan/issues/1287), `client/components/cards/cardDetails.js`,
+  `client/components/cards/cardDescription.js`). Two bugs: closing the description editor only
+  *avoided adding* a draft when the text matched the saved description — it never *removed* a
+  pre-existing draft record, so once the warning appeared, "View it" → Save could not clear it, only
+  Discard could. And the comparison matched a per-line-whitespace-stripped draft against the raw
+  stored description (or `null` when empty), so descriptions with Markdown `"  "` hard-breaks
+  re-created a phantom draft on every save. Saving now removes the draft record explicitly, and both
+  sides of the comparison are normalized the same way. Thanks to C0rn3j and xet7.
+
+- **Comments: a comment being written was lost when the card was closed or a click landed outside
+  the card** ([#5547](https://github.com/wekan/wekan/issues/5547),
+  `client/components/activities/comments.js`). The comment-draft machinery existed (the form even
+  prefills from it) but had been disarmed since 2019: the escape handler that saved the draft was
+  gated on a "form is open" flag that nothing ever set — the setter was removed back then because the
+  handler also *cleared the visible text* on every outside click. Now the draft is saved continuously
+  (debounced) while typing and flushed when the form is torn down, submit removes the draft, and the
+  escape handler no longer clears the visible text — so an unfinished comment survives closing the
+  card, and reopening the card restores it into the form. Thanks to Finnlife, webenefits and xet7.
+
+- **Attachments: deleting an attachment could log a client-side "Removed nonexistent document"
+  exception even though the delete succeeded**
+  ([#5282](https://github.com/wekan/wekan/issues/5282),
+  `client/components/cards/attachments.js`). Same class as the fixed #3252 for comments and
+  checklists: under publication churn the attachment document can already be evicted from Minimongo
+  when the confirm handler runs, and removing a missing _id throws. The delete now only runs when
+  the document is still in the local cache — the comment/checklist guards' missing sibling. Thanks
+  to lupuszr and xet7.
+
+- **Rules: the "move card to top/bottom" actions did nothing**
+  ([#6472](https://github.com/wekan/wekan/issues/6472), `server/rulesHelper.js`,
+  `client/components/rules/actions/boardActions.js`, `client/components/rules/rulesImportExport.js`,
+  `server/rulesButton.js`, `models/lists.js`). A pile-up of five bugs, all silent because the
+  activity hook swallows rule-action errors: (1) an unresolved destination list (typo'd, renamed,
+  case-mismatched, or on another board) crashed on `list.cardsUnfiltered` — now it falls back to the
+  card's current list; (2) the classic rule wizard's generic "move to top/bottom" stored the field as
+  `listTitle`, which the rule engine never reads (`listName`) — so every such rule created from the
+  wizard has never worked; (3) an empty destination list made `Math.min()/Math.max()` of nothing
+  write a corrupt `sort: ±Infinity`; (4) the rules JSON/CSV import created rules with raw client
+  inserts that the board-admin-only allow rules reject into minimongo limbo — it now uses the same
+  `rules.createRule` server method as the wizard, and defaults missing trigger matching fields (e.g.
+  `userId`) to the `*` wildcard so hand-written JSON matches; (5) `rules.createRule` let an empty
+  `boardId: ''` from a not-yet-loaded board selector override the real board. Also fixed the
+  server-side orphaned-cards fallback in `List.cards()/cardsUnfiltered()`, which silently never
+  applied because an async lookup was read synchronously. Thanks to jmb26240 and xet7.
+
+- **GUI: desktop density regressions from the v7.98–v8.18 mobile UI work**
+  ([#6465](https://github.com/wekan/wekan/issues/6465), `client/components/main/layouts.css`,
+  `client/components/cards/cardDetails.css`, `client/components/main/header.css`,
+  `client/components/settings/peopleBody.jade`, `client/components/settings/settingBody.css`,
+  `client/components/boards/boardHeader.jade`). Restores the WeKan 6.09 desktop look users asked
+  for: the base font is back to 14px (the `clamp(...2.5vw...)` introduced in v7.98 and raised in
+  v8.02 resolved to 18px on any window wider than 720px — +28.5% on every font, button and input,
+  the "everything is way too big" complaint) and headings back to 22/18/16px; the card details
+  window no longer opens as a huge floating sheet ON TOP of its own card — it docks to the right
+  edge like the classic side panel (still movable by its drag handle), with 6.09's 20px content
+  padding instead of ~48px white borders, a 3px corner radius, and without the v8.18 rule that
+  forced ALL card text to the title's size; the All Boards page header band is back to 6.09's
+  compact padding; the Admin Panel Organizations/Teams tables no longer explode column widths
+  ("Select all / Unselect all" header links are now compact icons and header cells may wrap); the
+  zoom pill no longer renders cut off (fixed-pixel pill inside the 28px quick-access row); and
+  board settings opens with ONE click from a new cog button in the board header (the sidebar path
+  still works). Follow-ups caught by the Playwright suite: archiving or deleting a card now also
+  CLOSES its details window (the card id stayed in the openCards session list, so the right-docked
+  window kept rendering exactly over the archives sidebar and intercepted its Restore/Delete
+  clicks), and an OPEN sidebar now stacks above the card window (z-index 2002 vs 2001) so the
+  sidebar is always usable while a card is open. With Playwright coverage: a new spec proves board
+  settings opens in one click from the header cog (and that the popup closes again), and the
+  archives spec's board-menu click is scoped to the sidebar instance since the cog made the bare
+  class selector ambiguous. Note: a missing watch "eye" icon is the Admin Panel → Features →
+  Notifications "disable watch" setting, not a regression. Thanks to Mintyt, csonkaoszimt,
+  micha141076 and xet7.
+
+- **Snap: WeKan served "502 Bad Gateway" forever when mongod could not start — including on CPUs
+  without AVX ("Illegal instruction")** ([#6458](https://github.com/wekan/wekan/issues/6458),
+  [#6466](https://github.com/wekan/wekan/issues/6466), `snap-src/bin/mongodb-control`,
+  `snap-src/bin/migration-control`). MongoDB 5.0+ x86_64 binaries require AVX; on CPUs without it
+  mongod dies instantly with SIGILL (exit 132). mongodb-control never checked the mongod fork's
+  exit status: it pinged the dead port for ~10 minutes, snapd restarted the service, and the cycle
+  repeated forever — same limbo as when the data files are still MongoDB 3.x ("This version of
+  MongoDB is too recent"). Now there is an AVX pre-flight and the fork/final-start exit codes are
+  checked: if a COMPLETED FerretDB migration exists the snap switches to it; otherwise the
+  MongoDB → FerretDB migration is (re)run — FerretDB is pure Go + SQLite and the 3.x reader uses
+  the bundled MongoDB 3.2 tools, so neither needs AVX — with a 3-attempt counter so a persistently
+  failing migration cannot ping-pong, and clear log guidance (`snap run wekan.migrate`).
+  migration-control also skips the pointless mongod 7 probe when AVX is missing. Thanks to kiarn
+  and xet7.
+
+- **Snap: a migration that finished with a few per-item errors ("Avatars Errors") deleted the
+  fully-copied FerretDB database and left the snap serving 502 Bad Gateway**
+  ([#6466](https://github.com/wekan/wekan/issues/6466), `snap-src/bin/migrate-mongo3-to-ferretdb.mjs`,
+  `releases/migrate-mongodb-to-ferretdb.mjs`, `snap-src/bin/migration-control`). Both importers
+  treated ≥10 logged errors of ANY kind as failure — but per-item errors (one document that fails
+  JSON parsing, one avatar that fails to extract) don't invalidate everything that DID copy. The
+  failure path then discarded the whole migrated SQLite, set `migrate=off`, and "fell back" to
+  MongoDB — impossible for a 6.09 upgrade, whose 3.x data files the bundled mongod 7 cannot open,
+  producing the reported endless `db-eval.mjs ping` loop and 502. Per-item errors are now logged
+  but non-fatal (only real failures — disk full, unreachable target/source — still fail), and a
+  failed 3.x-source migration keeps the partial FerretDB SQLite plus its checkpoint and RESUMES on
+  the next start instead of deleting hours of copied data. Thanks to Nissulya, S0QR2, lezioul,
+  usrflo and xet7.
+
+- **Snap/Bundle: FerretDB v1 pinned 250–400% CPU and boards took minutes to load after migration**
+  ([#6467](https://github.com/wekan/wekan/issues/6467),
+  [#6468](https://github.com/wekan/wekan/issues/6468), `snap-src/bin/wekan-control`,
+  `releases/ferretdb/start-wekan.sh`, and the wekan/FerretDB fork). Two sides. WeKan side: with
+  FerretDB there is no oplog, so Meteor observes every query by POLLING — and its defaults re-run
+  every observed query 50 ms after ANY write and at least every 10 s, which on an active board
+  multiplies into hundreds of full queries per second; with FerretDB the snap and the bundle
+  launcher now default to `METEOR_POLLING_THROTTLE_MS=2000` / `METEOR_POLLING_INTERVAL_MS=30000`
+  (overridable; own changes still appear instantly, other users' changes may take ~2 s longer).
+  FerretDB side (fork v1.28): real filter pushdown so `{boardId: X}` uses the SQLite expression
+  indexes instead of decoding the whole 53k-card collection per query, a connection pool cap of
+  2×CPUs (was 100 — dozens of concurrent full scans thrashing the pure-Go SQLite mutexes were the
+  reported 821k futex calls/30 s), and inserts no longer take the registry's global write lock.
+  Thanks to anlx-sw, markusst1982 and xet7.
+
+- **LDAP: group search filters were double-escaped and broke group filtering**
+  ([#6460](https://github.com/wekan/wekan/issues/6460),
+  [PR #6469](https://github.com/wekan/wekan/pull/6469), `packages/wekan-ldap/server/ldap.js`).
+  The group filter was post-processed with a global backslash-doubling replace, a leftover
+  workaround from the ldapjs era that predates the proper `escapedToHex` hex escaping. It turned
+  already-correct RFC 4515 escapes like `\5c` and `\28` (an AD DN with an escaped comma, a group
+  name with parentheses) into `\\5c`/`\\28`, which ldapts' strict filter parser rejects with
+  *"Invalid escaped hex character"* — so group filtering, admin-status sync and role sync failed
+  for exactly those directories. The redundant replace is removed; injection protection is
+  unchanged (`escapedToHex` still hex-escapes the username). Thanks to ChristianMa97.
+
+- **LDAP: enabling org/team sync made every LDAP login fail with 'forbidden'**
+  ([#6461](https://github.com/wekan/wekan/issues/6461),
+  [PR #6470](https://github.com/wekan/wekan/pull/6470), `packages/wekan-ldap/server/loginHandler.js`,
+  `packages/wekan-ldap/server/sync.js`). On the server, a nested `Meteor.callAsync` inherits the
+  current method invocation's `connection`, so when the login handler called the
+  `setUserOrgsTeamsFromLdap` method, its admin guard saw the client's `login` connection with no
+  logged-in user yet and rejected the sync — and the unhandled rejection failed the whole login.
+  (The nightly cron sync runs outside a method invocation, so it was unaffected — which is why
+  this hid.) The login-time sync call now clears the inherited invocation context so it is a true
+  server-to-server call, and org/team sync is additionally wrapped so an optional-enrichment
+  failure is logged instead of blocking login. The same PR also throws the account-creation error
+  from `addLdapUser` at the right point (it was previously used as a user object first), fixes
+  external-avatar localization to use `Avatars.writeAsync` (the callback-style `write` no longer
+  exists in ostrio:files 3.x, so localizing avatars silently did nothing), and adds `*`/`?`
+  wildcard support with unit tests to the `LDAP_SYNC_ORGANIZATIONS_GROUPS` /
+  `LDAP_SYNC_TEAMS_GROUPS` allowlists. Thanks to ChristianMa97 and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.95 2026-07-15 WeKan ® release
+
+This release fixes the following bugs:
+
+- **FerretDB: WeKan did not work after migrating to FerretDB — every logged-in browser was
+  logged out again and the database CPU was pinned at 100%** ([#6457](https://github.com/wekan/wekan/issues/6457),
+  `server/accounts-resume-login.js`, `server/imports.js`). Meteor's `accounts-base` "resume"
+  login handler projects one array element with the **positional operator**
+  (`{fields: {'services.resume.loginTokens.$': 1}}`), and FerretDB rejects that find with
+  *"Executor error during find command :: caused by :: positional operator '.$' couldn't find
+  a matching element in the array"* (code 51246). Resume is how an already-logged-in browser
+  re-authenticates on **every page load and every DDP reconnect**, so the throw logged the user
+  out, the client reconnected, resume threw again, and the retry loop pinned the FerretDB CPU —
+  the board looked broken right after a migration that had just taken hours. WeKan now replaces
+  that login handler with one that projects the whole (small) `loginTokens` array and picks the
+  matching token in JavaScript — which is what upstream already does in its own `$or` fallback
+  query, so nothing else about login behaviour changes. Thanks to markusst1982 and xet7.
+
+- **Snap: a snap refresh during the MongoDB → FerretDB migration threw away hours of migration
+  progress** (`snap-src/bin/migration-control`, `releases/migrate-mongodb-to-ferretdb.mjs`,
+  `snap-src/bin/migrate-mongo3-to-ferretdb.mjs`). A big migration can run for **5 hours**, so
+  being interrupted by a snap refresh, `snap stop` or a reboot is normal — but it was treated
+  as a *failure*: snapd's SIGTERM killed the importer, `migration-control` read its signal exit
+  code (143) as "the migration failed", and `fail_and_run_mongodb` **deleted the partial FerretDB
+  SQLite** and set `migrate=off`. Every refresh meant starting the whole migration from zero.
+  Now an interruption is distinguished from a failure (a SIGTERM/SIGINT trap, plus an importer
+  exit code >= 128) and **keeps** the partial database and the checkpoint, leaves auto-migration
+  on, and hands back to MongoDB so WeKan keeps working until the next start **resumes**. Thanks
+  to markusst1982 and xet7.
+
+- **Snap: an interrupted migration re-extracted every attachment, needing double the disk space**
+  (`releases/migrate-mongodb-to-ferretdb.mjs`, `snap-src/bin/migrate-mongo3-to-ferretdb.mjs`).
+  Only fully-copied *collections* were checkpointed; the file phase started over, and because the
+  destination path was picked with a *"add a `_1`, `_2`, … counter while the file exists"* loop,
+  every already-extracted attachment was written a **second** time under a new name, orphaning
+  the first copy — so a resumed migration silently needed twice the disk the up-front space check
+  had budgeted for. Extracted files are now checkpointed individually (recorded only once the
+  bytes are on disk *and* the record points at them, and re-verified by size on resume, so a
+  half-written file is never mistaken for a finished one) and skipped when resuming, and the
+  destination path is deterministic — an existing file at that path can only be this record's own
+  partial extraction, so it is overwritten. The MongoDB 3 importer had no checkpoint at all and
+  now resumes collections and files the same way. Thanks to markusst1982 and xet7.
+
+- **Snap: discarding a partial FerretDB migration left the resume checkpoint behind, so the retry
+  could switch to a database missing most of its data** (`snap-src/bin/migration-control`). The
+  importer's checkpoint lists the collections it has already copied and lives in `$SNAP_COMMON`,
+  **not** in the SQLite directory that `discard_partial_ferretdb` wipes — so it survived. The next
+  migration then trusted it, skipped every "already migrated" collection, copied only the rest into
+  the now-empty database, and reported success — leaving the snap serving a FerretDB missing most
+  of its data. The checkpoint is only meaningful together with the SQLite it describes, so the two
+  are now always discarded together. Thanks to markusst1982 and xet7.
+
+- **Snap: releases are now published to the Snap Store `stable` channel automatically**
+  (`.github/workflows/release-all.yml`). Both snap jobs (native and Launchpad) pushed only to
+  `candidate`, `beta` and `edge`, and `stable` had to be released by hand afterwards. Both now
+  publish to `stable,candidate,beta,edge`. Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.94 2026-07-15 WeKan ® release
+
+This release adds the following new features:
+
+- **Snap: the `database` setting is now authoritative, with a `snap run wekan.database
+  mongodb|ferretdb` command and no-downtime handling of a failed migration**
+  (`snap-src/bin/wekan-database`, `snap-src/bin/wekan-control`, `snap-src/bin/mongodb-control`,
+  `snap-src/bin/ferretdb-control`, `snap-src/bin/migration-control`, `snap-src/bin/migration-pending`).
+  Previously the control scripts **force-switched** to FerretDB whenever a `*.sqlite` file
+  existed, so `snap set wekan database=mongodb` would not stick and there was no way to keep
+  WeKan on MongoDB while fixing a migration — a failed migration meant downtime. Now the
+  `database` setting decides which database WeKan runs on, and **`snap run wekan.database
+  mongodb`** switches WeKan to MongoDB (and pauses auto-migration, `migrate=off`) while
+  **`snap run wekan.database ferretdb`** switches to the migrated FerretDB. Auto-migration can
+  be paused with `snap set wekan migrate=off` and, crucially, **a migration that FAILS now pauses
+  itself and hands back to MongoDB automatically** (`migration-control` `fail_and_run_mongodb`)
+  so WeKan keeps working on MongoDB instead of retrying-and-failing every start; re-run it with
+  `snap run wekan.migrate`. A successful migration also **restarts `wekan.wekan`** so it
+  reconnects to FerretDB. The only remaining auto-override is the safety guard that refuses to
+  start an empty FerretDB while MongoDB still holds data. Thanks to xet7.
+
+and fixes the following bugs:
+
+- **Snap: the MongoDB → FerretDB migration failed on GridFS collections and left a half-migrated
+  database behind** (`releases/migrate-mongodb-to-ferretdb.mjs`,
+  `snap-src/bin/migrate-mongo3-to-ferretdb.mjs`, `snap-src/bin/migration-control`). FerretDB v1
+  rejects collection names containing a dot (*"invalid key: 'attachments.chunks' (key must not
+  contain '.' sign)"*), and the importers tried to copy the GridFS internals collections
+  (`attachments.chunks`, `attachments.files`, `avatars.*`, `cfs_gridfs.*`) and the CollectionFS
+  `cfs.<bucket>.filerecord` collections as **text**, so the migration aborted. Now the text phase
+  **skips every dotted collection** — none of WeKan's real data collections contain a dot, and
+  the dotted ones are all GridFS internals (extracted in the file phase), CollectionFS
+  filerecords (turned into bare `attachments`/`avatars` records in the file phase, now created
+  with an upsert) or `system.*` collections. And crucially, when a migration **fails partway** it
+  now **deletes the partial FerretDB SQLite** it wrote (`migration-control`'s
+  `discard_partial_ferretdb`): otherwise that non-empty-but-incomplete `files/db/wekan.sqlite`
+  looked "migrated" to the data check, so the snap disabled MongoDB and tried to serve an
+  incomplete FerretDB. Now a failed migration cleanly keeps MongoDB and retries. Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.93 2026-07-15 WeKan ® release
+
+This release adds the following new features:
+
+- **Snap: new `snap run wekan.migrate` command to force a fresh MongoDB → FerretDB migration**
+  (`snap-src/bin/wekan-force-migrate`, registered in `snapcraft.yaml`). Ignores the `database`
+  setting and the migration marker, removes any partial FerretDB SQLite + resume checkpoint,
+  then re-runs the migration so it re-reads the existing MongoDB (3 or 7) data and migrates
+  text + attachments + avatars to FerretDB again. The source MongoDB data is never modified or
+  deleted. Watch it with `snap logs -f wekan.mongodb` or the migration dashboard. Thanks to xet7.
+
+- **Snap: new maintenance mode (`snap run wekan.maintenance on|off`) so you can run MongoDB OR
+  FerretDB by hand for data access** (`snap-src/bin/wekan-maintenance`,
+  `snap-src/bin/wekan-maintenance-page.mjs`, and the DB control scripts). While the
+  `$SNAP_COMMON/.wekan-maintenance` marker is present, the control scripts do **not** auto-migrate
+  or auto-disable, so `snap start wekan.mongodb` (old MongoDB data) or `snap start wekan.ferretdb`
+  (migrated FerretDB SQLite data) stays up instead of shutting itself down — letting you reach the
+  data over the MongoDB wire protocol on port 27019 (one at a time; they share the port). WeKan
+  itself serves an **"under maintenance" page (HTTP 503) on the web port for all URLs** while
+  maintenance is on, so end users see a clear message. The page shows the **Admin Panel product
+  name** if one is set (not "WeKan"): it is cached to `$SNAP_COMMON/.productname.txt` while a
+  database is running (by `wekan-control` on startup and by the migration importers), so it is
+  still available in maintenance mode when both databases are stopped. Thanks to xet7.
+
+and fixes the following bugs:
+
+- **Snap: `db-eval` could not load the MongoDB driver, so EVERY database readiness check
+  silently failed** (`snap-src/bin/db-eval.mjs`; also `migrate-schema-v843.mjs`,
+  `migrate-gridfs-to-fs.mjs`). `db-eval` is the small Node helper the snap uses (instead of
+  `mongosh`) to check whether MongoDB/FerretDB is up, elect the replica-set primary, and run
+  the migration's mongod-7 readiness probe. It did `import { MongoClient } from 'mongodb'` and
+  the wrapper set `NODE_PATH=$SNAP/programs/server/node_modules` to point at the bundled
+  driver — **but Node's ESM loader ignores `NODE_PATH`** (that env var is honored only by the
+  CommonJS loader). So the import resolved nothing, `db-eval` exited **before ever opening a
+  connection**, and every `ping`/`primary`/`rs-*` check "failed." This was the single root
+  cause behind a whole family of symptoms: WeKan looping *"MongoDB not ready yet, retrying…"*
+  or *"FerretDB not ready yet…"* forever even though the database was running and listening;
+  replica-set initialisation failing; and — most damaging — the MongoDB → FerretDB migration
+  **falling back to MongoDB 3.2** because the mongod-7 readiness probe never connected (mongod
+  7 opened the data fine, but `db-eval` couldn't reach it, so migration-control wrongly
+  concluded "mongod 7 can't open this" and tried the 3.2 reader, which cannot read WiredTiger-7
+  files — producing no FerretDB SQLite). Proven by the migration source mongod log: mongod 7
+  reached `Waiting for connections` with **zero `Connection accepted`** before being killed by
+  the readiness timeout. Fixed by resolving the driver with `createRequire` (CommonJS, which
+  **does** honor `NODE_PATH` and the bundle layout), anchored inside the modern bundle. Thanks
+  to xet7.
+
+- **Snap: the presence of a FerretDB SQLite database — not the migration marker — now decides
+  whether to use FerretDB, so a FAILED migration no longer leaves the snap with no database**
+  (`snap-src/bin/ferretdb-control`, `snap-src/bin/mongodb-control`, `snap-src/bin/wekan-control`).
+  An earlier attempt keyed the "use FerretDB / disable MongoDB" decision off the
+  `$SNAP_COMMON/.migration-to-ferretdb-done` marker. But `migration-control` also writes that
+  marker when the migration **falls back** (data unreadable, tools missing) or when there is
+  nothing to migrate — with **no** FerretDB data produced. So on a server whose MongoDB → FerretDB
+  migration failed, `mongodb-control` saw the marker, logged *"migration already finished;
+  disabling mongodb service"* and disabled MongoDB, while FerretDB's SQLite was empty — leaving
+  WeKan with no database at all, looping *"MongoDB not ready yet, retrying…"* forever and refusing
+  to keep `wekan.mongodb` running. Now all three scripts decide from **actual data on disk**:
+  MongoDB is disabled / FerretDB is forced **only when a `*.sqlite` database exists in
+  `files/db`**; an empty `files/db` means the migration did not succeed, so MongoDB starts
+  normally and WeKan keeps working while the migration can be retried. The check is a single
+  shared helper (`snap-src/bin/ferretdb-has-data`) that requires a `*.sqlite` file **bigger than
+  0 bytes**, not merely present, so a 0-byte stub never counts as "migrated". And
+  `migration-control`'s `finish_success` now **verifies that non-empty SQLite (with its WAL)
+  exists before switching to FerretDB** — if the importer returns success but wrote no data, the
+  snap keeps MongoDB and retries next start instead of switching to an empty database. Thanks to
+  xet7.
+
+- **Snap: the migration's mongod-7 readiness probe fast-fails when the temporary mongod has
+  exited** (`snap-src/bin/migration-control`). `ready_via_node` waits up to 45 s for the
+  temporary source mongod to accept connections (a large MongoDB 6/7 database can need that long
+  to replay its journal, #6454), but it now also checks the process is still alive: if the temp
+  mongod has exited — e.g. mongod 7 cannot open old MongoDB 3.x data — it stops waiting
+  immediately and drops to the MongoDB 3.2 reader instead of pinging a dead process for the full
+  timeout. Matters across many unattended 6.09 → 9.x upgrades. Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.92 2026-07-15 WeKan ® release
+
+This release fixes the following bugs:
+
+- **Snap: WeKan never started on a running MongoDB, looping "MongoDB not ready yet,
+  retrying in 5 seconds..." forever, on any server with less than ~34 GB RAM**
+  ([#6454](https://github.com/wekan/wekan/issues/6454), `snap-src/bin/mongodb-control`,
+  `snap-src/bin/migration-control`). The WiredTiger cache size was **hardcoded to 32 GB**.
+  On a smaller box (e.g. 8 GB) mongod was OOM-killed seconds after it started — including
+  the *temporary* mongod that `mongodb-control` starts to initialise the replica set, which
+  died before it could be reached, so the replica set was **never initiated**. The final
+  mongod then ran with `--replSet rs0` but no config, **no PRIMARY was ever elected**, and
+  since Meteor requires the replica-set primary (change streams), `wekan-control` waited on
+  it forever. Fixes: (1) the cache size is now **RAM-aware** — ~50 % of (RAM − 1 GB), the
+  same formula mongod uses for its own default, capped at 32 GB, min 1 GB, overridable with
+  `MONGODB_WIREDTIGER_CACHE_GB`; (2) the temporary-mongod readiness wait is raised from 30 s
+  to 90 s so a large database that needs longer to replay its journal still gets its replica
+  set initialised; and (3) the temporary source mongod that the MongoDB → FerretDB migration
+  starts to *read* the data now uses a conservative RAM-aware cache (¼ of (RAM − 1 GB), cap
+  8 GB) so it leaves room for the target FerretDB and the importer running alongside it.
+  Thanks to xet7.
+
+- **Snap: the MongoDB 6/7 → FerretDB importer now resolves the correct driver and matches
+  the MongoDB 3.2 importer's safety and dashboard** (`releases/migrate-mongodb-to-ferretdb.mjs`).
+  It now (a) resolves the `mongodb` driver by probing the WeKan bundle and **using whichever
+  actually works** — preferring a v6+ driver that exposes `GridFSBucket` and speaks OP_MSG,
+  because an older v2 driver's OP_QUERY is rejected by FerretDB ("Unsupported OP_QUERY command:
+  update"); and (b) gained the same disk-space guard and progress UI as
+  `migrate-mongo3-to-ferretdb.mjs`: it measures the total attachment/avatar size up front and
+  **stops before extracting** if it will not fit, and if space runs out mid-run it **stops,
+  deletes the partially-migrated files, and reports how much more disk is needed** (a full disk
+  can corrupt the still-running source MongoDB), shows a **live per-file progress bar**, and
+  **translates the dashboard into the browser's language**. Thanks to xet7.
+
+- **Snap: verified the migration's disk-space guard actually works inside snap confinement**
+  (`snap-src/bin/migrate-mongo3-to-ferretdb.mjs`, `releases/migrate-mongodb-to-ferretdb.mjs` —
+  comment/documentation only, no behaviour change). `statfs` (and `statfs64` / `fstatfs` /
+  `fstatfs64` / `statvfs` / `fstatvfs`) is in snapd's **default seccomp allow-list**
+  (`snapcore/snapd` → `interfaces/seccomp/template.go`), and a snap has no per-snap disk quota
+  by default, so the migration's free-space check (`statfsSync` on `$SNAP_COMMON/files`)
+  returns the real free space and its "stop before the disk fills" safety is fully active on
+  Snap. `quotactl` is **not** allowed, but the migration never calls it; the one case it would
+  matter — a snapd storage-quota group (project quotas invisible to `statfs`) — is still caught
+  by the `ENOSPC`/`EDQUOT` write-failure fallback. Only Sandstorm grains genuinely lack
+  `statfs` (FUSE does not implement it, `quotactl` blocked), where the guard already relies on
+  that write-failure fallback. Thanks to xet7.
+
+- **Snap: after a MongoDB → FerretDB migration, FerretDB never started and WeKan was stuck
+  on "MongoDB not ready yet, retrying..."** (`snap-src/bin/migration-control`). The
+  `wekan.ferretdb` service disables itself while `database` is `mongodb`; the migration
+  then switches the snap with an **internal** `snapctl set database=ferretdb`, but an
+  internal `snapctl set` does **not** re-run the `configure` hook that flips the two
+  database services — so FerretDB was left *disabled* and MongoDB *enabled but stopped*,
+  leaving WeKan with no database (both bind the same port, so only one runs at a time).
+  `finish_success` now performs the flip itself, exactly as the configure hook's ferretdb
+  branch does: enable + start (and restart) `wekan.ferretdb`, then stop + disable
+  `wekan.mongodb` — using the snap **instance** name so parallel snaps target their own
+  services. Immediate recovery on an already-migrated install — flip the setting so the
+  `configure` hook re-runs and enables + starts FerretDB and stops MongoDB (do **not** try
+  `snap start wekan.ferretdb` directly; while `database` is still `mongodb`, ferretdb-control
+  reads the setting and disables itself again — see the next entry):
+  `sudo snap set wekan database=ferretdb`.
+  Thanks to xet7.
+
+- **Snap: the migration-success marker is now authoritative, so FerretDB starts even if the
+  `database` setting was never flipped** (`snap-src/bin/ferretdb-control`,
+  `snap-src/bin/mongodb-control`, `snap-src/bin/wekan-control`). Every DB service keyed its
+  behaviour off the `database` setting alone: `ferretdb-control` logged *"database is
+  'mongodb', not 'ferretdb'. Disabling ferretdb service."* and self-disabled whenever the
+  setting still said `mongodb` — so on an already-migrated install `snap start
+  wekan.ferretdb` started and then immediately stopped itself, unfixable by hand without
+  first setting `database=ferretdb`. Now the marker
+  `$SNAP_COMMON/.migration-to-ferretdb-done` overrides the setting: when present,
+  `ferretdb-control` repairs `database=ferretdb` and keeps running instead of self-disabling;
+  `mongodb-control` disables itself (before the migration-pending check, so a finished
+  migration is never re-attempted); and `wekan-control` forces ferretdb and brings the
+  service up. WeKan thus recovers on its own after a migration whose setting flip was lost.
+  Thanks to xet7.
+
+- **Snap: WeKan now starts its database itself on startup instead of waiting forever for a
+  stopped one** (`snap-src/bin/wekan-control`). Previously the `wekan.wekan` service only
+  *waited* for whichever database `database` pointed at (`FerretDB not ready yet…` /
+  `MongoDB not ready yet…`) and never *started* a DB service, so if both `wekan.ferretdb`
+  and `wekan.mongodb` were stopped/disabled WeKan hung indefinitely. Now, before waiting, it
+  enables + starts whichever DB service is configured (`snapctl start --enable` = `snap
+  enable` + `snap start`, targeting the snap **instance** name so parallel snaps hit their
+  own services). Thanks to xet7.
+
+- **Snap: WeKan never starts an EMPTY FerretDB while data still lives in MongoDB**
+  (`snap-src/bin/wekan-control`). On startup WeKan now checks what data actually exists on
+  disk — the FerretDB SQLite dir (`$SNAP_COMMON/files/db`) and the MongoDB WiredTiger data
+  (`$SNAP_COMMON`) — instead of trusting the `database` setting alone. If `database=ferretdb`
+  was selected (or forced) but the migration never ran, so the SQLite database is empty while
+  MongoDB still holds the data, WeKan **reverts to `database=mongodb`** and prints how to run
+  the migration, rather than starting an empty FerretDB that would look like all data was
+  lost. Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.91 2026-07-15 WeKan ® release
+
+This release adds the following new features:
+
+- **Snap / Sandstorm migration dashboard: live per-file progress and a disk-space safety
+  guard** (`snap-src/bin/migrate-mongo3-to-ferretdb.mjs`). While a MongoDB 3 database's
+  attachments/avatars are migrated to the filesystem, the progress page now shows a **live
+  per-file progress bar** for the file currently being extracted — its name, size, "file N
+  of TOTAL", percent, and whether it is an **attachment or an avatar** (using WeKan's
+  existing translations in the viewer's browser language, with an English fallback; there
+  is no logged-in user during migration, so the browser's `Accept-Language` is used). Big
+  files no longer land in RAM: each GridFS file is **streamed chunk-by-chunk** straight to
+  disk (the old approach buffered the whole file through mongoexport's 512 MB stdout limit
+  and failed on large attachments). Because a full disk can corrupt the still-running
+  source MongoDB, the migration guards disk space **where it can measure it** (Snap with a
+  working `statfs`): it shows **remaining disk space**, checks the total size of all files
+  **up front** and stops before extracting if the volume cannot hold them, and stops
+  mid-run if free space drops below a safety margin (default 1 GB, `MIGRATION_MIN_FREE_BYTES`).
+  A Sandstorm grain cannot see its own free space or quota (its FUSE layer does not
+  implement `statfs` and `quotactl` is blocked — `statfs` on `/var` would report the *host*
+  disk, not the grain quota), and a locked-down Snap container may not report it either; in
+  those "unknown free space" cases the migration hides the space figures and instead treats
+  an actual **`ENOSPC`/`EDQUOT` write failure** as "out of space". On **any** such stop it
+  **deletes the partially-migrated files to free the space back**, reports how many files
+  were migrated before stopping, and shows how much more disk space is required to migrate
+  them all. Platform is detected from the environment (`$SNAP`; `SANDSTORM` /
+  `SANDSTORM_RAW_MONGO_PATH` / `METEOR_SETTINGS`). Thanks to xet7.
+
+and adds the following updates:
+
+- **i18n: 10 more selectable languages, corrected native names, and a Transifex-pull safety
+  report**. Added `languages.js` picker entries for translation files that were pulled from
+  Transifex but had no entry (so they were never selectable): Català (Valencià), English
+  (Indonesia / Singapore / Turkey), Español (Colombia), Français (France), Português
+  (Portugal), Русский (Украина), Türkmençe (Türkmenistan) and 吴语（简体）. Fixed language
+  names that showed the English name instead of the native one: Welsh → **Cymraeg** (and
+  `cy-GB` → *Cymraeg (Y Deyrnas Unedig)*), Acehnese → **Bahsa Acèh**, and *Afrikaans (South
+  Africa)* → *Afrikaans (Suid-Afrika)*. Also, `releases/translations/pull-translations.sh`
+  now runs a new `report-english-regressions.mjs` after `tx pull` that lists any language
+  file where a previously-translated string reverted to the English source (untranslated on
+  Transifex), so the regression is visible instead of committed silently. Thanks to xet7.
+
+and fixes the following tests:
+
+- **Test / dev infrastructure: starting a dev server now also frees the MongoDB port,
+  not just the app and rspack ports** (`rebuild-wekan.sh`, `kill_meteor_on_port`).
+  Picking a "Run Meteor for dev" option stops any server already on the app port, but it
+  only freed the app port (3000) and the rspack dev-server port (8080) — not Meteor's
+  bundled MongoDB on app-port+1 (3001). When the previous meteor parent is SIGKILLed its
+  mongo child is often orphaned and keeps holding 3001, so the new `meteor run` died with
+  `Unexpected mongo exit code 48 ... port was closed, or was already taken`. The stop step
+  now also frees app-port+1 (which additionally clears a leftover standalone test mongod
+  on :3001) and waits for all three ports before starting. Thanks to xet7.
+
+and fixes the following bugs:
+
+- **Snap: MongoDB 3 → FerretDB migration failed with "EJSON.parse unavailable", and the
+  progress dashboard should stay on the page you were on**
+  (`snap-src/bin/migrate-mongo3-to-ferretdb.mjs`). The migrator reads the 3.2 source with
+  the legacy CLI and inserts into FerretDB with the modern Node driver, which needs
+  WeKan's current `bson` (with EJSON) and `mongodb` v6 (OP_MSG). It anchored those
+  `require`s at paths relative to the script — but in the snap the script runs from
+  `$SNAP/bin/` while the bundle is at `$SNAP/programs/server/…` (one level up), so every
+  anchor resolved `$SNAP/bin/programs/server/…` (nonexistent) and fell through to the
+  ancient meteor-spk base `bson` 1.x that has no EJSON → `FATAL: EJSON.parse unavailable`
+  and the migration aborted. Now it builds candidate bundle roots from `$SNAP` (env) and
+  the script's parent directories and searches the known modern-bundle sub-paths under
+  each (npm-mongo's nested v6 driver first, so the ancient v2 that FerretDB rejects with
+  "Unsupported OP_QUERY" is never picked). The migration progress dashboard already
+  answers on every URL (so reloading any board page during migration shows progress); on
+  completion it now reloads the **same page you were on** instead of forcing All Boards.
+  (The dashboard itself also gained live per-file progress and a disk-space safety guard —
+  see the new features above.) Thanks to xet7.
+- **Admin Panel / Features / Security: "Always show all code as plain text" did not take
+  effect (links stayed clickable, code stayed rendered)**. The setting is applied by the
+  inner `markdown` helper, which reads a `ReactiveVar` (`Markdown.alwaysShowCodeAsText`)
+  that only a separate startup autorun kept in sync. But the `mentions` viewer wrapper
+  re-renders whenever the settings doc changes (it reads it for "render links as plain
+  text"), and that re-render usually ran BEFORE the startup autorun updated the
+  ReactiveVar — so the markdown helper read the stale value and rendered normally, and
+  because `mentions` does not depend on that ReactiveVar it never re-rendered again (the
+  race persisted even after reload). Fixed by setting the flag inside the `mentions`
+  helper, from the same reactive `getCurrentSetting()` it already reads, right before it
+  renders the inner markdown — so the toggle now takes effect immediately in every
+  rich-text field (card titles, descriptions, comments, checklists). Thanks to xet7.
+- **i18n: several languages fell back to English (or clobbered another language) because a
+  browser language string did not map to the right translation file**. Fixes:
+  - **Japanese `ja_JP` overwrote `ja`.** The Transifex `.tx/config` `lang_map` had
+    `ja_JP: ja`, writing Transifex's `ja_JP` into `imports/i18n/data/ja.i18n.json` — the
+    same file the real Japanese (`ja`) uses — so `tx pull -a -f` reverted Japanese to the
+    English source. Mapped to its own file (`ja_JP: ja-JP`); `ja`, `ja-JP` and `ja-Hira`
+    are now three separate files, matching `languages.js`.
+  - **Language matching is now case- and underscore/hyphen-insensitive** (requested):
+    `isLanguageSupported` and a new `TAPi18n.resolveTag()` map any input to the canonical
+    tag (`zh-hant` → `zh-Hant`, `JA-JP` → `ja-JP`, browser `af-ZA` → legacy key `af_ZA`);
+    `loadLanguage`/`setLanguage`/`ensureLanguageLoaded` resolve through it so the loaded
+    file, the i18next code and the stored current tag all agree.
+  - **Chinese: `zh-Hans-CN` / `zh-Hant-TW` (and bare `zh`) fell back to English.** Browser
+    detection now strips trailing subtags progressively (`zh-Hans-CN` → `zh-Hans`,
+    `zh-Hant-TW` → `zh-Hant`) instead of jumping to the first segment, and bare `zh` is
+    aliased to `zh-Hans` (Simplified). Each Chinese variant (`zh-CN`, `zh-TW`, `zh-HK`,
+    `zh-Hans`, `zh-Hant`, `zh-SG`) maps to its own file.
+  - **Mandarin (`cmn`) was unselectable** — its `tag` was the typo `cnm` (and `code` `cn`),
+    which mismatched `supportedLngs`; fixed to `cmn`.
+
+  Regression tests added in `imports/i18n/i18n.test.js`. Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.90 2026-07-15 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUE of [MimeBleed](https://wekan.fi/hall-of-fame/mimebleed/):
+
+- **[MimeBleed](https://github.com/wekan/wekan/security/advisories/GHSA-jhph-whx8-wq6p):
+  file-upload MIME-type validation bypass → stored XSS on deployments without the
+  `file` binary**
+  ([GHSA-jhph-whx8-wq6p](https://github.com/wekan/wekan/security/advisories/GHSA-jhph-whx8-wq6p),
+  CWE-434 Unrestricted Upload of File with Dangerous Type). WeKan's upload validation
+  (`models/fileValidation.js`) detects a file's real MIME type by running the Unix
+  `file` command. On minimal Docker/Alpine images where `file` is not installed,
+  `detectMimeFromFile()` silently returned `undefined` and the code fell back to the
+  **client-supplied** `fileObj.type`. An authenticated board member (with `WITH_API=true`)
+  could therefore upload an HTML file containing JavaScript while setting
+  `fileType: "image/png"`: the spoofed type is not on the dangerous-MIME deny-list, so
+  the dangerous-content scan was skipped and the file was stored, yielding stored XSS
+  served under the WeKan origin (session theft / actions as the victim, including admin).
+  - **Fixed** so the client-supplied type can never gate the safety scan: when
+    content-based detection via `file` is unavailable, WeKan now falls back to a
+    **dependency-free JS content sniff** (`looksLikeDangerousMarkup()`) that inspects the
+    real bytes for HTML/SVG/XML/`<script>` signatures and forces the dangerous-content
+    scan regardless of the claimed MIME — so a spoofed `image/png` that is actually
+    HTML+JS is caught and rejected. The sniff only matches definitive markup signatures,
+    so genuine binary uploads (real PNG/JPEG/PDF, including large ones) are unaffected.
+    WeKan also now logs a one-time warning when the `file` command is missing (previously
+    the failure was silent). A regression test
+    (`server/lib/tests/fileValidationBypass.security.tests.js`) covers both the spoofed
+    dangerous uploads and safe binaries. CVSS:3.1 8.3 High
+    (AV:N/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:N).
+  - Affected container deployments without the `file` binary and `WITH_API=true`;
+    fixed at the upcoming WeKan release. Reported by **HNUfwj**. Also install the `file`
+    package for full content-based MIME detection (WeKan's official images already do).
+  Thanks to HNUfwj and xet7.
+
+and adds the following new features:
+
+- **Admin Panel / Features / Security: import/export privacy controls**. Six new
+  optional toggles govern how boards and user data cross the WeKan boundary:
+  - **Disable all import** / **Disable all export** — master switches that turn off
+    every import / export feature (WeKan JSON, Trello, CSV/Excel, Jira, Kanboard,
+    NextCloud Deck, OpenProject, GitHub/GitLab/Gitea/Forgejo, board clone, and the
+    single-attachment export). The server rejects any such request, and the import /
+    export menu options are hidden in the UI.
+  - **Disable import avatars** / **Disable export avatars** — never carry avatars
+    (profile pictures) into / out of WeKan. Import covers WeKan JSON import, Trello
+    import and external identity-provider avatar sync on login (LDAP, OIDC/OAuth2),
+    gated at the single `localizeAvatarFromBuffer` choke point; export covers WeKan
+    JSON and CSV export.
+  - **Anonymize import users** / **Anonymize export users** — replace every user's
+    username, full name and initials with counter placeholders (user1, user2, ...),
+    drop their avatar, and rewrite `@username` mentions plus the requested-by /
+    assigned-by fields inside card and comment content, so the imported board /
+    exported file carries no real user identity. The placeholder word "user" follows
+    the language of the person importing/exporting (e.g. "käyttäjä1" in Finnish). Both
+    export paths are covered — the in-memory `build()` and the streaming
+    `buildStream()` (which does a lightweight id-only pre-scan so mentions streamed
+    before the users array still resolve to matching labels).
+
+  All six default to off (current behaviour). Enforcement lives server-side in the
+  Exporter, the WekanCreator import path and the avatar localizer, so it cannot be
+  bypassed from the client. Thanks to xet7.
+- **Admin Panel / Features / Security: new optional "Always show all code as plain
+  text" toggle**. When enabled, rich text is never rendered as markdown or HTML —
+  the entire source is shown as escaped plain text in every rich text field (board
+  and card titles, descriptions, comments, checklists, etc.), so hidden content is
+  always revealed: HTML comments (`<!-- -->`), the target URL inside a markdown
+  link, JavaScript and any other code. All code is always visible, not clickable,
+  and not running. This extends the existing invisiblebleed protection (which
+  already showed raw source for description-less markdown links) to all content.
+  The `wekan-markdown` package cannot import app code, so the setting is bridged to
+  the markdown renderer through a reactive flag on the exported `Markdown` object,
+  kept in sync by the rich text viewer. Stored as the global `alwaysShowCodeAsText`
+  setting; default off, so markdown renders normally. Thanks to xet7.
+- **Admin Panel / Features: new optional "Render links as plain text" security
+  toggle**. When enabled, all links — both markdown links like `[label](url)` and
+  raw HTML `<a href>` tags — are always shown as plain, non-clickable text in every
+  rich text field (board and card titles, descriptions, comments, checklists,
+  etc.), so a link can never be clicked and cannot present misleading anchor text.
+  This is a hardening option on top of the existing XSS sanitization (which already
+  strips `javascript:`/`data:` schemes, event-handler attributes and dangerous
+  tags): it addresses [#6453](https://github.com/wekan/wekan/issues/6453), where a
+  board title could render as a clickable link. The toggle lives under Admin Panel /
+  Features / Security, is stored as the global `renderLinksAsPlainText` setting, and
+  defaults to off (links stay clickable). Implemented by forbidding the `<a>` tag
+  (while keeping its visible text) in the shared DOMPurify sanitizer used by the
+  rich text viewer, gated on the setting so toggling it re-renders reactively.
+  Thanks to bcook-konza and xet7.
+
+and adds the following updates:
+
+- **Outgoing webhooks / notifications: include the card description**
+  ([#5143](https://github.com/wekan/wekan/issues/5143)). A card's description was
+  saved to the activity log (a `a-changedDescription` activity, #5482) but was never
+  put into the outgoing-webhook / notification payload, so integrations received an
+  event with no description text. The payload now carries `description` (the card's
+  current description, added only when non-empty) for every card event, and — for a
+  description *change* — the before/after text as `oldValue` / `value` (previously
+  only `timeValue`/`timeOldValue` were forwarded). New fields are additive, so
+  existing webhook consumers are unaffected. Thanks to xet7.
+- [Update Sandstorm Docs about how to install newest test version](https://github.com/wekan/wekan/commit/422daa6a0c33a578ebd84a77e7a537caf73f2510).
+  Thanks to xet7.
+
+and fixes the following tests:
+
+- **Test infrastructure: fix `meteor test` (Mocha, server-side) crashing at boot
+  with 0 tests run** (`scripts/patch-yargs-dirname.cjs`). The whole `yargs` package
+  is dragged into the Meteor **test** server bundle as a transitive devDependency,
+  and Meteor 3 wraps every module in a CommonJS function
+  `function(require, exports, module, __filename, __dirname){…}`. yargs (and its ESM
+  dependencies) ship native-ESM constructs that are illegal inside that wrapper and
+  crash the bundle before a single test runs:
+  - `import.meta.url` / `import.meta.resolve(…)` → "Cannot use 'import.meta' outside a module"
+  - `const __dirname = …` → "Identifier '__dirname' has already been declared"
+  - `const require = createRequire(import.meta.url)` (and the guarded bundler variant
+    `const require = createRequire ? createRequire(import.meta.url) : undefined`) →
+    "Identifier 'require' has already been declared"
+
+  A `postinstall` patch (`patch-yargs-dirname.cjs`) rewrites those constructs to the
+  wrapper's own `__filename` / `__dirname` / `require` (yargs is never executed here —
+  it only needs to *parse* as CommonJS). Getting the patch right took several iterations,
+  each of which failed in a way that looked like an unrelated source-level syntax error:
+  1. The patch expanded `import.meta.url` **before** stripping
+     `const require = createRequire(…)`. The expansion injected a `require('url')…`
+     call whose `)` then terminated the paren-naive `createRequire\([^)]*\)` match early,
+     leaving a dangling `.pathToFileURL(__filename).href))` — reify then died with
+     `SyntaxError: Unexpected token (19:33)` on the **generated** yargs `esm.mjs`, not on
+     any repo file. Diagnosing it required instrumenting reify's Babel parser in the
+     Meteor **dev_bundle** copy to dump the exact source string it was choking on, because
+     every scan of the repo's own `*.js` came back clean (the broken file was in
+     `node_modules`, was `.mjs`, and was *produced by the patch itself*). Fixed by
+     removing the `createRequire` line **before** expanding `import.meta.url`, plus a
+     repair rule that collapses any already-corrupted `…href))` leftover back to a marker.
+  2. With parsing fixed, a **second** ESM shim surfaced at boot — this time in a yargs
+     *dependency*, `node_modules/yargs-parser/build/lib/index.js` (not under
+     `node_modules/yargs`, so `import.meta.url` there was still unexpanded, a tell that
+     the old yargs-only scan had never touched it). Its line 30 used the guarded ternary
+     `const require = createRequire ? createRequire(import.meta.url) : undefined;`, whose
+     `createRequire ?` (space, not `(`) slipped past the direct `createRequire\(` matcher
+     → the leftover `const require` collided with the wrapper parameter and the server
+     bundle crashed at **boot** with "Identifier 'require' has already been declared".
+     Two changes fixed it: (a) generalize the removal (and its trigger) from
+     `const require = createRequire\(…\)` to a line-wise `const require = …createRequire…;`
+     so it matches both the direct call and the guarded-ternary form, running it *before*
+     the `import.meta.url` expansion so the injected `require('url')…` parens can never
+     confuse it; and (b) broaden the scan from just `node_modules/yargs` to yargs **and
+     its ESM dependency packages** (`yargs-parser` is the actual offender; cliui, escalade,
+     string-width, y18n, get-caller-file, require-directory are scanned too and are
+     harmless to include).
+
+  The patch is idempotent, best-effort (never fails an install), and re-runnable by hand
+  (`node scripts/patch-yargs-dirname.cjs`) to repair a `node_modules` tree left broken by
+  an older version. This is a pre-existing test-only build breakage (the yargs bundling
+  predates these fixes); production runtime bundles were never affected. Separately, three
+  server test files were present on disk but missing from the curated loader
+  `server/lib/tests/index.js` (which the `meteor test` entry imports explicitly rather than
+  by `*.tests.js` convention), so they had silently never run — the MimeBleed file-validation
+  bypass regression, the import/export privacy settings, and the impersonation report query
+  are now registered. With all of the above, the server suite boots and runs clean:
+  **450 passing, 0 failing** (411 before the three files were wired in). Thanks to xet7.
+- **Test infrastructure: `rebuild-wekan.sh` and `rebuild-wekan.bat` now show live
+  progress in every test path**. Several places used to sit silent for minutes, which
+  looked like a hang. Audited both scripts and closed every gap:
+  - **Server-start wait** (both "Run ALL tests" modes). While the `:3000` server came
+    up, the readiness wait printed only dots. `.sh` now shows live progress (see the
+    `.build/bundle` item below, where it streams the boot log scrolling); `.bat` prints a
+    check counter now and then and points at the live server log to `type` in another
+    window (on cmd, echoing arbitrary log lines is unsafe as they can contain `> < | &`).
+  - **Fixed the readiness poll hanging so nothing showed for minutes** (the progress
+    line froze at `[0s]`). The wait polled `curl http://127.0.0.1:3000/sign-in` with no
+    timeout; Meteor binds the :3000 proxy early and accepts the TCP connection while the
+    app is still building but sends no HTTP response until it finishes, so `curl` blocked
+    on that first connection for the whole build and the loop never advanced. Added
+    `--connect-timeout 2 --max-time 4` so each poll returns quickly, and the wait is now
+    bounded by wall-clock time (`.sh` 1200s / `.bat` ~240 polls) rather than a fixed count
+    (also applied to the Playwright-ALL precheck).
+  - **Sequential per-job** (menu option 2). Each job used to block/redirect to a log
+    with nothing on screen while it built and ran. Because only one suite runs at a
+    time in this mode, `.sh` now streams each suite's reporter output **straight to the
+    console** via `tee` (also saving the log), so you see every test tick by one-by-one
+    as Mocha / Playwright / the E2E harness prints it, then a final PASS/FAIL + count
+    line; `.bat` runs each job in its own minimized window (reusing the proven parallel
+    start-commands + `.done-<key>` flags) and polls a live pass counter, one at a time.
+  - **Playwright "ALL browsers" single menu item** (`.sh` option 10 /
+    `run_playwright_parallel`). It redirected each browser to a log and only dumped the
+    output after all finished. It now streams each browser's Playwright `list` reporter
+    live via `tee` (progress visible per test) while still saving the log;
+    `PIPESTATUS[0]` keeps the per-browser pass/fail accurate through the pipe.
+  - The single-suite menu items (Mocha, import regression, Node E2E, single Playwright
+    browser) already stream straight to the terminal, and the parallel-mode combined
+    progress table is unchanged. Thanks to xet7.
+- **Test infrastructure: "Run ALL tests" reuses the precompiled `.build/bundle` for the
+  :3000 server instead of recompiling with `meteor run`** (both `rebuild-wekan.sh` and
+  `rebuild-wekan.bat`). Node E2E
+  and Playwright drive a live WeKan over HTTP; that server is now started from the
+  production bundle you already built with `meteor build .build --directory` — `node
+  main.js` boots in seconds with no recompile, using Meteor's bundled `node` and `mongod`
+  (mongod on :3001, or an already-running MongoDB there is reused). Its one-time
+  `programs/server` npm install and its boot log now stream live (scrolling) so you can
+  see exactly what is happening. Two caveats that are inherent to Meteor and are called
+  out in the script: (1) the bundle is run **as-is**, so after changing source you must
+  rebuild it or the tests run old code; (2) the server-side **Mocha** suite still uses
+  `meteor test` (its own `.meteor/local-test` build) — the in-process unit/security tests
+  cannot run from a production bundle, so copying the bundle would not help them. In
+  **sequential** mode the suites run strictly one at a time, each streaming its own output,
+  and the parallel-only combined table is skipped (only the live WeKan server + MongoDB run
+  alongside — they are the system under test, not parallel test jobs). Before starting, the
+  run checks for the **`.build/bundle`** directory specifically (not just `.build`) and
+  builds it once with `meteor build .build --directory` if it is missing or incomplete, so
+  a first run with no bundle still works. The bundle server talks to the **`meteor`**
+  database on :3001 — the DB name Meteor's built-in mongo used under `meteor run` and the
+  one the Playwright / Node E2E tests seed into (`tests/playwright/helpers/db.js`,
+  `tests/e2e/list-regressions.js`); an earlier `/wekan` name made the app read an empty
+  database while the tests seeded a different one, so every seeded test failed until the
+  names were aligned. Both the Bash and the Windows batch runners now use this
+  bundle-based :3000 server (the `.bat` resolves Meteor's bundled `node` / `mongod` from
+  the dev_bundle, starts mongod in a minimized window, and stops it on exit only when it
+  started it). Thanks to xet7.
+
+and fixes the following bugs:
+
+- **Sandstorm: the WeKan Admin Panel is now always available in a migrated grain,
+  not just a freshly created one**. On Sandstorm the grain owner (Sandstorm
+  `configure` permission) is mapped to a WeKan admin, which gates the Admin Panel
+  (and Admin Panel / Attachments / Sandstorm, used to delete leftover files after
+  a migration). A brand-new grain worked because `Users.after.insert` derives the
+  role for the new user, but a grain migrated from an older WeKan already contains
+  the user, so that insert hook never runs. Sandstorm auto-login uses
+  `connection.setUserId()` (bypassing accounts-base, so `Accounts.onLogin` never
+  fires), and the only remaining hook — an `observeChanges` on `services.sandstorm`
+  — fires solely when that field actually changes on login. When the migrated
+  user's stored permissions already equal the grain's current permissions, the
+  login `$set` is a no-op with no oplog entry, so the role was never derived and
+  the owner had no Admin Panel. WeKan now reconciles this at grain startup (a
+  migrated grain reboots once migration completes): every Sandstorm user whose
+  stored permissions include `configure` is granted WeKan admin. It only promotes,
+  never revokes, so a stale/empty stored permission set can never lock the owner
+  out. Thanks to xet7.
+- **Admin Panel / Version: show the MongoDB storage engine even with
+  per-database credentials (no more "unknown")**. The storage engine was read
+  only from the `serverStatus` command, which requires the cluster-level
+  `clusterMonitor` role. A per-database WeKan user (`readWrite` on the `wekan`
+  database only, as in the `docs/Platforms/FOSS/Docker/Meteor3/` setup) is not
+  authorized to run it, so the command was rejected and the field stayed
+  `unknown`. WeKan now falls back to a `$collStats` aggregation (which needs only
+  the `collStats` action that `read`/`readWrite` already grant) and reads the
+  real engine — `wiredTiger` (or `inMemory`) — from `storageStats`. The MongoDB
+  compatible version and Database commit were already correct: they come from
+  `buildInfo`, which needs no special privileges. Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.89 2026-07-13 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUE of
+[SortBleed](https://wekan.fi/hall-of-fame/sortbleed/):
+
+- **[SortBleed](https://github.com/wekan/wekan/security/advisories/GHSA-xm8x-c8wg-jhmf):
+  a low-privilege (comment-only / read-only) board member could escalate to board admin and take
+  over a private board via the board `sort` collection-allow rule**
+  ([GHSA-xm8x-c8wg-jhmf](https://github.com/wekan/wekan/security/advisories/GHSA-xm8x-c8wg-jhmf),
+  CWE-863 Incorrect Authorization, CWE-269 Improper Privilege Management). Same broken-access-control
+  class as [BoardBleed](https://wekan.fi/hall-of-fame/boardbleed/) (CVE-2026-55234) — a Meteor
+  collection allow-rule field conflation — but on the Board document itself. To support drag-to-reorder
+  on the All Boards / Public Boards pages, a second `Boards.allow({ update })` rule returned `true` for
+  any board member whenever the update touched the `sort` field. Meteor evaluates allow rules with OR
+  semantics and does **not** scope an approving rule to the field that satisfied it: once any allow
+  callback returns `true` and no deny callback returns `true`, the **entire** modifier is applied.
+  Because `canUpdateBoardSort` only checked that `sort` was **among** the modified fields (not that it
+  was the **only** one), a comment-only / read-only member could smuggle arbitrary board mutations into
+  the same `$set` as `sort` in a single unprivileged DDP `Boards.update` call:
+  `{$set: {sort: 99, members: [...only themselves as admin...], permission: 'public', title: '...'}}`.
+  The member could therefore make themselves board admin, flip a private board to public (world-readable
+  in Wekan), rename it, and evict the legitimate owner. The last-admin deny rule did not help because it
+  only inspected `$pull`, so a wholesale `$set` of the `members` array bypassed it entirely.
+  - **Fixed** by restricting `canUpdateBoardSort` (`server/lib/utils.js`) so the sort-reorder rule
+    approves an update **only** when `sort` is the sole modified field (`fieldNames` is exactly
+    `['sort']`) — it can no longer approve a modifier that also mutates `members`, `permission`, `title`
+    or anything else. As defense in depth, the last-admin deny rule (`server/permissions/boards.js`) now
+    also rejects a `$set` rewrite of the `members` array that would drop the last active admin, not just
+    a `$pull`. A regression test covers the multi-field smuggling case
+    (`server/lib/tests/boards.security.tests.js`). The legitimate All Boards drag-reorder is unaffected:
+    it persists the order per-user in `profile.boardSortIndex` (`Users.setBoardSortIndex`), not in the
+    board document. CVSS:3.1 8.8 High (AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H).
+  - Affected Wekan v9.85 and earlier through the current release; fixed at the upcoming WeKan release.
+    Reported by **5ud0 / Tarmo Technologies**.
+  Thanks to 5ud0 / Tarmo Technologies and xet7.
+
+and adds the following updates:
+
+- Update Sandstorm WeKan info.
+  [Part 1](https://github.com/wekan/wekan/commit/1bf68f54b29ab29a54abb90f777a88be4aa45d7e),
+  [Part 2](https://github.com/wekan/wekan/commit/ade9f16db459708200f4d7677c3877f1cdc837a4),
+  [Part 3](https://github.com/wekan/wekan/commit/0d90011affcf3789ed3ea820db5f3402ad1019b3).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.88 2026-07-13 WeKan ® release
+
+This release adds the following new features:
+
+- [Added docs about new Sandstorm WeKan](https://github.com/wekan/wekan/commit/9f23e6384bdfa5ca81be18e4f0426c347e9894eb).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- **Sandstorm build: fixed "not writing through dangling symlink" that failed the
+  `sandstorm.yml` workflow at `sandstorm-src/build-deps.sh` step [3/7]**. The
+  meteor-spk 0.6.0 base ships some runtime libs in `meteor-spk.deps/lib` as
+  DANGLING symlinks (e.g. `libstdc++.so.6` → a library that no longer exists), so
+  refreshing them with the host's newer libs failed: `cp -fL` refuses to write
+  through a dangling destination symlink. Added `--remove-destination` so `cp`
+  deletes the existing destination (dangling symlink included) before copying the
+  host's real library. Thanks to xet7.
+- **Sandstorm build: write the signing keyring to the path `meteor-spk pack`
+  actually reads**. The `sandstorm.yml` "Restore the Sandstorm signing keyring"
+  step wrote the decoded `SANDSTORM_KEYRING` secret to `~/.sandstorm/sandstorm-keyring`,
+  but `meteor-spk` / `spk` read the app private key from `~/.sandstorm-keyring` (a
+  file directly in `$HOME`), so packing aborted with
+  `open(~/.sandstorm-keyring): No such file or directory` even when the secret was
+  set. Now it writes `~/.sandstorm-keyring`, and — since the `.spk` cannot be signed
+  without it — fails early with an actionable message when the secret is missing,
+  instead of the cryptic later crash. Thanks to xet7.
+- **Sandstorm .spk: trim it back toward Cloudflare's 100 MB upload limit**. The
+  Sandstorm build no longer bundles the ~300 MB of modern MongoDB Database Tools
+  (wekan/mongo-tools) — they are unused in Sandstorm (grains back up/restore
+  themselves; the MongoDB 3 → FerretDB migration uses the legacy migratemongo CLIs
+  + the `.mjs` importer). Also set `PUPPETEER_SKIP_DOWNLOAD=1` for the Meteor build
+  (puppeteer is a test-only devDependency, so its ~150 MB Chromium never belongs in
+  the `.spk`), and the pack step now prints the `.spk` size and warns if it exceeds
+  100 MB. (The Database Tools remain in the WeKan `.zip` bundle / Docker / Snap,
+  which do use them.) Thanks to xet7.
+- [Sandstorm .spk: bundle the matching glibc dynamic loader so grains start](https://github.com/wekan/wekan/commit/143607ef22ae91803cb611053fd4ce00754e7096):
+  the `.spk` bundled the host's new glibc `libc.so.6` (Ubuntu 24.04, glibc 2.39)
+  but kept the old glibc 2.31 `ld-linux` from the meteor-spk 0.6.0 base, so `node`
+  failed at startup with `libc.so.6: undefined symbol: _dl_audit_symbind_alt,
+  version GLIBC_PRIVATE` (HTTP-BRIDGE exit 127) and the grain crash-looped.
+  `sandstorm-src/build-deps.sh` now also copies the host's `ld-linux-x86-64.so.2`
+  so the loader and libc are the same glibc, and adds a `[verify]` gate that fails
+  the build if they differ or the bundled `node` cannot run under them — turning a
+  silent grain crash-loop into a loud build failure. Thanks to xet7.
+- [Sandstorm build workflow: enable unprivileged user namespaces and build the dispatched branch](https://github.com/wekan/wekan/commit/66d8706c4d2afab4d127f8c63e05d43407efaf30):
+  Ubuntu 24.04 defaults `kernel.apparmor_restrict_unprivileged_userns=1`, which
+  blocks the unprivileged user namespaces the Sandstorm install and the `spk`
+  supervisor rely on, so `sandstorm.yml` now relaxes it on the runner. A new `ref`
+  `workflow_dispatch` input also lets the workflow build a fix branch before it is
+  merged, instead of a hardcoded `main`. Thanks to xet7.
+- [Meteor unit tests: fix server-boot crash from `__dirname` in an ESM test file](https://github.com/wekan/wekan/commit/60116bc72f68c7bc0aa56a7d5700e33b98e870af):
+  `server/lib/tests/dependencies.openapi.tests.js` is an ES module that referenced
+  the bare `__dirname` global; under Node 24 / Meteor 3.5 the compiler injects
+  `const __dirname = fileURLToPath(import.meta.url)`, colliding with the `__dirname`
+  the CommonJS module wrapper already provides, so the server bundle failed to boot
+  with `Identifier '__dirname' has already been declared` and the "Meteor unit
+  tests" CI job died before any test ran. Drop the `__dirname` seed
+  (`process.env.PWD` already reaches the repo root under `meteor test`). Thanks to xet7.
+- [Sandstorm .spk: point FerretDB state dir to writable /var so the grain starts](https://github.com/wekan/wekan/commit/1c28b40fd41acd9b9e21671548411f25e55464b8):
+  FerretDB persists a `state.json` (version/UUID) via its state provider even with
+  telemetry disabled, and its `--state-dir` defaults to `.` — which in a Sandstorm
+  grain is `/`, read-only. So FerretDB failed with `Failed to create state
+  provider: failed to persist state: open /state.json: read-only file system`,
+  exited (code 1), and the grain crash-looped. `sandstorm-src/start.js` now creates
+  `/var/ferretdb` and passes `--state-dir=/var/ferretdb` (plus `FERRETDB_STATE_DIR`)
+  in `startFerret()`, covering both the migration and steady-state FerretDB launches.
+  Thanks to xet7.
+- [Sandstorm .spk: don't crash the grain when capnp.node can't load on Node 24](https://github.com/wekan/wekan/commit/f4f22bbe24e10659cc80cd1efeb6b4890b58ea49):
+  WeKan on Sandstorm bundles Node 24, but `capnp.node` (node-capnp) is built for an
+  older Node ABI (NODE_MODULE_VERSION 83 = Node 14), so `Npm.require('capnp')` in
+  `sandstorm.js` failed with `ERR_DLOPEN_FAILED` and crash-looped the whole grain on
+  boot. Cap'n Proto is now loaded lazily in a `try/catch` and degrades gracefully:
+  the grain boots and core WeKan works, because login and user identity come from
+  the sandstorm-http-bridge `X-Sandstorm-*` HTTP headers (`wekan-accounts-sandstorm`)
+  and need no Cap'n Proto. Only the two capnp-only features are skipped when the
+  addon cannot load — the Powerbox identity-claim method and Sandstorm activity
+  notifications — with a clear warning. They can be restored by rebuilding node-capnp
+  for Node 24, or reimplemented over the bridge's HTTP/JSON API. Thanks to xet7.
+- [Snap release: build amd64+arm64 natively on GitHub, exotic arches non-blocking on Launchpad](https://github.com/wekan/wekan/commit/8549a62c85f43ad48e8f049eead64691c3f1dbf0):
+  the single snap job ran `snapcraft remote-build` for all 5 platforms on Launchpad
+  and blocked until the slowest resolved, so the release hung ~3.5h on riscv64's
+  Launchpad queue even though amd64+arm64 finished in minutes. It is now split in
+  two: `snap-native` builds amd64 (`ubuntu-24.04`) and arm64 (`ubuntu-24.04-arm`)
+  natively on GitHub runners via `snapcore/action-build`; `snap-launchpad` builds
+  s390x/ppc64el/riscv64 on Launchpad in a non-blocking (`continue-on-error`),
+  per-arch matrix (`remote-build --build-for <arch>`) so a slow or failed exotic
+  arch never delays the release or the other arches. Each arch publishes to the
+  Snap Store (candidate,beta,edge) and attaches to the GitHub Release the moment it
+  finishes — all 5 arches still ship. Thanks to xet7.
+- [Sandstorm .spk: fix server-boot crashes from stale globals (Users, HTTP) in sandstorm.js](https://github.com/wekan/wekan/commit/60e40199c965460b95528ef9ea07281172c2d9b6):
+  once the capnp load was made non-fatal, the grain reached the rest of
+  `sandstorm.js` and hit two latent Meteor-2.x-isms the Meteor 3.x migration missed
+  (this file only runs on Sandstorm, so it was not exercised): it referenced the
+  `Users`/`Boards`/`Swimlanes`/`Activities` collections as implicit globals, but
+  those are now ES module default exports, so `Users.after.insert` threw
+  `Users is not defined` at boot; and it monkey-patched `HTTP.methods` from the
+  removed `meteor/http` package, so `HTTP` was undefined. The collections (and
+  `Accounts`) are now imported explicitly, and the obsolete `HTTP.methods` patch is
+  removed. Thanks to xet7.
+- [Sandstorm .spk: use boolean index options so FerretDB accepts the users index](https://github.com/wekan/wekan/commit/975316f5cd6e81b6ea8ae6ede588d26055f9f649):
+  `wekan-accounts-sandstorm` created the unique index on `services.sandstorm.id`
+  with `{unique: 1, sparse: 1}`. Real MongoDB accepts the truthy `1`, but FerretDB
+  (used by the Sandstorm `.spk`) is strict and rejects it with `The field 'unique'
+  has value unique: 1, which is not convertible to bool`, crashing the grain at boot
+  during index creation. Now uses real booleans (`unique: true, sparse: true`).
+  Thanks to xet7.
+- [Sandstorm .spk: strip Accept-Encoding so the grain doesn't serve corrupted (gzip) content](https://github.com/wekan/wekan/commit/013b6b5266be34326e36762b1a50e212237b109d):
+  the grain boots, but the page failed to load with a browser "Corrupted Content
+  Error" (`NS_ERROR_NET_CORRUPTED_CONTENT`). `sandstorm-http-bridge` advertises
+  `Accept-Encoding: gzip` to the app regardless of what the browser actually sent,
+  so Meteor served gzip/brotli-encoded responses the browser could not decode. A
+  `WebApp.rawHandlers` middleware now strips `Accept-Encoding` (it runs before
+  Meteor's static/boilerplate serving) so responses go out uncompressed; bandwidth
+  is a non-issue behind the local bridge. Thanks to xet7.
+- [Sandstorm .spk: bundle a modern sandstorm-http-bridge to fix "Corrupted Content"](https://github.com/wekan/wekan/commit/7f0706e45f26aa0937a15a2a8f7336df63830511):
+  the grain boots, but the page failed with a browser "Corrupted Content Error"
+  (`NS_ERROR_NET_CORRUPTED_CONTENT`) on WeKan's `/` redirect. The meteor-spk 0.6.0
+  base bundles an ancient (~2016) `sandstorm-http-bridge` that mangles responses
+  (it always advertises `Accept-Encoding: gzip` to the app and mishandles
+  redirect/encoding). `build-deps.sh` now overwrites the bundled
+  `/sandstorm-http-bridge` with the modern one from a Sandstorm install
+  (`/opt/sandstorm/latest/bin/sandstorm-http-bridge`; override with
+  `SANDSTORM_HTTP_BRIDGE`), and `sandstorm.yml` installs Sandstorm before assembling
+  the deps so the bridge is available on the CI runner. Thanks to xet7.
+- [Sandstorm .spk: fix the "/" redirect (malformed Location + Content-Length mismatch)](https://github.com/wekan/wekan/commit/ccdd1a0846ffed64546265c38263c7e1b8530480):
+  the grain's `/` served a broken `301`: the `Location` was `.../:6080board` because
+  `FlowRouter.path()` does not resolve on the server in Meteor 3.x (it returned the
+  bare route name `board`), and the response advertised `Content-Length: 90` while
+  sending an empty body — which the browser rejected as a "Corrupted Content Error"
+  (`NS_ERROR_NET_CORRUPTED_CONTENT`). The handler now builds the board path directly
+  (`/b/:id/:slug`) and sends a real HTML body (meta refresh + link) with a matching
+  `Content-Length`, so the redirect to the hard-coded Sandstorm board works. Thanks
+  to xet7.
+- [Sandstorm .spk: open the grain on the All Boards page, not a hard-coded board](https://github.com/wekan/wekan/commit/b5945cf596be546b9440854ee9c39520c3c715c0):
+  WeKan on Sandstorm originally opened a single hard-coded board
+  (`/b/sandstorm/libreboard`) and redirected `/` to it. It now supports many boards
+  and that board is no longer the right destination, so the `WebApp.handlers.get("/")`
+  redirect is removed entirely — `/` now falls through to WeKan's normal serving,
+  whose client `home` route renders the **All Boards** list, the right landing page
+  for a multi-board grain. This also removes the last server-side redirect the
+  browser was rejecting as a Corrupted Content Error. Thanks to xet7.
+- [Sandstorm .spk: don't auto-create a board; map grain permissions to global role](https://github.com/wekan/wekan/commit/8f11e8ac66d7348f62e8cf9278f4196b44c719b0):
+  a new grain/user no longer gets a hard-coded `sandstorm`/libreboard board
+  auto-created — WeKan on Sandstorm is multi-board now, so the user creates their own
+  boards from the All Boards page. `updateUserPermissions` previously added the user
+  as a member of that single board (which would now crash since the board no longer
+  exists); it now maps the grain's Sandstorm permissions to the user's **global**
+  WeKan role — `configure` (grain owner) becomes a WeKan admin, everyone else is a
+  regular user who can create and manage their own boards. Thanks to xet7.
+- [Sandstorm .spk: set SANDSTORM=1 so the header-based auto-login runs](https://github.com/wekan/wekan/commit/b0712e6656ce33bfe7c360547185fea04660c9f7):
+  WeKan loaded in the grain but every page showed "Must be logged in". The
+  `wekan-accounts-sandstorm` client only starts the automatic `X-Sandstorm-*` header
+  login when `__meteor_runtime_config__.SANDSTORM` is set, and the package only sets
+  that when `process.env.SANDSTORM` is present — which nothing did. The launcher now
+  sets `process.env.SANDSTORM = '1'` before loading the WeKan bundle, so the client
+  auto-logs-in the Sandstorm user from the headers. Thanks to xet7.
+- [Sandstorm .spk: rewrite ROOT_URL per request to the grain URL (fixes login + CORS)](https://github.com/wekan/wekan/commit/d5f707fd37b63ff038f61d7aa1316d5800859b35):
+  WeKan loaded but stayed on "Must be logged in", and the console showed
+  `Cross-Origin Request Blocked … http://127.0.0.1:4000/__meteor__/dynamic-import/fetch`.
+  The launcher sets a fixed `ROOT_URL` (`http://127.0.0.1:4000`, the internal bridge
+  target), but Sandstorm serves each grain at a per-session host
+  (`ui-<hash>.<host>`), so the client sent its DDP connection and dynamic-import
+  fetches to `127.0.0.1:4000` — cross-origin and unreachable — and the header-based
+  login handshake (a DDP method call) never completed. A `WebApp.addRuntimeConfigHook`
+  now rewrites `ROOT_URL` to the grain's real base URL (`X-Sandstorm-Base-Path`) per
+  request, so DDP, dynamic imports and the Sandstorm auto-login work. Thanks to xet7.
+- [Sandstorm .spk: bounce from sign-in to the boards list once auto-login lands](https://github.com/wekan/wekan/commit/6f3174b23d7072a383703a5fe03711090fe9f844):
+  the Sandstorm login was actually succeeding (`Meteor.userId()` gets set), but the
+  grain stayed on the sign-in page. WeKan's home route checks `Meteor.userId()` once
+  and, because the Sandstorm header login is asynchronous and uses
+  `connection.setUserId()` (bypassing accounts-base, so `Accounts.onLogin` never
+  fires), finds it still null on first render and redirects to `atSignIn` — where the
+  user is stranded even after login completes. A Sandstorm-only reactive autorun now
+  sends the user from `atSignIn` back to `home` as soon as `Meteor.userId()` is set,
+  so the grain lands on the All Boards page. Thanks to xet7.
+- [Sandstorm .spk: keep the grain URL in sync with the in-app route](https://github.com/wekan/wekan/commit/68e59ab66f68d1c60bc10c954c50999809e5381b):
+  navigating between boards worked but the Sandstorm shell's grain URL never updated
+  (it stayed on the grain root), unlike standalone WeKan. The path was synced via a
+  global `FlowRouter.triggers.enter` callback, which does not fire reliably on client
+  navigation in this flow-router-extra / Meteor 3 setup; it is now synced from a
+  reactive `Tracker.autorun` on `FlowRouter.watchPathChange()` (the same mechanism
+  the title sync uses), so every route change updates the grain URL to
+  `/grain/<id><path>`. Thanks to xet7.
+- [Sandstorm .spk: upload attachments over DDP (bridge strips Meteor-Files' HTTP headers)](https://github.com/wekan/wekan/commit/dc8ff6e6ca3093298d5e07f2c8726f597d672449):
+  adding a file to a card in the grain failed with HTTP 400 `Can't continue upload,
+  session expired [408]` and the file silently disappeared. Meteor-Files' HTTP
+  upload signals the first chunk with an `x-start` header and tracks the session
+  with `x-mtok`/`x-chunkid`/`x-fileid`/`x-eof`, but Sandstorm's request-header
+  whitelist does not include them, so the `sandstorm-http-bridge` strips them — the
+  server never sees `x-start`, treats every request as a chunk continuation, cannot
+  find the session and returns 408. Attachment uploads now use `transport: 'ddp'` on
+  Sandstorm (DDP method calls, no custom HTTP headers); HTTP transport is kept
+  everywhere else. Thanks to xet7.
+- [Sandstorm .spk: authorize attachment/avatar downloads via X-Sandstorm-User-Id](https://github.com/wekan/wekan/commit/1ca7bd3bb6016f560aaa3f748bbb23cec514acf0):
+  once uploads worked, the uploaded image still showed as a broken thumbnail,
+  minicard cover and slideshow in the grain — the file was on disk but the download
+  returned HTTP 403. The download route (`server/routes/universalFileServer.js`)
+  authorizes files on private boards with a Meteor login token (Authorization /
+  X-Auth-Token / `authToken` query / `meteor_login_token` cookie), but Sandstorm has
+  none of these: authentication is via `connection.setUserId()` and the
+  `sandstorm-http-bridge` `X-Sandstorm-*` request headers, so `extractLoginToken()`
+  returned null and `isAuthorizedForBoard()` denied every request. Sandstorm already
+  gates grain access at the platform level, so any request that reaches WeKan is an
+  authenticated grain user — both `isAuthorizedForBoard()` and
+  `isAuthorizedForAvatar()` now allow when `Meteor.settings.public.sandstorm` is set
+  and the request carries the bridge-injected `X-Sandstorm-User-Id` header. Gating on
+  the setting means a spoofed header cannot bypass auth on non-Sandstorm deployments.
+  Thanks to xet7.
+- [Sandstorm .spk: open All Boards (not sign-in) and keep the grain URL in sync](https://github.com/wekan/wekan/commit/3ab2b9dccbf3b32dd510d4634af88a1b9eb8513c):
+  two grain-navigation regressions against the last working Sandstorm build (v6.15).
+  (1) Opening a grain showed *"Must be logged in"* instead of the All Boards page: on
+  Sandstorm the platform authenticates the user asynchronously over DDP via
+  `connection.setUserId()`, which (unlike a password login) does not set
+  `Meteor.loggingIn()`, so `Meteor.userId()` is null for the first moments after the
+  grain opens — and useraccounts' `ensureSignedIn` trigger plus `renderBoardList()`
+  both bounced that brief null window to the `atSignIn` route, a sign-in page that
+  does not exist inside a grain. `config/router.js` now uses a Sandstorm-aware
+  `ensureSignedInUnlessSandstorm` wrapper (a no-op on Sandstorm) and
+  `renderBoardList()` no longer redirects on Sandstorm; the list renders and fills in
+  reactively once the login lands. (2) The Sandstorm shell's outer grain URL did not
+  update when switching boards — the shell rewrites `/grain/<id><path>` when the app
+  posts a `{ setPath }` message, but the sync was a bare top-level `Tracker.autorun`
+  that could run before flow-router-extra's reactive path tracking was ready and then
+  never re-run. Restored v6.15's event-driven `FlowRouter.triggers.enter` (fresh
+  entering path, order-independent) and kept a `watchPathChange()` autorun wrapped in
+  `Meteor.startup` as a backup. Thanks to xet7.
+- [Sandstorm .spk: fix the MongoDB 3 → FerretDB migration of an existing grain](https://github.com/wekan/wekan/commit/3f5c70e6435c5305cb165eeb866fc1ac88f58dd0):
+  importing an old WeKan grain crash-looped in the one-time migration — mongod 3.0
+  forked and its child aborted with exit code 14. Two bugs. (1) *WiredTiger
+  cache_size=0G*: mongod 3.0 sizes its WiredTiger cache from detected RAM
+  (`RAM/2 − 1GB`), but inside a Sandstorm grain sandbox RAM detection returns 0, so it
+  computed `cache_size=0G` and WiredTiger refused to open (minimum is 1MB), logging
+  *"Value too small for key 'cache_size'"* / *"Fatal Assertion 28561"* to
+  `/var/migration-mongod.log` before aborting. Both mongod invocations (the niscu →
+  3.0 stage and the 3.0 → FerretDB stage) now pass an explicit
+  `--wiredTigerCacheSizeGB 1` so the cache size never depends on RAM detection
+  (mongod 3.0.7 parses this option as an integer number of GB — a decimal like `0.25`
+  fails with `Bad digit "."`, [fixed to `1`](https://github.com/wekan/wekan/commit/0804cd19e) —
+  and it is a cache cap, not a preallocation). The data
+  itself is intact (the *"unclean shutdown"* notice is harmless —
+  WiredTiger recovers from the last checkpoint). (2) *Wrong source database*:
+  Sandstorm WeKan grains store their data in the Meteor-default database `meteor`, but
+  the importer was told `SRC_DB=wekan`, so even once mongod started it would have
+  exported zero collections; only the FerretDB *target* database is `wekan`. Thanks to
+  xet7.
+- [Sandstorm/Snap migration: import mongodb and bson as default (CommonJS) exports under Node 24](https://github.com/wekan/wekan/commit/a5bcb2e27c070643f17c9ed62ca6284564da1c51):
+  with the WiredTiger cache fixed mongod 3.0 started and the migration importer ran,
+  but crashed immediately on its named imports — `import { EJSON } from 'bson'` and
+  `import { MongoClient } from 'mongodb'` each threw *"Named export '…' not found. The
+  requested module is a CommonJS module"*. Both packages, as bundled in WeKan's server
+  `node_modules`, are CommonJS, so Node 24's ESM loader exposes no named exports on
+  them. Import the default and destructure, as Node's own error message advises (bson in
+  the commit linked above; [mongodb in the same way](https://github.com/wekan/wekan/commit/50abd8f95)).
+  Shared by the Snap MongoDB 3 → FerretDB migration too (same Node 24). Thanks to xet7.
+- [Sandstorm/Snap migration: connect mongoexport over IPv4 so it can read the old data](https://github.com/wekan/wekan/commit/6142396ae9f95872f5b2ff0e3ee889e519fd56e8):
+  with the importer finally running, every `mongoexport` of a source collection failed
+  — at first silently (its own [`--quiet` flag suppressed the reason](https://github.com/wekan/wekan/commit/3076f2317)),
+  and once that was
+  dropped the real error showed: *"error connecting to db server: no reachable
+  servers"*. `mongoexport` is a Go tool whose `--host` defaults to `localhost`, which
+  resolves to `::1` (IPv6) first, but the migration `mongod` listens only on
+  `--bind_ip 127.0.0.1` (IPv4); the mongo shell defaults its host to `127.0.0.1` and so
+  connected fine (it listed all 42 collections), which is why only the shell worked.
+  Pass `--host 127.0.0.1` explicitly. The one-time progress dashboard also now shows a
+  live Activity panel (mongoexport-ready line, per-collection export/insert counts, GridFS
+  extraction counts) with a [spinner and an auto-updating timestamp](https://github.com/wekan/wekan/commit/62df99153),
+  so it is
+  clear what the migration is doing rather than sitting on *"(waiting…)"*. Thanks to
+  xet7.
+- [Sandstorm/Snap migration: resolve bson/mongodb from the modern server bundle so EJSON exists](https://github.com/wekan/wekan/commit/beefe441d):
+  once mongoexport connected, every collection failed with *"Cannot read properties of
+  undefined (reading 'parse')"* — `EJSON` was undefined. The importer script sits at the
+  deps root right next to the OLD meteor-spk 0.6.0 base `node_modules` (kept only for the
+  niscu → 3.0 stage): its `bson` is 1.x with no `EJSON` at all, and its `mongodb` is
+  ancient — it has `MongoClient` (so the connection worked) but no `EJSON` re-export. A
+  bare `import`/`require` from the script resolved those adjacent old copies, so every
+  way of reaching `EJSON` (bare `bson`, `mongodb.EJSON`) came back undefined. WeKan's
+  current `bson` 7.3 and mongodb driver (with `EJSON`) live under
+  `programs/server/npm/node_modules`; [anchor `createRequire`](https://github.com/wekan/wekan/commit/0e0a8bbb3)
+  inside that modern bundle
+  first (falling back to the deps root) and load both `mongodb` and `bson` through it —
+  which also moves the importer to the same modern mongodb driver the WeKan app uses
+  against FerretDB. An upfront guard fails loudly with a diagnostic list if `EJSON.parse`
+  is still unreachable. Thanks to xet7.
+- [Sandstorm/Snap migration: insert into FerretDB with the modern mongodb driver (OP_MSG)](https://github.com/wekan/wekan/commit/cab231ee3):
+  text collections exported and *"inserted N/N"* was logged, but every document actually
+  failed with *"Unsupported OP_QUERY command: update"* — nothing reached FerretDB.
+  `requireAny('mongodb')` had resolved the ancient meteor-spk base driver (v2.x, at the
+  deps root) because the modern driver is not directly under
+  `programs/server/npm/node_modules` — Meteor nests it at
+  `…/meteor/npm-mongo/node_modules/mongodb` (v6.16). The 2.x driver speaks legacy
+  OP_QUERY, which FerretDB rejects; the 6.x driver speaks OP_MSG (the same driver the
+  WeKan app uses against FerretDB). Add the npm-mongo path as the first resolver anchor,
+  and log the resolved driver version. Thanks to xet7.
+- [Sandstorm/Snap migration: extract Meteor-Files GridFS attachments + parse legacy v1 binary](https://github.com/wekan/wekan/commit/3476cd17c):
+  with text migrating, attachments still produced 0 files and *"parse attachments.chunks:
+  Unexpected Binary Extended JSON format"*. Two causes. (1) mongo 3.x `mongoexport` writes
+  binary as legacy Extended JSON v1 `{"$binary":"<b64>","$type":"00"}`, but modern bson
+  `EJSON.parse` only accepts v2 `{"$binary":{"base64":…,"subType":…}}` — rewrite v1→v2 per
+  line before parsing. (2) The grain stores attachments in Meteor-Files' own GridFS buckets
+  (`attachments.files` + `attachments.chunks`, with the FilesCollection record in the
+  `attachments` collection), not CollectionFS's `cfs_gridfs.*`. Reassemble those buckets to
+  disk, link each GridFS file to its record via `metadata.fileId`/`versionName`, then repoint
+  the record's `versions.<v>` at the file and drop `versions.<v>.meta.gridFsFileId` —
+  otherwise WeKan's `getFileStrategy` keeps choosing the now-empty GridFS backend and the
+  image 404s. Verified end to end on a real grain: boards/cards/lists/swimlanes migrate and
+  all 3 attachments extract and display. Thanks to xet7.
+- [Sandstorm/Snap migration: auto-open All Boards after migrating, WeKan-themed dashboard](https://github.com/wekan/wekan/commit/b8bdbcd2d):
+  the one-time progress dashboard used to sit on the grain URL for 60s after completion,
+  forcing a manual reload to reach WeKan. On success the importer now hands off quickly and
+  the done page polls `/` until WeKan's app shell answers (riding out the brief
+  importer→WeKan port hand-off) and then opens All Boards, with the spinner still spinning so
+  it is clear the grain is still working. The dashboard is also recoloured to WeKan's
+  blue/white/grey. Thanks to xet7.
+- **Avatars and original members now travel with a board (export/import), from every
+  identity source.** A board could be moved between servers (or imported into Sandstorm)
+  but member avatars vanished — they lived in Sandstorm / LDAP / OAuth2, not in WeKan —
+  and original members were collapsed onto the importing user by a mapping that could
+  attach the wrong person and leak board permissions. Now:
+  - [External avatars are localized into WeKan's own files/avatars](https://github.com/wekan/wekan/commit/ac8bedfef),
+    triggered when a board is opened and at login, from any source — Sandstorm profile
+    picture, LDAP [`jpegPhoto`/`thumbnailPhoto`](https://github.com/wekan/wekan/commit/c258d862d),
+    OAuth2/OIDC `picture` claim, gravatar or a pasted URL — every network fetch guarded
+    against SSRF (http/https only; no private, loopback, link-local or cloud-metadata
+    address; timeout + size + image-type caps). ([board-open trigger](https://github.com/wekan/wekan/commit/5a38ca3ca).
+    Inside a Sandstorm grain outbound fetch is sandboxed, so a still-external Sandstorm
+    picture is a best-effort no-op there — but any avatar that is already a local file
+    exports/imports fully, grain included.)
+  - [Board export embeds each member's local avatar file as base64](https://github.com/wekan/wekan/commit/92c769fd1)
+    alongside their username, fullname and initials — never passwords, emails or services.
+  - [Board import preserves the original members as inert placeholder users](https://github.com/wekan/wekan/commit/aff3017ff)
+    (`authenticationMethod:'imported'`, `loginDisabled`, `isActive:false`, no secrets),
+    reusing each original `_id` so card/comment/activity references resolve to the right
+    person with NO mapping at import time, and restores their avatar. The importer stays
+    the sole admin; imported members hold no permissions until reconciled.
+  - [Reconciliation maps placeholders to the valid accounts deliberately, later](https://github.com/wekan/wekan/commit/6985281d5):
+    an admin sweep merges each placeholder into a matching real account (provisioned by
+    LDAP/OIDC at login) by reassigning every reference, and leaves the rest inactive
+    (e.g. a person not in LDAP); a one-off admin merge is available too.
+  - [Avatars visibly distinguish account state](https://github.com/wekan/wekan/commit/fae20c8bc),
+    on card avatars and in the right-sidebar member list: a dashed ring + amber "?" badge
+    for un-reconciled imported placeholders, greyscale + dim for inactive members, and the
+    sidebar now lists everyone (active first, then inactive) instead of hiding inactive
+    members. Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.87 2026-07-11 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Normal users cannot move cards between swimlanes](https://github.com/wekan/wekan/commit/b227a931933a3a8abff67c1084f9561b8847f444):
+  in the swimlanes view the `.js-swimlanes` sortable — which also carries moving a
+  card from one swimlane to another — was disabled for every non-admin
+  (`!isBoardAdmin()`), even though its own comment said it should be disabled only
+  for non-members. So ordinary board members could move a card within a swimlane
+  but not between swimlanes, and could not reorder swimlanes. Now it is disabled
+  only for users without write access (`!canModifyCard()`: comment-only, worker,
+  read-only), so board members can move cards between swimlanes again.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.86 2026-07-11 WeKan ® release
+
+This release fixes the following bugs:
+
+- [At default docker-compose.yml, changed DDP_TRANSPORT from uws to sockjs, because uws does not work at s390x](https://github.com/wekan/wekan/commit/aa5847f21561957216a34a7f6a61699f427971c8).
+  Thanks to xet7.
+- **FerretDB v1 is now downloaded as an individual per-arch binary, not `ferretdb.zip`**:
+  the wekan/FerretDB release now attaches one `ferretdb-<arch>` (`.exe` on Windows)
+  asset per platform instead of a single multi-platform `ferretdb.zip`. Every WeKan
+  build path now downloads only the one binary for the platform it targets from
+  `https://github.com/wekan/FerretDB/releases/latest/download/ferretdb-<arch>`:
+  `release-all.yml` (the amd64/arm64/win64/mac/ppc64le/s390x/riscv64 bundle jobs —
+  the separate `build-ferretdb` job and its `ferretdb-zip` artifact are removed),
+  the default `docker-compose.yml`, and the Sandstorm `sandstorm-src/build-deps.sh`.
+  FerretDB itself also moved its Go toolchain to 1.25.11 to clear the Quay.io
+  `stdlib` security advisories. Thanks to xet7.
+- **Drop the `mongosh` binary; use bundled Node.js 24 + the `mongodb` driver instead**:
+  WeKan no longer bundles or downloads the MongoDB Shell anywhere (snap, Windows
+  bundle). Every scripted database operation it was used for — readiness `ping`,
+  replica-set `initiate`/`status`, and the v8.43 schema migration — now runs
+  through the new `snap-src/bin/db-eval` (a tiny wrapper around the bundled Node.js
+  24 + the `mongodb` driver), so the snap control scripts (`wekan-control`,
+  `mongodb-control`, `migration-control`), the `start-wekan.sh`/`start-wekan.bat`
+  launchers, and the ported `migrate-schema-v843.mjs` are all mongosh-free. This
+  removes a large, CVE-prone binary and works identically on every architecture
+  (including s390x/ppc64le/riscv64, which have no prebuilt mongosh). The legacy
+  MongoDB 3.2 `mongo` shell (migratemongo, amd64) stays for migration-time reads
+  only. Thanks to xet7.
+- **MongoDB Database Tools now come from `wekan/mongo-tools`, not the MongoDB website**:
+  every WeKan build downloads the per-arch `<tool>-<arch>` binaries (bsondump,
+  mongodump, mongoexport, mongofiles, mongoimport, mongorestore, mongostat,
+  mongotop) built by the [wekan/mongo-tools](https://github.com/wekan/mongo-tools)
+  fork (pure Go, cross-compiled for every architecture) from its newest release,
+  replacing the `fastdl.mongodb.org` / `downloads.mongodb.com` downloads. They are
+  embedded in the Linux `.zip` bundles (amd64/arm64/s390x/ppc64le/riscv64) — and
+  therefore in the Docker image, which is built from those bundles — the Windows
+  and macOS bundles, the Snap (`mongotools` part), and the Sandstorm `.spk`. The
+  MongoDB 7 server (mongod) is still fetched from MongoDB (amd64/arm64 only), since
+  MongoDB ships no server for the other architectures; the legacy MongoDB 3.2 CLIs
+  (migratemongo, amd64) remain only for the one-time MongoDB 3 migration. Thanks to xet7.
+- **Snap: the default `snapcraft.yaml` is now the `base: core24`, `grade: stable` build**:
+  the previous `snapcraft.yaml` (core26, `grade: devel`) is renamed to
+  `snapcraft-core26.yaml`, and the former `snapcraft-core24.yaml` becomes
+  `snapcraft.yaml`. Because the default is `base: core24` (a released base), it can
+  be published to the Snap **candidate** channel, which core26 cannot. The automated
+  `release-all.yml` workflow publishes the snap to the **candidate + beta + edge**
+  channels; the **stable** channel is published manually later, once it is proven
+  stable enough. Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.85 2026-07-11 WeKan ® release
+
+This release adds the following features and fixes:
+
+- **Docker: FerretDB v1 + SQLite is now the default `docker-compose.yml`**:
+
+  The default database for `docker compose up -d` is now **FerretDB v1 with embedded
+  SQLite** (from https://github.com/wekan/FerretDB) — light and self-contained, no
+  separate database server. The compose files were renamed accordingly:
+  `docker-compose-ferretdb-v1-sqlite.yml` -> **`docker-compose.yml`** (the new default),
+  and the previous MongoDB default `docker-compose.yml` -> **`docker-compose-mongodb-v7.yml`**.
+  The other files are unchanged: `docker-compose-ferretdb-v2-postgresql.yml` (FerretDB 2
+  + PostgreSQL) and `docker-compose-multitenancy.yml` (MongoDB multitenancy). To use
+  MongoDB 7, run `docker compose -f docker-compose-mongodb-v7.yml up -d` or rename that
+  file to `docker-compose.yml`. `rebuild-wekan.sh` / `rebuild-wekan.bat` Docker menus now
+  list FerretDB v1 SQLite first (default) and point at the new filenames, the compose
+  files' own header comments were updated, and the Docker docs now describe which
+  compose file maps to which database. The Docker menus also gained a **Build from
+  source & start (up -d --build)** action per compose file, which builds the wekan-app
+  image from the local `Dockerfile` (tagged as the image the compose file references)
+  and starts that freshly built container instead of a possibly-stale prebuilt image —
+  useful when a change (e.g. the FerretDB Version-page detection) isn't in the pulled
+  image yet. Finally, the obsolete `version:` attribute (which Docker Compose v2 warns
+  about and ignores) was removed from all compose files (`docker-compose.yml`,
+  `docker-compose-mongodb-v7.yml`, `docker-compose-ferretdb-v2-postgresql.yml`,
+  `docker-compose-multitenancy.yml`, `.devcontainer/docker-compose.yml`, and the
+  ToroDB docs example).
+
+- **rebuild-wekan.sh / rebuild-wekan.bat: reorganized into category submenus + Docker start/logs/stop**:
+
+  The long flat menu is now grouped into a short top-level menu — **Setup**,
+  **Dev server**, **Tests**, **Docker**, **Tools**, **Quit** — each opening a small
+  submenu with `0) Back`, so you read only a handful of items at a time and labels
+  are shorter (the category provides the context). **Docker** is a two-stage submenu:
+  pick a backend (MongoDB `docker-compose.yml`, FerretDB v1 SQLite, FerretDB v2
+  PostgreSQL, MongoDB Multitenancy), then an action — **Start** (`up -d`),
+  **Follow logs** (`logs -f`) or **Stop** (`down`) — which removes the previous
+  repetition of 12 near-identical entries. The `.sh` auto-detects `docker compose`
+  vs legacy `docker-compose`. All existing actions are unchanged, just regrouped.
+
+- **rebuild-wekan.sh / rebuild-wekan.bat: Dev server options now stop the previous
+  server (including the rspack :8080 dev server) before starting, plus a new "Kill
+  all dev servers" option, and docs updated for the new menu**:
+
+  Every **Dev server** option (`localhost:3000`, `+ trace warnings`, `+ bundle
+  visualizer`, `CURRENT-IP:3000`, `CURRENT-IP:3000 + MONGO_URL 27019`, and
+  `CUSTOM-IP:PORT`) now stops any Meteor dev server already running before starting a
+  fresh one, so re-running a dev option no longer fails because a port is taken — no
+  need to hunt down and kill the old processes yourself. Crucially it frees **both**
+  the app port **and the rspack dev-server port `8080`**: `meteor run` starts an rspack
+  dev server on 8080 that can outlive the `meteor` parent, and a leftover one made the
+  restart crash with `Error: listen EADDRINUSE ... :8080`. Port detection now checks the
+  listening socket directly (`ss`/`lsof`, with a bash `/dev/tcp` fallback that needs no
+  external tools, and `netstat` on `.bat`) instead of an HTTP probe, so it also catches
+  a server that is still building. A new **Dev server -> Kill all dev servers** option
+  frees every dev/test port the scripts use at once — the dev app (3000) and its Mongo
+  (3001), the Mocha test server (3100) and its Mongo (3101), a Sandstorm standalone dev
+  server (4000) and its Mongo (4001), and the rspack dev server (8080) — killing meteor,
+  the rspack watcher and Meteor's bundled `--replSet meteor` Mongos (never a
+  production/system Mongo). Both scripts escalate to SIGKILL if a port does not free up.
+  Also updated the build-from-source docs (README.md, Build-from-source.md,
+  Build-and-Create-Pull-Request.md, Emoji.md, and the two Sandstorm developer docs) to
+  the new two-level menu (**Setup -> Install dependencies**, **Setup -> Build WeKan**,
+  **Dev server -> localhost:3000**) and fixed a stale dev-server port
+  (`localhost:4000` -> `3000`).
+
+- **FerretDB: quieter logs, and removed a dead MongoDB-driver-selection subsystem**:
+
+  On FerretDB (SQLite), the driver debug logs revealed a second, TLS-enabled Mongo
+  monitor connection retrying every ~0.5s and being rejected by the plaintext FerretDB
+  port, which FerretDB logged at WARN (`Connection stopped … invalid message length` /
+  `before secure TLS connection was established`) — harmless (WeKan runs fine on the real
+  plaintext connection) but very noisy. FerretDB is now started with `--log-level=error`
+  in all bundled launch points (Docker entrypoint, snap `ferretdb-control`, the release
+  `start-wekan.sh`, and the `docker-compose-ferretdb-v1-sqlite.yml` example), which drops
+  the per-connection WARN spam. Separately removed a **dead, unused "MongoDB Driver System"**
+  (`server/mongodb-driver-startup.js` + `models/lib/{meteorMongoIntegration,mongodbConnectionManager,mongodbDriverManager}.js`)
+  — an abandoned attempt to auto-detect MongoDB 3.0–8.0 and pick versioned driver packages
+  that were never even installed; WeKan uses the mongodb-7 driver via Meteor.
+
+- **Fix snap build failing on the `caddy` part (Cloudsmith unreachable on Launchpad)**:
+
+  The snap installed Caddy from the Cloudsmith apt repo
+  (`curl … dl.cloudsmith.io … | gpg --dearmor`), which fails on the Launchpad remote
+  builders — their network is restricted to a fetch proxy that can't reach Cloudsmith, so
+  `gpg` got no key (`no valid OpenPGP data found`) and the `caddy` `override-build` failed
+  with code 2 on both arches, all attempts. Both `snapcraft.yaml` and `snapcraft-core24.yaml`
+  now download the **official prebuilt Caddy static binary from GitHub releases** (per-arch,
+  latest stable with a pinned fallback) instead. WeKan uses only built-in Caddy directives,
+  so vanilla Caddy is sufficient — no apt repo, no `gpg`, no `xcaddy`/custom-module build.
+
+- **Fix Admin Panel / Version showing "MongoDB" when running on FerretDB**:
+
+  The database detection only recognised a `buildInfo.ferretdb` sub-document, but the
+  wekan/FerretDB v1 fork reports its identity as a **top-level `ferretdbVersion`** string
+  (e.g. `v1.24.2-60-gb5523566`) plus `ferretdbFeatures`, with its git commit in `gitVersion`.
+  So the Version page showed `Database type: MongoDB` and hid the FerretDB rows. Detection now
+  handles both shapes ([server/statistics.js](https://github.com/wekan/wekan/blob/main/server/statistics.js)),
+  so it shows `Database type: FerretDB`, the `FerretDB version` and `FerretDB commit` rows, and
+  the `SQLite` storage engine. (FerretDB v1's `version: 7.0.42` is the MongoDB version it emulates.)
+
+- **Design doc: WeKan on Sandstorm (Meteor 3.5 / Node 24) with MongoDB 3 → FerretDB migration**:
+
+  Added [docs/Platforms/FOSS/Sandstorm/Meteor3/Migration.md](https://github.com/wekan/wekan/blob/main/docs/Platforms/FOSS/Sandstorm/Meteor3/Migration.md)
+  describing how to build a modern Sandstorm `.spk` (Node 24, replacing meteor-spk
+  0.6.0's Node 14) that runs on FerretDB v1 (embedded SQLite) instead of MongoDB 3.0,
+  migrating an existing grain's MongoDB 3.0 data on first launch — reusing the snap's
+  proven `migrate-mongo3-to-ferretdb` logic (mongoexport read → FerretDB insert;
+  CollectionFS/Meteor-Files GridFS attachments+avatars → filesystem). Includes the
+  grain sandbox (seccomp) compatibility analysis, the rewritten `start.js`, and a new
+  `isSandstorm`-only Admin Panel / Attachments / Sandstorm section (migration status,
+  raw-MongoDB disk usage, and a guarded delete-raw-MongoDB-files action). Implementation
+  of the in-app pieces follows.
+
+- **Sandstorm: Admin Panel / Attachments / Sandstorm (migration status + free raw-MongoDB disk space)**:
+
+  Implemented the in-app pieces from the design above. When WeKan runs inside a
+  Sandstorm grain (`isSandstorm`), a new **Sandstorm** section appears in Admin
+  Panel / Attachments showing whether the one-time MongoDB 3 → FerretDB v1
+  migration succeeded, and the disk space the raw MongoDB 3 database files, the
+  FerretDB SQLite, and the attachments/avatars currently use inside the grain.
+  An admin can delete the now-redundant raw MongoDB files to free disk space —
+  guarded so it only runs after a confirmed-successful migration, behind a
+  confirmation. New admin-gated server methods `sandstormMigrationStatus` /
+  `sandstormDeleteRawMongo` ([server/methods/sandstormMigration.js](https://github.com/wekan/wekan/blob/main/server/methods/sandstormMigration.js));
+  the migration importer now writes a `migration-status.json` the panel reads.
+
+- **Sandstorm: grain launcher + spk build tooling (Node 24 / FerretDB, no releases.wekan.team)**:
+
+  Added the grain launcher [sandstorm-src/start.js](https://github.com/wekan/wekan/blob/main/sandstorm-src/start.js):
+  on first launch it runs the migration chain for whatever an existing grain holds —
+  **niscu (MongoDB 2.x) → MongoDB 3.0** (the preserved legacy path for very old grains) then
+  **MongoDB 3.0 → FerretDB v1** — then runs WeKan (Node 24) on FerretDB. Migration support from
+  old versions is permanent (niscud + mongod 3.0 are kept). Added the deps-assembly script
+  [sandstorm-src/build-deps.sh](https://github.com/wekan/wekan/blob/main/sandstorm-src/build-deps.sh)
+  which builds a modern `meteor-spk.deps` on top of **upstream meteor-spk 0.6.0**
+  (`dl.sandstorm.io`) — swapping in Node 24, adding FerretDB + the Mongo 3.x CLIs + the
+  launcher/importer, keeping niscud — with extra binaries fetched from **GitHub releases**
+  (the retired `releases.wekan.team` / old `projects.7z` are no longer used). `sandstorm.yml`
+  now calls it, and `WRITABLE_PATH` in `sandstorm-pkgdef.capnp` is `/var/files`. Build/CI only —
+  not yet packed/tested end-to-end in a grain.
+
+Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.84 2026-07-11 WeKan ® release
+
+This release adds the following features and fixes:
+
+- **Fix scheduled backup cron init crashing at server startup on Meteor 3**:
+
+  The scheduled-backup cron used Meteor's synchronous Mongo API
+  (`BackupSettings.findOne`/`upsert`), which Meteor 3 no longer allows on the
+  server — startup logged `findOne is not available on the server. Please use
+  findOneAsync() instead.` and the cron silently never registered, so scheduled
+  backups did not run. `registerCron()` is now `async` and uses `findOneAsync`,
+  the `getBackupSchedule`/`saveBackupSchedule` methods use `findOneAsync`/
+  `upsertAsync`, and every `registerCron()` caller awaits it. Added
+  `tests/backupCron.test.cjs` (positive + negative cron-registration tests and a
+  source guard that fails if the synchronous server-forbidden API is
+  reintroduced), wired into the `test:unit:node` suite.
+
+- **Snap: show the correct writable path for parallel installs in backup instructions**:
+
+  The backup/migration help text printed by `wekan.help` hardcoded
+  `/var/snap/wekan/common/files`, which is wrong for a parallel snap install
+  (e.g. `wekan_customer`, whose data lives under `/var/snap/wekan_customer/common`).
+  It now prints `$SNAP_COMMON/files`, which snapd sets per instance. Display-only;
+  all functional snap paths already derive from `$SNAP_COMMON`/`$SNAP_DATA`, so
+  parallel installs were already fully supported.
+
+- **Fix flaky server-side Mocha i18n test (TAPi18n `.loadLanguage`)**:
+
+  The `.loadLanguage` suite stubbed `addResourceBundle` on the shared
+  `TAPi18n.i18n` singleton and asserted the call count. Because `loadLanguage()`
+  reads `this.i18n` late and each test re-`init()`s the singleton, cross-test
+  state could leave the stub watching a different i18next instance than the one
+  the bundle was registered on, so the count read 0 and the run intermittently
+  reported `expected addResourceBundle to be called once`. The tests now assert
+  on observable i18next state (`hasResourceBundle`/`getResourceBundle` under the
+  normalised `toI18nCode`), which is instance-agnostic and deterministic and
+  mirrors the reliable `.setLanguage` suite. Also stopped a leaked
+  `Tracker.autorun` in the `.getLanguage` reactive test (the cross-test hazard).
+
+- **[Fix rebuild-all.yml s390x build; add bundled FerretDB v1 for ppc64le, s390x, riscv64 and to the Docker image](https://github.com/wekan/wekan/commit/0360ca1583b4b17b465ded20c4fd7560004aee47)**:
+
+  The extra-arch bundle build ran `node:24-slim` under QEMU, but the official
+  `node:24` image publishes no `linux/s390x` manifest (only amd64/arm64/ppc64le),
+  so the s390x leg failed with "no matching manifest for linux/s390x". The
+  emulated native-module rebuild now runs on an `ubuntu:26.04` base (which
+  publishes every arch) and installs Node.js from nodejs.org; riscv64 uses
+  unofficial-builds.nodejs.org (nodejs.org ships no riscv64).
+
+  MongoDB Community only ships amd64/arm64 server binaries, so on ppc64le, s390x
+  and riscv64 — the other architectures with a Node.js 24 build — WeKan now
+  bundles FerretDB v1 (the [wekan/FerretDB](https://github.com/wekan/FerretDB)
+  fork with its embedded pure-Go SQLite backend, which speaks the MongoDB wire
+  protocol) instead of requiring MongoDB. The FerretDB binary is cross-compiled
+  once for all five architectures (CGO off, static, no QEMU) and embedded in
+  every `.zip` next to `main.js`, so amd64/arm64 users can opt in too with
+  `WEKAN_DB=ferretdb`. The Docker image now covers all five architectures and
+  auto-starts FerretDB on the MongoDB-less ones. FerretDB telemetry is disabled
+  and locked (`--telemetry=disable`, plus `DO_NOT_TRACK`). armv7l/32-bit ARM is
+  still not built: there is no Node.js 24 build for it anywhere, so nothing could
+  run WeKan there regardless of RAM.
+
+- **[Snap: choose MongoDB or FerretDB v1 with "snap set wekan database=ferretdb"; FerretDB default for new installs; disable mongosh telemetry](https://github.com/wekan/wekan/commit/598aa8dfa1cc406243e0db681573093d9db7783f)**:
+
+  The WeKan snap gains a `database` setting (`mongodb` or `ferretdb`). A new
+  `ferretdb` service runs FerretDB v1 (SQLite) on the same port MongoDB would
+  use, so `MONGO_URL` is unchanged; only one database runs at a time, and the
+  configure hook stops one and starts the other when the setting changes. Switch
+  with `snap set wekan database=ferretdb` (or back with `database=mongodb`).
+
+  New snap installs default to FerretDB on all platforms (via the install hook,
+  which runs only on fresh installs — upgrades keep MongoDB, and a pre-existing
+  MongoDB data directory is detected and kept so no data is lost). There is no
+  `snap install --db=ferretdb` flag (snapd has no custom install options); use
+  the two-step `snap install wekan --channel=latest/beta` then
+  `snap set wekan database=ferretdb`.
+
+  mongosh collects anonymized usage analytics by default and the snap invokes it
+  several times; it is now disabled so nothing phones home. mongod itself has no
+  phone-home telemetry (Cloud Free Monitoring is opt-in and stays off).
+
+- **[Admin Panel / Version: show database type, version, commit, storage engine and reactivity mode](https://github.com/wekan/wekan/commit/d5c69e02595c9a4caf597496a4f1572064142b9f)**:
+
+  Admin Panel / Version now shows whether WeKan is using MongoDB or FerretDB v1
+  (SQLite), the MongoDB-compatible version and the server git commit, FerretDB's
+  own version and commit when FerretDB is in use, the storage engine, and which
+  reactivity mechanism is currently in use — changeStreams / oplog / polling
+  (FerretDB has no oplog, so it uses polling).
+
+- **[Standalone ferretdb.zip for all platforms, and rebuild-all.yml uses the prebuilt one from wekan/FerretDB releases](https://github.com/wekan/wekan/commit/3824066f7fb88acd66bc1f4c70350e8516f5f00b)**:
+
+  FerretDB v1 (the wekan/FerretDB fork, pure-Go SQLite backend, CGO off, no QEMU)
+  is now cross-compiled for every platform Go and modernc.org/sqlite support — far
+  beyond the arches Node.js ships — and packed into a single `ferretdb.zip`:
+
+      ferretdb/<arch>/ferretdb-<arch>        (Linux/macOS/BSD, executable)
+      ferretdb/<arch>/ferretdb-<arch>.exe    (Windows only)
+      ferretdb/README.md                     (links to https://github.com/wekan/FerretDB)
+
+  That zip is produced and released in the wekan/FerretDB repo (by its `build.sh`,
+  which gained sequential and parallel "Build ferretdb.zip" menu options). The
+  WeKan release workflow no longer builds FerretDB with Go: it downloads the newest
+  `ferretdb.zip` from https://github.com/wekan/FerretDB/releases and every WeKan
+  build (the bundle .zip for each arch, and via the bundle the Docker image and
+  snap, including the Windows and macOS bundles) embeds its per-arch binary from
+  that one source. ferretdb.zip is not re-attached to the WeKan releases.
+
+- **[Fix #6445: dynamic-import chunks 404 under a sub-path (duplicated build-chunks/build-chunks/)](https://github.com/wekan/wekan/commit/dbca7cd72d4f9791ba109dc25d359cce1e849e3a)**:
+
+  Under a sub-path deployment (ROOT_URL like `https://host/wekan`, usually behind
+  a reverse proxy that strips the prefix), language selection and other
+  lazy-loaded features failed with `ENOENT ... build-chunks/build-chunks/<id>.js`.
+  rspack's client runtime builds each chunk URL as public-path + chunk-name, and
+  the chunk name already carries the `build-chunks/` prefix, but
+  client/00-startup.js set the sub-path public path to `<sub-path>/build-chunks/`,
+  so rspack appended a second `build-chunks/`. It now sets the public path to just
+  `<sub-path>/` and lets rspack add `build-chunks/` itself.
+
+- **[Add snapcraft-core24.yaml so the newest WeKan can be published to the Snap Stable channel](https://github.com/wekan/wekan/commit/3a968052b96d4778797e175ad17205260535cbbe)**:
+
+  The main `snapcraft.yaml` uses `base: core26`, which (until core26 is released)
+  needs `build-base: devel` + `grade: devel`, so it can only go to Snap Beta/Edge.
+  `snapcraft-core24.yaml` builds the SAME newest WeKan (Meteor 3.5, Node.js 24,
+  FerretDB v1, MongoDB 7, Caddy 2) on `base: core24` (a released base, `grade:
+  stable`), so the Snap Stable channel can finally be updated from the old 6.09
+  snap. Only base/build-base/grade differ.
+
+- **[Self-contained release bundles: bundle Node.js + FerretDB + start-wekan.{sh,bat}](https://github.com/wekan/wekan/commit/bfb3fd246bc348900fa1fbda732dcb80afb027d1)**:
+
+  Each `wekan-<version>-<arch>.zip` is now fully offline. Its `bundle/` directory
+  contains the WeKan server, a Node.js binary for that platform, a FerretDB v1
+  (SQLite) binary, and a `start-wekan.sh` (`start-wekan.bat` on Windows) that by
+  default runs WeKan on the bundled Node against the bundled FerretDB SQLite,
+  storing data and attachments/avatars on the filesystem under `WRITABLE_PATH`
+  (as in the Windows Offline guide) — no separate Node or database install
+  needed. The Docker image and snap, which have their own Node and entrypoint,
+  strip the redundant bundled Node + launchers to stay small.
+
+- **[Standalone sandstorm.yml workflow to build + attach the .spk (Sandstorm removed from release-all.yml)](https://github.com/wekan/wekan/commit/5757cfc8ca4f0757206e668f80f9b12d91bafb27)**:
+
+  Sandstorm packaging (mirroring `releases/release-sandstorm.sh` +
+  `install-sandstorm.sh`: installs Meteor, meteor-spk 0.6.0 and a dev Sandstorm,
+  runs `meteor-spk pack`) is **not tested well enough yet**, so it no longer runs
+  as part of a full release — the `build-sandstorm` job was removed from
+  `release-all.yml`. Instead a separate, manually-triggered `sandstorm.yml` builds
+  ONLY the `.spk` and uploads it as `wekan-sandstorm-YYYY_MM_DD-HH_MM_SS.spk` to the
+  newest WeKan GitHub Release (plus a workflow artifact), so it can be downloaded
+  and tested for errors without affecting releases. Experimental in CI — Sandstorm
+  needs unprivileged user namespaces, and signing the `.spk` needs the app private
+  key via the `SANDSTORM_KEYRING` secret; `spk publish` / scp upload stay manual.
+
+- **[Migration: resumable progress in WRITABLE_PATH + compact the old MongoDB after success](https://github.com/wekan/wekan/commit/4c630d4ba87b3a6e582d0898179898416e6e9890)**:
+
+  The MongoDB → FerretDB / GridFS → filesystem migrator (used by the Snap and
+  Sandstorm migrations) now checkpoints progress to
+  `$WRITABLE_PATH/migration-progress.json` after every collection and file phase,
+  so an interrupted migration (snap refresh, Sandstorm grain restart, power loss)
+  **resumes** on restart instead of starting over — skipping collections already
+  copied. Once migration has completed, a later boot reclaims the now-duplicated
+  disk space in the old MongoDB by running `compact` on each source collection
+  (best-effort, once). The existing ROOT_URL progress dashboard and disk-space
+  checks are kept, and the dashboard is restored from the checkpoint on resume.
+
+- **[Snap: migrate the Caddyfile from Caddy v1 to Caddy v2 format on upgrade](https://github.com/wekan/wekan/commit/748fd2d391ca3ae187c14c1676c682dbebf49eb8)**:
+
+  When upgrading from an old WeKan snap, `$SNAP_COMMON/Caddyfile` may still be in
+  Caddy v1 syntax, which Caddy 2 cannot parse (caddy would fail to start).
+  `caddy-control` now runs a converter before `caddy run` when caddy is enabled:
+  a no-op if the file already parses as Caddy 2, otherwise it backs up the
+  original, converts the common v1 directives (`proxy / TARGET` →
+  `reverse_proxy TARGET`, drop the v1 `websocket`/`transparent` presets Caddy 2
+  does by default, `gzip` → `encode gzip`, strip the `http://` scheme), validates
+  with `caddy adapt`, and only keeps a valid result — falling back to the shipped
+  Caddy 2 template otherwise, so caddy always starts with valid config.
+
+- **[Rename docker-compose-ferretdb.yml to -v2-postgresql.yml and add -v1-sqlite.yml](https://github.com/wekan/wekan/commit/be5ddd77efdd03753acf73feb577ab615da7d3eb)**:
+
+  `docker-compose-ferretdb.yml` (FerretDB 2 + PostgreSQL) is renamed to
+  `docker-compose-ferretdb-v2-postgresql.yml`, and a new
+  `docker-compose-ferretdb-v1-sqlite.yml` runs WeKan against FerretDB v1 with the
+  embedded SQLite backend — no PostgreSQL or MongoDB — fetching the v1 binary for
+  the container's architecture from the newest wekan/FerretDB release. Both
+  compose files now carry the FULL `wekan` service from `docker-compose.yml`
+  (every documented environment variable and feature); the only differences are
+  database-related (the `ferretdb` service replaces `mongodb`, `MONGO_URL` points
+  at FerretDB, `MONGO_OPLOG_URL` is dropped and reactivity is polling, since
+  FerretDB has no MongoDB change streams / replica-set oplog).
+
+- **[Snap: one-time MongoDB → FerretDB v1 migration on upgrade, with live progress at ROOT_URL](https://github.com/wekan/wekan/commit/6ab29dc81e44c11a3c813d717090e418652b2599)**:
+
+  On first boot after upgrading an old MongoDB-based WeKan snap, `mongodb-control`
+  hands off to a new `migration-control` before starting mongod. It opens the
+  existing MongoDB data with the right bundled mongod — **mongod 7 for MongoDB 7
+  data (all arches, including the arm64 snaps already on newest WeKan)**, or a
+  bundled **old mongod 3.2 (amd64 only)** for WeKan 6.09 / MongoDB 3.2 data —
+  starts a temporary FerretDB v1 (SQLite), and runs the migrator, which moves text
+  data to FerretDB and **both CollectionFS GridFS and Meteor-Files GridFS
+  attachments+avatars to the filesystem**, shows a **live progress counter at
+  ROOT_URL**, checkpoints to `$SNAP_COMMON` (resumable), and compacts the old
+  MongoDB when done. It then switches the snap to `database=ferretdb`. Idempotent,
+  resumable, never deletes the source data, only switches on success. (The amd64
+  6.09/MongoDB-3.2 path needs testing on real 6.09 data; the arm64/MongoDB-7 path
+  uses the already-bundled mongod 7.)
+
+- **[Snap: bundle migratemongo (MongoDB 3.2 binaries + old libraries + AVX wrappers) to read 6.09 data](https://github.com/wekan/wekan/commit/dd4611e43f09aff2b793eb70b0dfd0138c39e87f)**:
+
+  Per docs/Backup/Backup.md and https://github.com/wekan/migratemongo, running the
+  old MongoDB tools/server in the snap needs `LC_ALL=C` and their libraries on
+  `LD_LIBRARY_PATH` (`$SNAP/lib/<arch>-linux-gnu`), and the 2016 MongoDB 3.2
+  binaries additionally need old libraries (`libssl`/`libcrypto.so.1.0.0`,
+  `libpng12`, `libexpat`) that modern bases lack. A new `migratemongo` snapcraft
+  part (amd64) stages https://github.com/wekan/migratemongo at `$SNAP/migratemongo`
+  (its MongoDB 3.2 `bin/`, the old `lib/x86_64-linux-gnu/`, and the `avx/` QEMU
+  wrappers) — also filling in the `$SNAP/migratemongo/avx` path that
+  `mongodb-control`/`-backup`/`-restore` already referenced but was never bundled.
+  `migration-control` now reads the amd64 6.09 MongoDB 3.2 data with that mongod
+  (old `LD_LIBRARY_PATH`) and the legacy `mongo` shell (mongosh cannot talk to 3.2).
+
+- **[Snap migration: read MongoDB 3.2 via migratemongo CLI (dump → restore into mongod 7), fix migrator NODE_PATH](https://github.com/wekan/wekan/commit/b99d21d9f19a867af74166732aaf18c59d52a1d0)**:
+
+  The bundled Node MongoDB driver can't connect to a 3.2 server, and no single
+  driver version spans 3.2 and MongoDB 7 / FerretDB — so rather than aliasing an
+  EOL Node driver into `package.json`, the amd64 6.09/3.2 case uses the
+  migratemongo CLI: `migration-control` dumps the `wekan` database with the old
+  migratemongo `mongodump` (MongoDB 3.2, old libraries), then loads it into a fresh
+  temporary mongod 7 with the snap's modern `mongorestore`. The existing
+  driver-based migrator then reads that mongod 7 exactly like the arm64 MongoDB-7
+  case (both GridFS types → filesystem, text → FerretDB v1 SQLite); the MongoDB-7
+  path connects the driver directly, unchanged. Also fixes a real bug: the
+  standalone migrator in `$SNAP/bin` could not resolve its `mongodb`/`bson`
+  imports — `NODE_PATH` now points at the WeKan bundle's `node_modules`.
+
+- **[Snap migration: only MongoDB 3 migrates (mongo CLI read + Node driver insert), FerretDB SQLite at files/db](https://github.com/wekan/wekan/commit/02cf16d8c6a8941bbab3e7d07fdc952beb2395d8)**:
+
+  Refines the snap migration to the intended design: a **MongoDB 7** database works
+  with newest WeKan as-is and is **not** migrated; only the old 6.09 / MongoDB 3.2
+  data is. `migration-control` now checks whether mongod 7 can open the data — if
+  so it keeps MongoDB; otherwise it migrates the 3.x data. It reads it with the
+  legacy `mongoexport` CLI (the Node driver can't talk to 3.2) and inserts into
+  FerretDB with the Node driver — text streamed directly, GridFS attachments+avatars
+  reassembled per-file straight to `files/attachments`/`files/avatars` — with **no
+  mongodump/mongorestore and no intermediate MongoDB 7** (which the earlier commit
+  used). FerretDB's SQLite now lives at `<files>/db`, next to attachments/avatars
+  (the `files/<name>` layout), across the snap, offline launchers, Docker entrypoint
+  and the v1-sqlite compose.
+
+- **[Admin Panel / Attachments: migrate text data between MongoDB and FerretDB v1 (SQLite), both directions](https://github.com/wekan/wekan/commit/84fee7b660e365d900e1ac355d97fcccf3debc25)**:
+
+  A new "Database migration" section in Admin Panel / Attachments with two buttons:
+  migrate text-based data (everything except attachments/avatars, which stay on the
+  filesystem) **to FerretDB v1 (SQLite)** or **back to MongoDB**. WeKan is connected
+  to one database at a time, so the server opens a second driver connection to the
+  OTHER database (both speak the MongoDB wire protocol) and copies the text
+  collections into it, upserting by `_id` (idempotent). The target is
+  `WEKAN_FERRETDB_URL` (default `mongodb://127.0.0.1:27018/wekan`) or
+  `WEKAN_MONGODB_URL` (default `:27019`); both must be running. Progress is shown
+  live; afterwards point `MONGO_URL` at the other database and restart (Snap:
+  `snap set wekan database=ferretdb` / `=mongodb`). Admin-only.
+
+- **[Admin Panel / Attachments / Backup: scheduled backups streamed to storage, restore + list](https://github.com/wekan/wekan/commit/c7c8a200ff551f979fe6eeb30266d7c435cd7fa4)**:
+
+  A new Backup section in Admin Panel / Attachments. Select any of **Attachments**,
+  **Avatars**, **Data** (all text-based collections that are not attachments/avatars)
+  and a **storage** (filesystem, S3/MinIO, Azure, GCS). "Backup now" streams the
+  `.zip` **directly to the selected storage — no temp file, no extra disk** — as
+  `backup/YYYY/MM/DD/HH_MM_SS/backup.zip` containing
+  `YYYY_MM_DD-HH_MM_SS/{attachments,avatars,data/<collection>.json}` (filesystem pipes
+  to the file; S3 uses `@aws-sdk/lib-storage` streaming, Azure `uploadStream`, GCS
+  `createWriteStream`, with the cloud credentials from the storage tabs). A
+  **scheduler** (off/daily/weekly/monthly + time/day) runs backups via synced-cron.
+  **List backups** shows a table (storage, datetime, path); pick one and **Restore**
+  with "Add missing data only" or "Replace all data". Admin-only. (Cloud upload and
+  restore are not exercised end-to-end yet; jszip assembles the whole zip, so very
+  large attachment sets use notable memory.)
+
+- **[Backup: switch from jszip to archiver+unzipper for low-memory streaming](https://github.com/wekan/wekan/commit/e39dcd4ebf19c4280cc8f48352e91b547c5ff673)**:
+
+  Follow-up to the Backup section above: it no longer holds whole files or the
+  whole zip in memory. The backup `.zip` is written with **archiver**, streaming
+  each attachment/avatar straight from disk and each text collection a document at
+  a time from a Mongo cursor as **NDJSON**, piped directly to the destination
+  (filesystem or S3/Azure/GCS streaming upload). Restore uses **unzipper**: each
+  file entry is piped to disk and each NDJSON data entry is applied line-by-line
+  in 200-doc batches. A board with thousands of cards or a 5 GB attachment now
+  backs up and restores with flat memory.
+
+- **[Stream board exports (JSON, CSV/TSV, Excel) with bounded memory](https://github.com/wekan/wekan/commit/41cd166358ea40a4517eddd02fe1913c22b7777b)**:
+
+  The board export routes used to buffer the whole board in memory: the JSON
+  export built one object with every card, comment, activity, checklist and
+  base64 attachment; CSV called that same builder; Excel additionally loaded data
+  it never renders and did O(n²) `find()` lookups. On large boards this peaked at
+  gigabytes and could exceed V8's max string length. Now the JSON export writes
+  the document straight to the response a card at a time from raw cursors
+  (attachments base64-encoded in aligned chunks), CSV streams one row per card
+  keeping only the small lookup tables in memory, and Excel uses the exceljs
+  streaming `WorkbookWriter`, committing each row and resolving card titles via an
+  id→title map. Peak memory stays flat regardless of board size, and the JSON
+  output is unchanged so import round-trips.
+
+- **[Export board to HTML .zip: stream to disk and include every card](https://github.com/wekan/wekan/commit/ae9be62ef31014f5f452d32808c55b96d4e97f54)**:
+
+  The HTML export cloned the live DOM and built the whole `.zip` as an in-memory
+  blob — but infinite scroll keeps only ~10 cards per list in the DOM, so most
+  cards were missing, and the archive was buffered whole in browser RAM. Every
+  list's card limit is now lifted so the entire board renders before the
+  snapshot, and the zip is written with JSZip's `generateInternalStream` piped
+  straight to the chosen file via the File System Access API, chunk by chunk with
+  backpressure (browsers without the API fall back to the previous blob download).
+
+- **[Lazy card loading for very large boards: CARDS_LOADING=all|lazy + Admin Panel / Features](https://github.com/wekan/wekan/commit/6f7ad270d124bf961b811743d1b78abf24f8f7e5)**:
+
+  A board's `board` publication normally ships **every** non-archived card (with
+  full fields, comments, attachments and checklists) into each viewer's minimongo.
+  The list rendering is already infinite-scrolled (~10 cards per list in the DOM),
+  but the whole dataset still crosses the wire and sits in browser memory, so a
+  board with thousands of cards is heavy for every viewer.
+
+  A new **`CARDS_LOADING`** mode (`all` default, or `lazy`) makes each list load
+  only the cards it is about to render. In lazy mode the board publication ships
+  no cards; instead each list/swimlane subscribes to a windowed publication
+  (`boardCardsWindow`) for just its visible window — growing as you scroll — plus
+  a reactive total count (`boardListCardCount`) so it knows when more remain. The
+  window selector is ANDed with a server-forced board scope and refuses `$where`.
+  This is set by the `CARDS_LOADING` env var (exposed in `docker-compose*.yml`,
+  the bundle `start-wekan.sh`/`.bat`, and `snap set wekan cards-loading=lazy`) and
+  also at runtime in a **new Admin Panel / Features** section — the intended home
+  for optional / performance / future tier-gated capabilities. ([client + Features](https://github.com/wekan/wekan/commit/09805a8a9185c41c84b2596e2854f209aecf2ac0),
+  [platform env](https://github.com/wekan/wekan/commit/f0d25a24314fe4f11bc01933fd6ebbac0d7fea25))
+
+  Lazy mode is opt-in and **experimental**: card counters and WIP limits are
+  accurate (they read a server count for the list's exact selector), but the
+  Calendar/Table/Gantt views and multi-select currently reflect only the cards
+  loaded so far, and open boards must be reloaded after switching modes. Default
+  `all` is unchanged. ([accurate counters + WIP](https://github.com/wekan/wekan/commit/7d5f29e11479be6a3b8393c8817b30620e99a068))
+
+- **[Fix Transifex push: remove duplicate database-migration i18n keys](https://github.com/wekan/wekan/commit/4cbefed339d61b9ec10c1d1227c0b201d060dc77)**:
+
+  `en.i18n.json` had `database-migration` and `database-migration-description`
+  defined twice, so the Transifex source push failed with "Duplicate string key".
+  The later, unused copies ("Database Migration" / "Updating database structure…")
+  were removed, keeping the values the Admin Panel / Attachments migration UI
+  actually renders. JSON now parses with unique keys.
+
+- **[Finnish translations for the newest features](https://github.com/wekan/wekan/commit/43006f9025fd8770c59334189af6bb3b6786226c)**:
+
+  Translated the remaining English strings of the Upcoming features into Finnish
+  (`fi.i18n.json`), matching existing terminology: Admin Panel / Version
+  (database type, FerretDB/MongoDB version + commit, reactivity mode), Attachments
+  / Database migration, Features (card loading all/lazy), and Backup (schedule,
+  storage, restore, list). 44 keys; product names/acronyms kept as-is.
+
+- **[Unit + negative tests for the newest features](https://github.com/wekan/wekan/commit/d2ec3ee400192b65f87edc29dbe6c12eb0cd0401)**:
+
+  Extract the pure, security-/correctness-critical logic of the recent features
+  into Meteor-free `models/lib/*` modules (shared by production and tests) and add
+  plain-Node tests with positive and negative cases, wired into `test:unit:node`:
+  the windowed-card publication's `$where` selector safety, `CARDS_LOADING` mode
+  resolution + window-count id, the JSON export's streaming base64 chunker, and
+  the backup files-root + schedule-text helpers. 41 assertions, all passing.
+
+- **[docs: Design/Multiverse/Alternative-Architectures.md](https://github.com/wekan/wekan/commit/9828081c762fe180f01f1195351c0b1c2b95d59c)**:
+
+  Document which CPU architectures WeKan can run on and why (the limit is Node.js,
+  not FerretDB): the Node 24 / MongoDB / FerretDB v1 matrix, why armhf/armv7l/i386
+  are unsupported (Node dropped 32-bit) and loong64 is not buildable in CI (no
+  QEMU emulation / base image), the JavaScript-engine alternatives (Deno/Bun cover
+  fewer arches; QuickJS/JSC/SpiderMonkey/JVM run on 32-bit but cannot run Meteor),
+  and server-rewrite options (Go recommended, QuickJS niche, Tcl/Tk a poor fit).
+
+- **[Fix backup build: archiver@8 (ESM) + @aws-sdk/lib-storage dependency](https://github.com/wekan/wekan/commit/abe8af0788d15053770d9f008098ab62a8daf55e)**:
+
+  The Meteor/rspack build failed on `server/methods/backup.js`: `archiver@8` is now
+  pure ESM with no default export or `archiver('zip', …)` factory (it exports
+  classes), and the S3 streaming upload used `@aws-sdk/lib-storage`, which was not
+  a dependency. Use `import { ZipArchive } from 'archiver'` /
+  `new ZipArchive({ zlib: { level: 6 } })`, and add `@aws-sdk/lib-storage`
+  (pinned to `~3.1073.0` to match the installed `@aws-sdk/client-s3`).
+
+Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.83 2026-07-09 WeKan ® release
+
+This release fixes the following bugs:
+
+- **[Fix #3624 swimlane REST regression: await the async board.swimlanes()](https://github.com/wekan/wekan/commit/6a6db32884f68dadd5911ec3487225c908f40176)**:
+
+  The swimlanes CRUD e2e test (23-rest-api-more.e2e.js:209) regressed on all
+  browsers. Root cause: on the server ReactiveCache.getSwimlanes is async, so
+  board.swimlanes() returns a Promise in the REST handler. The #3624 change read
+  board.swimlanes().map(s => s.sort); .map on a Promise throws, the insert never
+  ran, the error was swallowed by the handler's catch (returned as 200 with no
+  _id), and the test read .title off a null swimlane.
+
+  The earlier "move the require to a top-level import" commit was not the real
+  cause (the same module.exports import pattern works server-side, e.g.
+  ruleDeletePermission in rulesButton.js). The actual fix is to await
+  board.swimlanes() before mapping. This also means API-created swimlanes now get
+  a real max(existing sort)+1 sort — previously the un-awaited `.length` yielded
+  undefined, so they were stored with no sort at all, which is the #3624 symptom.
+
+  Verified: the swimlane test passed in every kept local run through
+  2026-07-09_02-38-07 and failed starting 09-52-25 (right after the #3624 change),
+  confirming the regression window; the tests/swimlaneSort.test.cjs unit test
+  still passes.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.82 2026-07-09 WeKan ® release
+
+This release fixes the following bugs:
+
+- **[Fix #5536: automated rule can now move/link a card to a different board](https://github.com/wekan/wekan/commit/18153cbc556823318a31766935dd3d718a88eaee)**:
+  The rules "move card to top/bottom of a list on another board" and "link
+  card to another board" actions failed for boards the rule creator did not
+  own. The action showed BLANK after creating the rule (the wizard's optimistic
+  client inserts landed in minimongo limbo / were rejected by allow-deny for
+  non-owner members) — these now create the rule through the server
+  `rules.createRule` method, keeping the action's destination boardId. And
+  execution crashed with an "Internal Server Error" because the destination
+  swimlane fallback dereferenced `._id` on a possibly-undefined swimlane titled
+  exactly `Default` (renamed/translated/deleted on the destination board);
+  resolution now uses the board's real default swimlane via a Meteor-free
+  resolver `models/lib/ruleActionResolve.js`, unit tested in
+  `tests/ruleActionResolve.test.cjs`. Thanks to DarthKillian and xet7.
+- **[Fix #4978: board background updates when switching boards via the favorites bar](https://github.com/wekan/wekan/commit/af6ed501c6f341c3c1fbceade704ef0ae69a5669)**:
+  Switching directly between two boards via the favorites bar reused the same
+  boardBody template instance, so the one-shot `setBackgroundImage()` in
+  onRendered never re-ran and the previous board's background stuck. It is now
+  applied inside a reactive autorun and clears any stale inline background when
+  the new board has no image. The decision is a Meteor-free helper
+  `models/lib/boardBackground.js`, unit tested in `tests/boardBackground.test.cjs`.
+  Thanks to dasarne and xet7.
+- **[Fix #4881: Due this week / next week filter respects the start day of week](https://github.com/wekan/wekan/commit/b4a83462c39fb4be2e1c33aa7c90e690abffc79e)**:
+  The "Due this week" filter selected next week's cards and ignored the
+  configured start weekday, because it derived its window from
+  `startOf(now(), 'week')` — which the native dateUtils never implemented, so
+  it returned the date unchanged. A new Meteor-free helper
+  `models/lib/weekStart.js` computes the correct week window for any start day
+  of week; the this/next-week buttons now toggle per week too. Unit tested in
+  `tests/weekStart.test.cjs`. Thanks to mimZD and xet7.
+- **[Fix #4946: calendar week numbers respect the defined start day of week](https://github.com/wekan/wekan/commit/9f9430595507d5e305f3919bd0d3f5298239e971)**:
+  In the Calendar view the week-number column was numbered from Sunday
+  regardless of the start-day-of-week setting. The calendar now computes the
+  number with `weekNumberByFirstDay()` (in `models/lib/weekStart.js`) from the
+  same firstDay used to lay out the grid, unit tested in
+  `tests/weekStart.test.cjs`. Thanks to helioguardabaxo and xet7.
+- **[Fix #4653: LDAP username with a hyphen no longer becomes a dot](https://github.com/wekan/wekan/commit/a780c8b2a2c558a2b6e79f64b075007836af24d1)**:
+  With `LDAP_UTF8_NAMES_SLUGIFY` enabled, `limax(text, { separator: '.' })`
+  turned every non-alphanumeric run — hyphens included — into `.`, so an LDAP
+  username like `p.parta-partb` became `p.parta.partb` and the user could not
+  log in. The username is now slugified per hyphen-separated segment and
+  rejoined with `-`, preserving hyphens while still transliterating UTF-8. Pure
+  helper `packages/wekan-ldap/server/usernameSlug.js`, unit tested in
+  `tests/ldapUsernameSlug.test.cjs`. Thanks to RowhamD and xet7.
+- **[Fix #4236: Enter adds a new line in the card title, consistent with the description](https://github.com/wekan/wekan/commit/aa5241a1ef3a8611701d4fb28e5d5b9e67f74900)**:
+  The card title textarea submitted on plain Enter (only Shift+Enter made a new
+  line), unlike the description field which inserts a new line on Enter and
+  saves on Ctrl/Cmd+Enter. The title now uses the same shared, Meteor-free rule
+  `isSubmitKey()` (`models/lib/editorSubmitKey.js`): submit only on
+  Ctrl/Cmd+Enter, newline otherwise. Unit tested in
+  `tests/editorSubmitKey.test.cjs`. Thanks to listenerri and xet7.
+- **[Fix #4055: ISO week-number regression test (already correct in current code)](https://github.com/wekan/wekan/commit/4e9614894a3b8eb23286f834c6bc4183f861d7eb)**:
+  #4055 reported the week number was one/two weeks too high for 2021-10-25..31
+  (ISO week 43). That was the old moment-based math; the current native,
+  DST-safe `getISOWeek()` computes it correctly. Added
+  `tests/isoWeek.test.cjs` pinning the reported dates so it cannot regress.
+  Thanks to marcungeschikts and xet7.
+- **[Fix #4394: Register / Forgot Password links stay hidden after a failed login](https://github.com/wekan/wekan/commit/9e754e69b60509e3cb7abc9bef3bc61e27d3fa84)**:
+  Security. With registration / forgot-password disabled in the Admin Panel, the
+  links were hidden by a one-shot `.hide()` that a useraccounts form re-render
+  (e.g. an LDAP failed login) dropped, so the links reappeared. The disable
+  state is now a class on the stable `<body>` ancestor with matching CSS, so the
+  links are re-hidden on every re-render. Thanks to Alsterdetektive1 and xet7.
+- **[Fix #4494: creating a board from a template no longer breaks subtasks](https://github.com/wekan/wekan/commit/032f06feb825ba62aebddfdc24f494812195542b)**:
+  A board created from a template inherited the template's
+  subtasksDefaultBoardId / dateSettingsDefaultBoardId; when those pointed at the
+  template board itself, subtasks created on the new board were dropped onto the
+  TEMPLATE board and linked back across boards. Board.copy() now repoints such
+  self-referential defaults to the copy and clears the paired list id so it
+  self-heals on the new board. Pure helper `models/lib/boardCopyDefaults.js`,
+  unit tested in `tests/boardCopyDefaults.test.cjs`. Thanks to Xilef11 and xet7.
+- **[Fix #4249: filter by card title now works for renamed linked cards](https://github.com/wekan/wekan/commit/e089e176345452956889f709f0eb05b1687bec2c)**:
+  Renaming a linked card wrote the new title only to the linked target, leaving
+  the linking card's own title field stale; filter-by-title queries the own
+  field, so linked cards dropped out of title filters after a rename.
+  Card.setTitle() now also writes the linking card's own title. Pure helper
+  `models/lib/linkedCardTitle.js`, unit tested in
+  `tests/linkedCardTitle.test.cjs`. Thanks to Ben0it-T and xet7.
+- **[Fix #3606: activity feed no longer shows "edited/deleted comment undefined"](https://github.com/wekan/wekan/commit/4c721b997514d5e6659cf1725c719238d6db3e58)**:
+  The feed passed the comment id (absent on old activities, and gone for a
+  deleted comment) into the activity string. Edit/delete activities now store
+  the comment text and render it via `Activities.commentDisplayText()`, which
+  falls back to the live comment text and then to an empty string — never
+  "undefined". Pure helper `models/lib/commentActivity.js`, unit tested in
+  `tests/commentActivity.test.cjs`. Thanks to janchuelo and xet7.
+- **[Fix #3624: new_swimlane REST API appends the swimlane last and accepts a sort](https://github.com/wekan/wekan/commit/04021f8c1df4b8e8f285a4cfffc03404ada4188e)**:
+  `POST /api/boards/:boardId/swimlanes` set the sort to the swimlane count, so a
+  new swimlane appeared FIRST when existing sort values were non-contiguous. It
+  now appends at max(existing sort)+1 and honors an optional explicit `sort` in
+  the body. Pure helper `models/lib/swimlaneSort.js`, unit tested in
+  `tests/swimlaneSort.test.cjs`. Thanks to tamasberesoebb and xet7.
+- **[Fix #3185: copying a card (or template) now copies its subtasks' checklists](https://github.com/wekan/wekan/commit/fae7bcaa416d766c32d46b29b91e3fc6b7d022ce)**:
+  Copying a card inserted each subtask as a bare card document, so the subtasks'
+  checklists (and items) were dropped and the copied subtasks came out empty.
+  Card.copy() now copies each subtask's checklists onto the new subtask. Pure
+  helper `models/lib/subtaskCopy.js`, unit tested in `tests/subtaskCopy.test.cjs`.
+  Thanks to ramses345 and xet7.
+- **[Fix #5439: list scrollbar is always visible on desktop and mobile browsers](https://github.com/wekan/wekan/commit/82e0afa38f50223959cc3cc0091c52da7af93840)**:
+  List bodies used `overflow-y: auto`, so overlay scrollbars (macOS/iOS/Android/
+  Firefox) auto-hid. The list body now keeps a scrollbar visible across all
+  engines — `overflow-y: scroll`, `::-webkit-scrollbar` (Chrome/Safari/Edge/
+  mobile WebKit), `scrollbar-width`/`scrollbar-color` (Firefox/Gecko) and
+  `scrollbar-gutter: stable`. Cross-browser rules in `models/lib/scrollbarCss.js`,
+  applied in `client/components/lists/list.css`, unit tested (builder contract +
+  applied CSS, positive + negative) in `tests/scrollbarCss.test.cjs`. Thanks to xet7.
+- **[Fix #6444: RTL — typing a card title no longer garbles other lists' minicard titles](https://github.com/wekan/wekan/commit/3aaf8f9b6180661abb0a86becf15710fc6937ef8)**:
+  In an RTL language (e.g. Arabic) the board root is `dir="rtl"`, and both the
+  minicard title (a `dir="auto"` `.viewer`) and the add-card composer textarea
+  were `dir="auto"` with no bidi isolation, so they shared the surrounding
+  bidirectional context. Typing a strong RTL character into one list's composer
+  re-resolved that shared context and visibly reflowed the displayed minicard
+  titles of the OTHER lists (no data change, reverted on refresh). Each title and
+  the composer now use `unicode-bidi: isolate`. Locked in (positive + negative)
+  by `tests/minicardBidiIsolation.test.cjs`; browser RTL behaviour is covered by
+  `tests/playwright/specs/18-rtl-layout.e2e.js`. Thanks to xet7.
+- **[Fix the Playwright CI test failures introduced by the #3624 and #4236 fixes above](https://github.com/wekan/wekan/commit/6a6db32884f68dadd5911ec3487225c908f40176)**:
+  Two browser tests failed on Chromium, Firefox and WebKit after this release's
+  changes. (1) `23-rest-api-more.e2e.js:209` (swimlanes CRUD): on the server
+  `ReactiveCache.getSwimlanes` is async, so `board.swimlanes()` returns a Promise
+  in the REST handler. The #3624 change read `board.swimlanes().map(s => s.sort)`;
+  `.map` on a Promise throws, so `POST /api/boards/:boardId/swimlanes` never ran
+  the insert, the error was swallowed by the handler's `try/catch` (returned as
+  200 with no `_id`), and the test read `.title` off a `null` swimlane. The old
+  `board.swimlanes().length` had tolerated the un-awaited Promise by silently
+  yielding `undefined` (so API-created swimlanes were stored with no sort at all —
+  the very #3624 symptom). Fixed by `await`ing `board.swimlanes()` before mapping,
+  which also gives API-created swimlanes a real `max(sort)+1` value.
+  (2) `02-cards-open-view.e2e.js:93` (editing the card title): #4236 deliberately
+  made plain Enter insert a newline in the card title (Ctrl/Cmd+Enter saves), but
+  the `CardPage` page object still saved with plain Enter, so the title never
+  persisted and the read timed out — updated to save with `Control+Enter`
+  ([`984ec16`](https://github.com/wekan/wekan/commit/984ec160daec54b0e6b16cd15d89884f1c4fadf1)).
+  The server-side Mocha, import-regression and Node E2E jobs were already green;
+  this makes the Playwright jobs green too. Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.81 2026-07-09 WeKan ® release
+
+This release adds the following new features:
+
+- **[Feature #5394: the Link-card popup's Cards dropdown is now sorted alphabetically](https://github.com/wekan/wekan/commit/b07c4d0a7bed0f03ba2d7d1ad1f030e7edf3dfff)**:
+  In the "Link to this card" popup, the Cards pull-down list is now sorted
+  alphabetically by card title (case-insensitive, locale/numeric aware)
+  instead of board sort order, so a card can be found on boards with many
+  cards. Thanks to xet7.
+- **[Feature #5396: edit Lists (title, color) via the REST API + api.py commands](https://github.com/wekan/wekan/commit/7ce71dbb2e1eae5159503eefac7e6f349dfb59c8)**:
+  Lists can now be edited through the REST API like cards can. The endpoint
+  `PUT /api/boards/:boardId/lists/:listId` already accepted `title`, `color`,
+  `starred` and `wipLimit`, but the color was stored unvalidated; it now
+  validates the color with `normalizeListColor` (a named palette color or a
+  custom `#rrggbb` hex) and rejects an unknown color with a clear 400 instead
+  of silently storing None. The pure field/validation logic lives in a
+  Meteor-free helper `models/lib/listApiUpdate.js` and is unit tested in
+  `tests/listApiUpdate.test.cjs`. The `api.py` reference CLI gains two new
+  commands mirroring `editcard`/`editcardcolor`: `editlist BOARDID LISTID
+  NEWLISTTITLE` and `editlistcolor BOARDID LISTID COLOR`. Thanks to C0rn3j and xet7.
+- **[Feature #5514: custom color-wheel (RGB/hex) picker with automatic readable text contrast](https://github.com/wekan/wekan/commit/30f36a7f319675bd3aac7a4ba0700427000726b9)**:
+  The color pickers that previously offered only a fixed set of named colors now also include a native
+  color wheel (`<input type="color">`), so any `#rrggbb` color can be chosen. The wheel was added
+  alongside the existing swatches for card labels ("categories"), swimlanes ("tabs"), lists and cards.
+  The schema color fields accept a custom hex in addition to the named palette, and existing named-color
+  data keeps working; a stored hex is rendered with an inline `background-color` instead of the named
+  CSS class. A new pure, Meteor-free helper `models/lib/contrastColor.js` computes a readable text color
+  from sRGB relative luminance (white text on dark backgrounds, black on light), maps the named palette
+  to hex, and validates/normalizes hex; it is applied as an inline text color wherever a chosen color is
+  a background behind text (label chips, swimlane / list headers, minicard, card details header), so text
+  stays readable on any color. Covered by `tests/contrastColor.test.cjs` (20 assertions pass).
+  Thanks to Ruyeex and xet7.
+- **[Feature #5621: Rules can set a date field to a custom time (value + minute/hour/day/week/month later)](https://github.com/wekan/wekan/commit/53328f40c6e092988175ce820c14658c855390de)**:
+  The Rules "Set date relative to now" action previously only offset a date field (Start / Due / End /
+  Received) by a whole number of DAYS. It now has a unit selector, so a rule can set a date field to
+  now + `<value>` `<unit> later`, where the unit is minute(s) / hour(s) / day(s) / week(s) / month(s);
+  negative values move the date earlier. Months use a real calendar-month add (e.g. keeping the same
+  day-of-month) rather than a fixed 30-day approximation. Existing rules created before this change
+  have no stored unit and keep working exactly as before (no unit ⇒ days), so the change is fully
+  backward compatible. The offset math lives in a new pure, Meteor-free helper
+  `models/lib/relativeDateOffset.js` used by `server/rulesHelper.js` and covered by
+  `tests/relativeDateOffset.test.cjs` (15 assertions pass). Note that the related "overdue" Rules
+  trigger and the "set date field to now" action from the same feature request already existed in an
+  earlier release; this change adds only the missing custom-time unit selector. Thanks to xet7.
+
+and fixes the following bugs:
+
+- **[Fix #5351: users are auto-added to organizations matching their email domain on sign-up](https://github.com/wekan/wekan/commit/d41e17d6a088edf6abbb1f9517d2ecb58d618f03)**: the Organization setting "Automatically add users with the domain name" (`org.orgAutoAddUsersWithDomainName`) could be configured, but nothing at sign-up ever read it, so a new user whose email domain matched an organization was never added to it; the `Accounts.onCreateUser` hook now, on every non-admin sign-up path (password registration, LDAP, invitation code, new OIDC user), adds the user to each organization whose configured domain exactly matches the domain part of their email (case-insensitive, exact — a subdomain does not match and an empty org domain matches nobody), using the same `{ orgId, orgDisplayName }` membership shape used everywhere else and never duplicating an existing membership, with the matching decision extracted into a Meteor-free, unit-tested `orgsToAutoAddForEmail` helper.
+  Thanks to xet7.
+- **[Fix #5369: the Activities show/hide control is now a clear eye / eye-slash icon toggle](https://github.com/wekan/wekan/commit/1ce2d8cc8871e5da6f0ce5dde04520885649c0ba)**: the Activities panel's show/hide control was a generic, unlabeled material toggle switch whose ON/OFF meaning was counterintuitive; it is replaced on the card details Activities panel with an eye / eye-slash icon toggle (open eye = activities shown, crossed eye = activities hidden) that mirrors the login/register password-visibility toggle, so the icon reflects the current visibility, clicking flips it, and the tooltip states the action (Show activities / Hide activities). For consistency the board sidebar Activities toggle, which drives the same showActivities state, was switched from the check / empty-square icon to the same eye / eye-slash toggle. The underlying show/hide setting and its persistence are unchanged.
+  Thanks to xet7.
+- **[Fix #5442: outgoing webhooks now include the label name on add/remove label](https://github.com/wekan/wekan/commit/aad00cdba2bb896068f4a896cf67df2a7bd79a73)**: the addedLabel/removedLabel outgoing webhook (and notification) text showed a bare, generic "label" with no name, because labels are embedded in the board document but the Activities `label()` helper looked the label id up in the Cards collection and always returned undefined, so the `__label__` token was never filled; the hook now resolves the label from the already-loaded board via `getLabelById` and a pure, unit-tested `labelDisplayName` helper (name, then color for a nameless label as shown in the UI, then the id), so the webhook always carries the label's display name.
+  Thanks to xet7.
+- **[Fix #5482: adding/editing a card description now triggers outgoing webhooks](https://github.com/wekan/wekan/commit/da0d338e336ecfd3c120753aaea064e9487bf3cd)**: outgoing webhooks fire only when an operation logs an activity (the Activities.after.insert hook posts to the board's webhooks), but changing a card's description created no activity — unlike title/date changes — so no webhook was sent; the Cards before.update hook now logs an `a-changedDescription` activity on first-time set and later edits (but not on no-op / empty-to-empty saves), so the existing webhook hook fires, with a Meteor-free unit-tested `descriptionChanged` helper.
+  Thanks to xet7.
+- **[Fix: the Rules Workflow view is now fully translatable via i18n](https://github.com/wekan/wekan/commit/8c499823cbc8c5785ec604015d55e28daa11336e)**: the Rules Workflow view rendered its trigger/action palette chips ("Card is created", "Move card to top", "Set received date to now", etc.) as hardcoded English regardless of the UI language, while the rest of the page was translated; each palette entry now carries an i18n key translated at render time via TAPi18n.__ (reusing existing rule keys where they fit, plus new r-w-* keys for workflow-only labels), and the slot clear tooltip now uses the existing r-remove key, so the whole view follows the selected language.
+  Thanks to xet7.
+- **[Fix: deleting a board rule no longer fails with "Access denied [403]"](https://github.com/wekan/wekan/commit/68dd14140f620574a95db42dc1078a7b4bd97916)**: deleting a rule ran three separate client-side Collection.remove() calls (Rules + Triggers + Actions), each gated by a per-collection allow() rule that resolved the board from that document's own boardId; when a trigger/action document had no resolvable boardId (legacy docs, or docs not published to the client) the board came back null, `allowIsBoardAdmin` returned false, and Meteor rejected the mutation with 403 "Access denied" — so the delete failed even for a legitimate board admin. Rule deletion now goes through a new server method `rules.deleteRule` that authorizes once (active board admin or site admin) and removes the rule, its trigger and its action server-side, bypassing the brittle client allow/deny; the permission decision is a Meteor-free, unit-tested helper and no permission is loosened.
+  Thanks to xet7.
+- **[Fix #5510: adding a board label via the REST API no longer errors/hangs](https://github.com/wekan/wekan/commit/0e9aed5a4b359188a9390f1132443614b3b0e133)**: PUT /api/boards/:boardId/labels only sent a response when the body had a `label` key, so a body without one hung until the client timed out, and a bare-string `label` pushed a schema-invalid label and returned 200; the handler now always returns JSON (2xx on success, 4xx on bad input, real error status otherwise) via a pure, unit-tested input helper.
+  Thanks to xet7.
+- **[Fix #5604: CSV export no longer crashes on boards with dangling references](https://github.com/wekan/wekan/commit/d01526bbff892a946a58aae1b516bd0b82d23113)**: exporting a large/old board to CSV failed with "Couldn't download - Network issue" because Exporter.buildCsv read `.title`/`.username`/`.name` directly on the result of looking up a card's deleted list/swimlane/owner/member/assignee/label/customField by id, throwing "Cannot read property 'title' of undefined"; the per-card row builder is now a null-safe helper that emits a blank cell for missing references while keeping identical output for well-formed cards.
+  Thanks to xet7.
+- **[Fix #5656: the Calendar view now honors the active board filters](https://github.com/wekan/wekan/commit/b0da9097c18dea12ccce8dec6de8a5cf2519551a)**: the Calendar view queried cards by board and date only and ignored the active Filter sidebar (member / assignee / due-date / label / custom-field), so it showed every card in the interval unlike the Board / Lists / Swimlanes views; it now ANDs the Filter selector into its query and refetches when the filter changes.
+  Thanks to kerier and xet7.
+- **[Fix #6442: All Boards "Custom (drag order)" — drop now persists the reorder](https://github.com/wekan/wekan/commit/457713968cf3c365899271606398b7796a7b07f4)**:
+  Follow-up to #6439, which restored the drag preview but left the drop a no-op: dragging a board on
+  the All Boards page in Custom (drag order) mode showed the dashed-border preview, but releasing it
+  snapped the board back without reordering. The drop handler built the current on-screen order from
+  `el.classList[0]` of each `.js-board`, but the item is `li.js-board(class="{{_id}} …")` and Jade
+  emits the literal `js-board` class FIRST, so `classList[0]` was the string `"js-board"` for every
+  board — never the board `_id`. The ordered ids were therefore `['js-board','js-board',…]`, the
+  (correct, unit-tested) `computeReorderedSortIndex` helper could not find the dragged/target ids
+  among them, returned `null`, and nothing was written to `profile.boardSortIndex`; the preview still
+  worked because it is driven by the `dragover` CSS class, independent of the id. The fix reads each
+  board's `_id` from its Blaze data context (the same source `dragstart` uses via `this._id`) instead
+  of the literal class, so the real display order reaches the reorder helper and the drop persists.
+  Guarded by a new case in `tests/boardSortReorder.test.cjs` (the wrong-class extraction yields no
+  mapping; real ids reorder).
+  Thanks to jullbo and xet7.
+- **[Fix #6443: cards on a deleted swimlane are invisible in swimlane view](https://github.com/wekan/wekan/commit/a37e7d1cc7e1a4541c498c974aa97b2e36136065)**:
+  On some old boards a swimlane was deleted while its cards kept the now-dangling `swimlaneId` (an
+  "orphaned" card), so those cards showed no content in swimlane mode even though they worked in list
+  mode. Cards with no swimlane at all (`null` / `''` / missing) already appear in every swimlane, but
+  an orphaned card matched no existing swimlane and so was visible in NO swimlane (while list view,
+  which applies no swimlane scope, still showed it) — exactly the reported symptom. The fix mirrors
+  the existing orphaned-**list** fallback (`Swimlanes.orphanedSwimlaneLists`, which surfaces orphaned
+  lists in the first swimlane) for **cards**: when a list's cards are fetched for the board's FIRST
+  swimlane, the swimlane-membership clause becomes a single `{ swimlaneId: { $nin: <otherSwimlaneIds> } }`
+  (everything not owned by another existing swimlane: own id, `null`/`''`, missing, or orphaned). It
+  stays a single field clause with no second `$or`, so the #6441 board-wide label filter still holds,
+  and orphaned cards appear once — in the first swimlane — without a database migration. Threaded
+  through the pure `models/lib/swimlaneFilter.js` helpers, the in-memory `filterCardsByListAndSwimlane`,
+  a new `List.orphanedCardsSwimlaneIds` helper and the `cards()`/`cardsUnfiltered()`/`allCards()` model
+  methods plus the `listBody` `cardsWithLimit` render helper. Covered by new cases in
+  `tests/swimlaneFilter.test.cjs` (18 assertions pass; the #6441 regression guards stay intact).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.80 2026-07-06 WeKan ® release
+
+This release adds the following new features:
+
+- **[Admin Panel Domains table: pagination, column sort and search (like the Board Table view)](https://github.com/wekan/wekan/issues/5850)**:
+  The Admin Panel > People > Domains table loaded every domain (aggregated from all users) into the
+  browser at once, with a fixed order and no search. It now behaves like the Board Table view: the
+  server aggregates the domains and returns only one small page, so the whole list is never sent to
+  the browser. You can order by the Domain or Users column (click the header to toggle ascending /
+  descending, with a ▲/▼ indicator) and filter with a search box; prev/next controls page through the
+  results. The search + sort + slice runs in the new pure, unit-tested `models/lib/domainTablePage.js`
+  behind a new `getDomainsWithUserCountsPage` admin method (`server/models/users.js`), and the
+  `domainGeneral` template (`client/components/settings/peopleBody.{jade,js,css}`) is now
+  self-contained and fetches only the current page. Covered by `tests/domainTablePage.test.cjs`.
+  Thanks to xet7.
+
+and adds the following tests:
+
+- **[Verified and added a regression test for the board-invitation email language](https://github.com/wekan/wekan/commit/dfa6c78d4f032a698f6feaad189c86da903d27fb)**:
+  Confirmed that a board-invitation email is localised in the existing recipient's own profile
+  language, or — when the invitee is a new account created by the invite — in the inviter's profile
+  language, defaulting to `en` (`en.i18n.json`) when none is set. The behaviour was already correct;
+  the language choice is now extracted into the pure, unit-tested `models/lib/inviteEmailLanguage.js`
+  used by `inviteUserToBoard`, and locked in by `tests/inviteEmailLanguage.test.cjs`.
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- **[Linked-card minicard now shows the cover image of the real card](https://github.com/wekan/wekan/commit/9ef7f4a07a6b40a2582af24b27fe133119adcd18)**:
+  A linked card (created by "Link card to this card") on one board did not show the cover image of
+  the real card it points at on another board, even though the card's other fields did. A linked
+  card is only a placeholder — its real content lives on the card at `linkedId` — and every other
+  minicard getter resolves through the real card (`getTitle`/`getReceived`/`getDue`/…), but the
+  cover helpers read `this.coverId` directly, and a linked card has no `coverId` of its own. The
+  real card's cover attachment is already published to the linking board (see the "linked cards" /
+  "attachments for linked cards" children of the `board` publication), so this was purely a
+  client-side resolution gap. `Card.cover()` and the minicard `cover()` helper now resolve the
+  cover id through the real card via the pure, unit-tested `models/lib/linkedCardCover.js`; normal
+  cards are unaffected. Covered by `tests/linkedCardCover.test.cjs`.
+  Thanks to 32Dexter and xet7.
+
+- **[Fix date-picker calendar stays fully visible when opened low on a scrolled page](https://github.com/wekan/wekan/commit/7a0eb61c0a4d3ace60f95cfbda7c1d70dff665ef)**:
+  Opening a date field (due/start/end date, or a date custom field) low on the screen showed the
+  calendar popup extending past the visible area, and — because the pop-over is `position: absolute`
+  (document coordinates) — scrolling to reach it moved the calendar along with the page, so the full
+  calendar could never be seen (the workaround was to close it, drag the field to the center and
+  reopen). `Popup._getOffset` computed the space above/below the opener and the clamped `top` from
+  the opener's DOCUMENT offset mixed with the VIEWPORT height, ignoring the page scroll, so on a
+  scrolled page the anchored popup landed outside the visible viewport. The geometry now runs in
+  viewport coordinates (subtracting the page scroll) and clamps the popup fully within the visible
+  viewport, then converts back to document coordinates for the absolute style; when the page is not
+  scrolled the output is unchanged. Extracted the math into the pure, unit-tested
+  `client/lib/popupOffset.js`, used by `client/lib/popup.js`. Covered by `tests/popupOffset.test.cjs`.
+  Thanks to MarcusDger and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.79 2026-07-06 WeKan ® release
+
+This release fixes the following bugs:
+
+- **[Fix #6439: Custom (drag order) sort on All Boards page now reorders via drag-and-drop](https://github.com/wekan/wekan/commit/f8e31745d8104c58dc7bbcb4c1e4c615141a8e82)**:
+  On the All Boards page the jQuery-ui sortable that reordered boards in the "Custom (drag order)"
+  mode was removed when the page switched to HTML5 drag-and-drop for workspaces, and nothing
+  replaced it, so dragging a board showed a not-allowed cursor and never updated
+  `profile.boardSortIndex`. Added HTML5 `dragover`/`drop` reorder handlers on the board tiles in
+  `client/components/boards/boardsList.js` (active only in the custom sort mode), a
+  `setBoardSortIndexes` helper in `models/users.js` to persist the new order in one write, a
+  drop-hint style in `client/components/boards/boardsList.css`, and extracted the reorder
+  decision/index math into the pure, unit-tested `models/lib/boardSortReorder.js`. Covered by
+  `tests/boardSortReorder.test.cjs`.
+  Thanks to jullbo and xet7.
+
+- **[Fix #6440: '+' add-item button on minicard checklist does nothing](https://github.com/wekan/wekan/commit/dd90995db74593228d40bc504405620ec09c175d)**:
+  On the minicard the checklist add-item `<form>` is rendered inside the `a.minicard-wrapper`
+  anchor, so the native form `submit` event never reached the Blaze event map — the #5565
+  minicard-checklist work wired only a `submit .js-add-checklist-item` handler (which never fires
+  there) and gave the Save button no click handler, so clicking "+" Save did nothing. Added an
+  explicit `click .js-submit-add-checklist-item-form` handler in
+  `client/components/cards/minicard.js` (mirroring the working edit-item button) that inserts the
+  item, with the blank-input guard and title parsing extracted into the pure, Meteor-free
+  `models/lib/checklistItemTitles.js`. Card-detail checklists are unaffected. Covered by
+  `tests/checklistItemTitles.test.cjs`.
+  Thanks to jullbo and xet7.
+
+- **[Fix #6441: label filter now applies board-wide across all swimlanes](https://github.com/wekan/wekan/commit/9dca403782d476eb3c593fe614848ef02bb7f5a3)**:
+  A label filter hid non-matching cards in one swimlane (e.g. "Focus") but left another swimlane
+  (e.g. "Background") unfiltered. Each list scopes its cards to the current swimlane while also
+  showing shared/orphaned cards that have no swimlane; that fallback was written as a bare
+  top-level `$or`, which competes with the board Filter's own top-level `$or` (label/member
+  criteria) when the two selectors are combined — dropping the label criterion in every swimlane
+  except the default one. The swimlane-membership fallback is now a single
+  `swimlaneId: { $in: [id, null, ''] }` clause (the same form already used in `sidebarFilters.js`,
+  `cardDetails.js` and `dialogWithBoardSwimlaneList.js`), extracted to the pure, unit-tested
+  `models/lib/swimlaneFilter.js` and used by `client/components/lists/listBody.js` and
+  `models/lists.js`, so no second `$or` exists and the filter is always `$and`-combined and applied
+  board-wide. Covered by `tests/swimlaneFilter.test.cjs`.
+  Thanks to jullbo and xet7.
+
+- **[Fix flaky server-side Mocha test (i18n zh-CN "is not a spy")](https://github.com/wekan/wekan/commit/fc4eadedc9109602ee029b60c44eeda869aa98c3)**:
+  The server-side Mocha suite intermittently reported "1 failing" on the #5756
+  `imports/i18n/i18n.test.js` region-tag test with `TypeError: [Function] is not a spy`. The
+  assertion re-read `TAPi18n.i18n.addResourceBundle`, and the sinon-chai matcher (routed through
+  chai-as-promised) could evaluate after this suite's `afterEach` had already run
+  `sinon.restore()` — at which point the property is the original function, not the stub. The
+  `.loadLanguage` tests now assert on the captured stub reference (restore unwraps the property but
+  leaves the spy intact), which is deterministic. Reproduced and verified with a standalone
+  sinon/chai script.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.78 2026-07-06 WeKan ® release
+
+This release fixes the following bugs:
+
+- **[Fix "Internal Server Error" when signing up despite the account being created](https://github.com/wekan/wekan/commit/b1b414e850c5494dd3849f8dab6db44fecef0196)**:
+  Registering a new account showed a red "Internal server error" on the sign-up form even
+  though the account was created and could sign in — which typically happens when SMTP is not
+  configured. Root cause: useraccounts' `ATCreateUserServer` creates the account and then
+  calls `Accounts.sendVerificationEmail()` (because `sendVerificationEmail: true`); when SMTP
+  is missing/misconfigured that send throws **after** the user row is inserted, and with no
+  try/catch the exception leaves the createUser method as an opaque HTTP 500. The verification
+  email is best-effort at sign-up, so `Accounts.sendVerificationEmail` is now wrapped to log
+  and swallow a transport failure — registration completes and redirects to sign-in — while an
+  "already verified" error is re-thrown so the resend-verification flow still reports it. This
+  mirrors the [#5706](https://github.com/wekan/wekan/issues/5706) reset-password hardening.
+  Covered by `tests/verificationEmail.test.cjs`.
+  Thanks to Firas-Git and xet7.
+
+- **[Fix can not add members to a Linked Card](https://github.com/wekan/wekan/commit/cb9c8973092df5aa3112d3d59e3da4d8793c628b)**:
+  A **linked card** (created by "Link card to this card") is only a placeholder on the board
+  that links it — its members are stored on the **real card** it points at (`linkedId`), which
+  lives on another board, and `Card.getMembers()` / `assignMember()` / `unassignMember()`
+  already read and write that real card. But the member **picker** listed the members of the
+  board you were *viewing* the linked card on, not the board the real card lives on. So on a
+  board that links a card from another board, the picker offered the wrong set of members and
+  toggling them did not behave as a consistent add/remove — "can not add members to the linked
+  card". The picker now resolves a linked card to its real card's board and offers *that*
+  board's active members (matching where the membership is actually stored), falling back to
+  the current board for normal cards or when the real card isn't loaded yet. Extracted the
+  target-card/target-board resolution into `models/lib/linkedCardMembers.js`, covered by
+  `tests/linkedCardMembers.test.cjs`.
+  Thanks to ITT5 and xet7.
+
+- **[Fix can't search numbers in custom fields](https://github.com/wekan/wekan/commit/001c258f967caa502bf1d1ebb147b8506596f4bf)**:
+  Searching a board for the value of a **number** or **currency** custom field (e.g. a
+  transaction number `2025001`, or a currency amount `123`) found nothing. Those field types
+  store their value as a JS **Number** (the inputs save `parseInt(...)` / `Number(...)`), but
+  `Board.searchCards()` only matched custom fields with `{ value: <regex> }` — and a MongoDB /
+  Minimongo regex only matches **string** values, so it silently skipped every numeric custom
+  field. The search now also adds an exact numeric-equality clause when the term is a plain
+  number (a comma is accepted as a decimal separator, matching the currency input), so numeric
+  custom fields match too; text/title/description matching is unchanged. Card search runs
+  against Minimongo on the client, which — like MongoDB — cannot regex a numeric field, so
+  equality is the correct cross-environment match. Covered by `tests/cardSearch.test.cjs`.
+  Thanks to MarcusDger and xet7.
+
+- **[Fix "Removed nonexistent document" crash during notification_cleanup](https://github.com/wekan/wekan/commit/2242da4176edcd7ed6bbdd779fe2bafab8457b7c)**:
+  The scheduled notification-tray cleanup logged `Exception in removed observeChanges
+  callback: Error: Removed nonexistent document …`. The crash itself came from the old
+  `cottz:publish-relations` package (since replaced by `reywood:publish-composite`), but the
+  cleanup that provoked it still fired one **un-awaited** `removeNotification()` per expired
+  notification — a separate `Users.update` `$pull` each time — so a user with K stale
+  notifications produced K writes to the Users collection, and every publication that
+  republishes user documents re-ran its observers K times in quick bursts (the churn that
+  surfaced the removed-document error), while any rejected write went unhandled. The cleanup
+  now scans only users that have notifications and prunes each user's stale notifications in a
+  single awaited `$pull … $in`. It also removes an activity's notifications only when *every*
+  entry for that activity is read and past its removal age (so a freshly re-created unread
+  notification sharing an activity id is not dropped), and guards missing/invalid `read`
+  timestamps. Covered by `tests/notificationCleanup.test.cjs`.
+  Thanks to xet7.
+
+- **[Fix impossible to select another board in rules](https://github.com/wekan/wekan/issues/5698)**:
+  In the IFTTT-Rules "Move card to the board" and "Link card to the board" actions, the
+  board dropdown was empty for some users — the current board included — while colleagues
+  in the same company could pick boards normally. Root cause: the dropdown filtered the
+  (already access-scoped) client cache with `'members.userId': me`, i.e. it only kept boards
+  where the user has a *direct* member entry. A user who reaches a board through an
+  Organization, Team or email-domain share — but is not listed individually in
+  `board.members` — matched nothing, so the whole selector came up empty. The dropdown now
+  filters by the same visibility rule as `Boards.userBoards()` (public OR active member OR
+  active org OR active team OR active domain), so org/team/domain-shared boards appear too,
+  while archived boards, template containers, the user's templates board and internal helper
+  boards stay excluded.
+  Thanks to Augustin356 and xet7.
+
+- **[Fix board disappeared after adding another user](https://github.com/wekan/wekan/commit/933aad87fca6fc8b17efce577127e0b1fddf17f2)**: 
+  A board admin adding another user could make the whole board silently vanish from a
+  user's board list, with no archive and "nothing out of order" in the logs. Root cause:
+  the `setBoardTeams` server method (used by the board Teams/Members management popups)
+  blindly overwrote the board's entire `members` array with a snapshot sent by the client.
+  When that client's board document was stale — e.g. a member had just been added via
+  `inviteUserToBoard` on the server and the change had not yet propagated to the client —
+  the overwrite dropped members, and in the worst case the board's own admin, so the board
+  no longer matched the board-list publication (which requires an active membership) and
+  disappeared. Because a wholesale `$set: { members }` never passes through
+  `foreachRemovedMember()`, no `removeBoardMember` activity was logged and no
+  card/watcher/star cleanup ran, which is why the logs looked normal. `setBoardTeams` now
+  reconciles against the authoritative server-side members instead of trusting the client
+  snapshot: it never drops an active admin, keeps every existing member the client still
+  lists, adds the members the client introduces, and only removes non-admin members the
+  client explicitly omitted (an intentional team-leave) — logging and cleaning up each such
+  removal so it is auditable rather than silent.
+  Thanks to DVNBLMHC and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.77 2026-07-06 WeKan ® release
+
+This release adds the following updates:
+
+- **Snap: migrate any existing MongoDB (3, 7, or other) to FerretDB (SQLite) on
+  upgrade, and fix the upgrade that failed with "could not start migratemongo mongod
+  on the MongoDB 3.x data"** ([#6454](https://github.com/wekan/wekan/issues/6454)).
+  The WeKan snap now moves EVERY existing MongoDB database onto FerretDB (SQLite) on
+  first boot after an upgrade — text data into SQLite and the CollectionFS +
+  Meteor-Files GridFS attachments/avatars onto the filesystem (files/attachments,
+  files/avatars) — then shuts MongoDB down so only WeKan (Node.js) + FerretDB
+  (SQLite) run. The MongoDB version only decides HOW the source is read: a modern
+  MongoDB (6/7) is read with the `mongodb` driver, old MongoDB 3.x with the bundled
+  migratemongo 3.2 CLI (mongoexport). This also fixes the reported failure: the old
+  check was a false dichotomy — it probed whether mongod 7 could open the data and,
+  if that short probe failed for ANY reason (journal recovery, a stale `mongod.lock`,
+  a slow disk, a large oplog), assumed the data was MongoDB 3.x; a healthy MongoDB 7
+  database then went down the 3.x path, mongod 3.2 also could not open it, and —
+  because `mongodb-control` `exec`s the migration script — mongod never started, so
+  the MongoDB service failed to activate and looped on every restart. Now a
+  mongod-7-openable database is migrated with the modern importer instead of being
+  misclassified; the mongod-7 readiness probe was lengthened (20s → 45s) so large
+  databases needing recovery are not misread; the temporary source mongod is tracked
+  by pidfile and force-stopped so it never leaves the dbpath locked; and if neither
+  mongod can open the data (unusual/corrupt) or the tools are missing, the snap falls
+  back to a normal MongoDB start (never leaving the service dead) and retries next
+  boot. The MongoDB data is never modified or deleted; the snap only switches to
+  FerretDB once the migration succeeds. Thanks to xet7.
+- **Migration dashboard: use the Admin Panel product name instead of "WeKan"**. If
+  the migrated database has a product name set in Admin Panel
+  (`settings.productName`), both the Snap and Sandstorm migration progress
+  dashboards now show that name and do not mention WeKan; otherwise they default to
+  WeKan. Thanks to xet7.
+- Updated Code of Conduct.
+  [Part 1](https://github.com/wekan/wekan/commit/209cb8b43d84f7382d181a9f5d1e96ff32f2634d),
+  [Part 2](https://github.com/wekan/wekan/commit/574dd5bedd4f7c584b0fbbfaf57df86f286607fa).
+  Thanks to xet7.
+
+- **[Retry snapcraft install in the release-all.yml snap job](https://github.com/wekan/wekan/commit/0d4e48ddd6b9ee086f0aa10d9f7c9893fe1637e4)**:
+  The v9.76 release's `snap` job failed at `sudo snap install snapcraft --classic` with
+  `error: cannot install "snapcraft": too many requests` — a transient Snap Store rate limit
+  (429-style throttle) that instantly failed the whole job before any build ran. The install now
+  retries up to 5 times with 30s backoff, so one store throttle no longer fails the release
+  (matching the `remote-build` retry already in the same job).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.76 2026-07-06 WeKan ® release
+
+This release adds the following fixes:
+
+- **[Fix notification emails linked to `/b/undefined/board/<cardId>` instead of the real board](https://github.com/wekan/wekan/commit/8b21158736f9e1360332903707c100bce3d6b164)**:
+  On the server `ReactiveCache.getBoard()` is async and returns a Promise, but `Cards.board()` did not await it,
+  so the synchronous `Card.originRelativeUrl()`/`absoluteUrl()` interpolated a Promise —
+  `board._id` and `board.slug` were `undefined`, producing `/b/undefined/board/<cardId>` in
+  card activity notification emails (the client UI was unaffected because `this.board()` is
+  synchronous there). Fixed by making `Card.originRelativeUrl(board)`/`absoluteUrl(board)` accept an
+  already-resolved board and fall back to `this.boardId` (always available synchronously) when the
+  board is a Promise, and by passing the awaited board from `server/models/activities.js` so the
+  correct board id and slug are used.
+  Thanks to titver968 and xet7.
+
+- **[Release workflow: publish the Helm chart only after the Docker image is pushed](https://github.com/wekan/wekan/commit/a2802a850b57ef7ac183ddb581be666d14d43705)**:
+  In `.github/workflows/release-all.yml` the `charts` job now depends on the `docker` job
+  (`needs: docker`) instead of running in parallel right after `bump`. GitHub Actions runs a job
+  only when all of its `needs` jobs succeed, so the wekan/charts Helm chart is published only after
+  the multi-arch image is live on Docker Hub / Quay.io / GHCR (and is skipped if `docker` fails).
+  This prevents ArtifactHub from scanning a freshly published chart whose image tag does not exist
+  yet and emailing the maintainer about the missing Docker image.
+  Thanks to xet7.
+
+- **[Fix thousands of unsolicited empty "Default" swimlanes created on some boards](https://github.com/wekan/wekan/commit/45fb54794755663307ef89636e2822ef9c65428d)**:
+  `Board.getDefaultSwimline()`/`getDefaultSwimlineAsync()` self-heal a missing default swimlane by
+  reading the board's swimlanes and inserting one if none exist. That check-then-insert is a race:
+  concurrent or repeated server calls for a swimlane-less board each saw zero swimlanes and each
+  inserted a new one, so some boards accumulated 30 000+ empty "Default" swimlanes and became
+  unloadable (the `key 'default (en)' returned an object instead of string` log is a harmless i18n
+  side effect — the title correctly falls back to the string `Default`). Follow-up to the
+  client-side [#6382](https://github.com/wekan/wekan/issues/6382) fix, which only stopped the
+  browser from auto-creating them. Fixed by making the server self-heal **idempotent**: the default
+  swimlane is now upserted with a deterministic `_id` (`<boardId>-default`), so the `_id` unique
+  index guarantees at most one default swimlane per board no matter how many times, or how
+  concurrently, the getters run. `archived`/`type` are set explicitly in the `$setOnInsert` because
+  their schema autoValue/defaultValue only fire on insert, not upsert. Note: this prevents new
+  duplicates; boards that already accumulated thousands still need a one-off cleanup.
+  Thanks to brlin-tw and xet7.
+
+- **[Reduce card flicker on drag by only writing changed fields on a card move](https://github.com/wekan/wekan/commit/2e7c4ede2a6429048882e68084bb286aedbc42a5)**:
+  `Card.move()` wrote `boardId`/`swimlaneId`/`listId` into the update unconditionally, even for a
+  same-board drag to another list (the reported case). Keeping `boardId` in the `$set` on every drag
+  re-ran the `boardId`-gated `Cards.after.update` hook that re-syncs the card's checklists and
+  checklist items via `multi` updates, ran the cross-board consistency guard and the
+  `denyCrossBoardMove` deny-rule DB lookup, and invalidated more reactive dependents than
+  necessary — server work and reactivity churn that contributed to a ~1s card flicker on large
+  boards. `Card.move()` now writes **only the fields that actually change** (via the pure
+  `computeCardMoveModifier` helper) and skips the write entirely when a card is dropped back in the
+  same place, so a same-board move no longer touches boardId or the cross-board hooks. The
+  `moveCard`/`moveCardBoard` activity generators already re-check `doc.X !== oldX`, so trimming the
+  modifier does not drop any activity. Note: this reduces the drag-time work behind the flicker; the
+  residual reactive re-render cost on very large boards is a separate performance topic.
+  Thanks to mimZD and xet7.
+
+- **[Fix `DEFAULT_AUTHENTICATION_METHOD` env var ignored, and Admin Panel Layout save hanging](https://github.com/wekan/wekan/commit/d5596f05b7ee63a114d3479c34e930f0d9d5549c)**:
+  Two related problems with the default login authentication method.
+  - **Env var ignored:** the stored setting was only ever seeded as `password` and
+    `DEFAULT_AUTHENTICATION_METHOD` was never applied, so operators setting it (e.g. Kubernetes/Helm
+    `DEFAULT_AUTHENTICATION_METHOD: ldap`) saw no effect. Startup now applies the env var
+    authoritatively: it seeds the value on a fresh install and, on existing installs, keeps the
+    stored `defaultAuthenticationMethod` in sync with the env var on every boot (the operator's env
+    is the source of truth), so the method can be configured entirely by env without the Admin Panel.
+    The value is normalized (trimmed + lower-cased), so `DEFAULT_AUTHENTICATION_METHOD=LDAP` works.
+  - **Layout save hanging / not persisting:** the authentication-method `<select>` is populated by an
+    async `Meteor.call`, so clicking **Admin Panel > Layout > Save** before it loaded sent an empty
+    value for the **required** `defaultAuthenticationMethod` field, which silently failed validation —
+    the save looked stuck and nothing changed. The save now falls back to the currently stored method
+    when the select is empty, so a real value is never overwritten by `''`.
+  Both paths share one pure helper (`resolveDefaultAuthenticationMethod`) that never resolves to an empty string.
+  Thanks to joe-speedboat and xet7.
+
+- **[Fix #5808: linking a card to another linked card made both cards inaccessible](https://github.com/wekan/wekan/commit/878a24f586d698307bc3af1e65c903147f87a59a)**:
+  The "Link to this card" target picker only excluded template cards, so an existing **linked** card
+  (or a card that already links back to the current board) could be chosen as a link target. That
+  builds a chain/cycle of `linkedId` pointers, but the card helpers
+  (`getTitle`/`getBoardTitle`/`getRealId`) resolve `linkedId` only **one hop**, so such a card
+  renders as an empty/broken pointer and becomes effectively inaccessible (the reported freeze). As
+  the reporter suggested, the fix **prevents the configuration** rather than allowing it: only a real
+  card — not a linked card/linked board, not one of the linking board's own cards, and not a card
+  that links back to one of them — may now be a link target. This is enforced both in the picker's
+  query and re-checked at creation time (the options can be stale), via the pure
+  `isLinkableCardTarget` guard, mirroring the existing #3328 parent/subtask cycle guard. Note: this
+  stops new inaccessible links; any already-created ones still need manual cleanup.
+  Thanks to the reporter and xet7.
+
+- **[Fix the "Board not found" flicker (stale-while-revalidate for the client board cache)](https://github.com/wekan/wekan/commit/d00dc6056b241b0b3e383bb5b4e75ba10ed78f56)**:
+  While viewing a board, the board view could briefly flash the **"Board not found"** shell — and on
+  WebKit throw a Blaze `Can't select in removed DomRange` error tearing down the card view. Root
+  cause: the client board cache (`imports/lib/dataCache.js`) re-fetches its value inside a reactive
+  computation, and when the board doc is momentarily absent from minimongo (a subscription stops and
+  restarts, so Meteor transiently removes the doc) the re-fetch returns `undefined` and that empty
+  value is surfaced immediately. It self-recovers when the subscription re-delivers the doc, so it
+  presents as a flicker — reliably reproduced only on Firefox/WebKit, where the reactive-render
+  timing hits the window (Chromium did not, which is why it surfaced as browser-specific Playwright
+  failures in `14-voting-watchers` and `24-feature-issues`). Fixed with an opt-in
+  **stale-while-revalidate** mode on `DataCache`, enabled only for `getBoard`: a transient miss over
+  an already-cached board keeps the last value and re-checks after a short delay, surfacing an empty
+  result only if the board is still gone then (a genuine deletion / access loss). First-ever loads
+  and caches that did not opt in are unchanged. Core decision extracted to the pure
+  `shouldDeferCacheMiss` helper with unit tests.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.75 2026-07-05 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUE of
+[ScannerBleed](https://wekan.fi/hall-of-fame/scannerbleed/):
+
+- **[ScannerBleed](https://github.com/wekan/wekan/commit/0137924d7ee0b28102f671e1badf5ed21d6ab22f):
+  shell injection (RCE) via a malicious upload filename in the external antivirus scanner command path**
+  ([GHSA-x3xm-pxrv-jg7p](https://github.com/wekan/wekan/security/advisories/GHSA-x3xm-pxrv-jg7p),
+  CWE-78 OS Command Injection). Same RCE class as
+  [AvatarBleed](https://wekan.fi/hall-of-fame/avatarbleed/) (CVE-2026-52891, GHSA-35j7-h385-2q9g)
+  and its follow-up regression (CVE-2026-53447 / GHSA-qfqv-42qw-vvwh area), but in a code path that
+  was **never** covered by those fixes.
+  In `models/fileValidation.js`, when an admin has configured an external scanner (antivirus)
+  command line with a `{file}` placeholder, the uploaded file path was interpolated into the command
+  and run through `asyncExec` (`promisify(exec)`), which spawns `/bin/sh -c` and interprets **all**
+  shell metacharacters:
+  ```js
+  await asyncExec(externalCommandLine.replace("{file}", '"' + fileObj.path + '"'));
+  ```
+  Wrapping the path in double quotes is not a shell boundary — inside double quotes the shell still
+  expands `$(...)`, backticks and `\`, so a filename such as `` a`id`.png `` or `$(touch /tmp/pwn).png`
+  escaped the argument and executed as the Wekan server process. Any **authenticated** user who can
+  upload an attachment could trigger it, on servers that have an external scanner configured. Unlike
+  the sibling MIME-detection path (`detectMimeFromFile`, which already uses `execFile` with no shell)
+  and unlike the AvatarBleed fix (which strips non-alphanumeric characters from the filename), this
+  scanner path had **zero** sanitization.
+  - **Fixed** by POSIX single-quote-escaping the interpolated file path via a new `shellQuote()`
+    helper (wrap in single quotes, escape embedded `'` as `'\''`). Inside single quotes the shell
+    interprets no metacharacters, so a malicious filename can no longer break out of the argument or
+    inject commands, while the admin's arbitrary command line and the exact on-disk path are both
+    preserved. CVSS:3.1 9.9 Critical (AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H).
+  - Affected Wekan v9.06 and earlier through the current release; fixed at the upcoming WeKan release.
+    Reported by **DavidCarliez**.
+  Thanks to DavidCarliez and xet7!
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.74 2026-07-05 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of
+[DnsBleed](https://wekan.fi/hall-of-fame/dnsbleed/) and
+[ExcelBleed](https://wekan.fi/hall-of-fame/excelbleed/):
+
+- **[DnsBleed](https://github.com/wekan/wekan/commit/ef845fe4a0adb82af436313310939cd48c0b1347) — SSRF filter bypass via DNS-resolving hostname in outgoing webhooks**
+  ([GHSA-66m2-4wfr-c45p](https://github.com/wekan/wekan/security/advisories/GHSA-66m2-4wfr-c45p), CWE-918).
+  Incomplete-fix follow-up to [WebhookBleed](https://wekan.fi/hall-of-fame/webhookbleed/)
+  ([GHSA-hc3x-hq3m-663q](https://github.com/wekan/wekan/security/advisories/GHSA-hc3x-hq3m-663q)) and
+  [IntegrationBleed / RebindBleed](https://wekan.fi/hall-of-fame/integrationbleed/).
+  The synchronous URL validator on outgoing-webhook (board **Integrations**) URLs in
+  `models/integrations.js` blocks private/loopback/link-local IPs by regex-matching the URL
+  **hostname string** and never resolves DNS. A public hostname that resolves to a blocked address —
+  e.g. `169-254-169-254.nip.io` → `169.254.169.254` (cloud metadata), `127-0-0-1.nip.io` → `127.0.0.1`,
+  or any attacker-controlled domain with an A/AAAA record pointing at an internal IP — passes that
+  string blocklist. The report notes the underlying weakness: **string matching is not an SSRF
+  boundary** because it can't see the resolved IP.
+  - **The reported PoC was already blocked at delivery** by the earlier RebindBleed fix: outgoing
+    webhooks are sent through `fetchSafe` (`server/lib/ssrfGuard.js`), which resolves the hostname,
+    validates the resolved IP, pins the connection to it and blocks redirects — so
+    `169-254-169-254.nip.io` is rejected before any request is made. The REST write paths
+    (`POST`/`PUT /api/boards/:boardId/integrations`) were likewise already hardened in WebhookBleed to
+    run the DNS-aware `validateAttachmentUrl()` at input time.
+  - **This release completes the fix and removes the drift risk the advisory points at.** The
+    delivery guard previously resolved only IPv4 A-records (`dns.resolve4`), leaving it blind to AAAA
+    (an IPv6-only internal target was merely fail-closed, and legitimate IPv6 webhooks were
+    unreachable) and keeping a *second, less-complete* private-range block-list that could drift out
+    of sync with the input-time one. `fetchSafe` now resolves **both address families** via
+    `dns.lookup({ all: true })` — the same resolver call the input validator uses — and validates
+    every resolved IP through the single shared `isIpBlocked` block-list in
+    `models/lib/attachmentUrlValidation.js`. The three previously-separate block-lists (schema regex,
+    delivery guard, input validator) are now one source of truth, and the schema-level `url` validator
+    is documented in code as a non-authoritative first-line UI check only.
+  - Affected Wekan v8.36 and later (input-side string validator); the delivery-time SSRF boundary has
+    been in place since v8.35/v8.36 (IntegrationBleed) and v9.32 (WebhookBleed). Reported by
+    **4n207**.
+  Thanks to 4n207 and xet7!
+
+- **[ExcelBleed](https://github.com/wekan/wekan/commit/7bbd1a3fad5d868fd01d79b5908913e215698e8e) — broken access control in the Excel-export REST route lets any authenticated user export any private board**
+  ([GHSA-mwq8-ccpm-r533](https://github.com/wekan/wekan/security/advisories/GHSA-mwq8-ccpm-r533),
+  CWE-862 / CWE-639). Same un-awaited async-auth bug class as
+  [BFLABleed](https://wekan.fi/hall-of-fame/bflableed/) (48 REST endpoints, v9.22),
+  [CloneBleed](https://wekan.fi/hall-of-fame/clonebleed/) (un-awaited `allowIsBoardMemberByCard`,
+  v9.35) and [TokenBleed](https://wekan.fi/hall-of-fame/tokenbleed/).
+  `models/exportExcel.js` called its access-control guard
+  `exporterExcel.canExport(user)` **without `await`**. Because `canExport` is `async`, it returns a
+  Promise (always truthy), so `if (exporterExcel.canExport(user) || impersonateDone)` was always true
+  and `exporterExcel.build(res)` ran regardless of the guard's real result — any authenticated user
+  could download the full contents of any board (card titles + descriptions, lists, swimlanes,
+  members, metadata) via `GET /api/boards/:boardId/exportExcel`, including private boards they are not
+  a member of. The JSON export route (`/export`) was correctly awaited and returned 403 for the same
+  non-member.
+  - **Fixed** by awaiting the guard —
+    `if ((await exporterExcel.canExport(user)) || impersonateDone)` — matching every other export
+    route (`models/export.js`, `exportPDF.js`, `exportExcelCard.js`, `import.js`). The Excel-export
+    route was the lone remaining un-awaited `canExport` call site.
+  - Affected Wekan v9.57.0 (latest) and earlier; present at HEAD until this release. Reported by
+    **sec-reex** (defensive research, responsible disclosure, read-only PoC).
+  Thanks to sec-reex and xet7!
+
+and adds the following updates:
+
+- [Update to Meteor 3.5](https://github.com/wekan/wekan/commit/df3f519e99a6cf96bf947c72e0639988dc044740).
+  Thanks to Meteor developers.
+- [Run all tests at parallel or sequential](https://github.com/wekan/wekan/commit/7d416cc7ccaf82876b052eeb621794f805e1e3d8).
+  Thanks to xet7.
+- [Run all tests at parallel or sequential](https://github.com/wekan/wekan/commit/7d416cc7ccaf82876b052eeb621794f805e1e3d8).
+  Thanks to xet7.
+- [Script to be executeable](https://github.com/wekan/wekan/commit/267bfc72295839a8b846889703ca4874ffe35eb2).
+  Thanks to xet7.
+- [Update vscode sandbox](https://github.com/wekan/wekan/commit/4533268418f5d081fb70537d6311d4a6c4c94db8).
+  Thanks to xet7.
+- [Each run all tests now has logs at ../log/YYYY-MM-DD_HH-MM-SS/](https://github.com/wekan/wekan/commit/236fdf93381aed72f277be8203a9cd9512bc2092).
+  Thanks to xet7.
+
+and fixed the following bugs:
+
+- [Updated tests](https://github.com/wekan/wekan/commit/c997c12f88eb35834d4702e331fd65f753fa8260).
+  Thanks to xet7.
+- [Fix parallel tests](https://github.com/wekan/wekan/commit/36efd9c98871e4fa3f59a7d04981f542f7a32a04).
+  Thanks to xet7.
+- [Fix tests](https://github.com/wekan/wekan/commit/4eebdb4278190e4c4bfe5cbbf5cf13559d127a07).
+  Thanks to xet7.
+- [Board Settings / Card Settings / Checklist item count (0/0) on minicard. Default: Off](https://github.com/wekan/wekan/commit/bb440b0d7befa936e738a13267052d9a585b964a).
+  Thanks to carl-unique and xet7.
+- [Card Settings popup options combined to same lines, and added more options](https://github.com/wekan/wekan/commit/1e7de6d776571846be6c966d4583f4710b5e0b0d).
+  Thanks to xet7.
+- [Fix tests](https://github.com/wekan/wekan/commit/c48ecb1d88b3c2ba752c8f6ce7884743905d68fb).
+  Thanks to xet7.
+- **[Playwright E2E: fixed three cross-process-contention flakes in the parallel run](https://github.com/wekan/wekan/commit/f5a4ece29431fc5e3f72986f089a2089e90599ae).**
+  The Chromium / Firefox / WebKit browser jobs run as separate processes against ONE shared server + DB,
+  so specs that used fixed identifiers or global cleanups raced each other:
+  - `26-shared-templates.e2e.js` seeded a fixed email domain (`usera@acme-e2e.invalid`) in all three
+    browsers, hitting `E11000 duplicate key` on the unique `emails.address` index. Now uses a
+    unique-per-run token for the org / team / domain and template titles.
+  - `38-impersonation.e2e.js` cleaned up with a global
+    `deleteMany({ reason: 'clickedImpersonate' })` that deleted another browser's in-flight audit
+    record mid-poll. Scoped the cleanup to the test's own `adminId`.
+  - `32-org-team-feature-toggles.e2e.js` exercises `setAllOrgsFeature` / `setAllTeamsFeature`, which
+    do a global `updateMany({})` across every org / team, so two browsers clobbered each other's
+    rows. These browser-agnostic server-method tests now run in a single project (Chromium);
+    Firefox / WebKit skip them.
+  Thanks to xet7.
+- **[Server-side Mocha suite: fixed a startup crash and the 44 latent failures it had been hiding](https://github.com/wekan/wekan/commit/b9f9390d04d2d8aa27236132784ec448209f17ae).**
+  - `imports/i18n/i18n.test.js` crashed the whole run at load: `chai` 6.x plugins (`sinon-chai`,
+    `chai-as-promised`) are ESM-only, so `use(require('sinon-chai'))` handed `chai.use()` a module
+    namespace instead of the plugin function ("fn is not a function"). Now imports the default export.
+  - That unmasked a second load crash — `PositionHistory.helpers is not a function`: the
+    `meteor test` entry (`server/lib/tests/index.js`) never ran the `.helpers` / `.attachSchema` shim
+    that `server/main.js` bootstraps, so the first model to call `Collection.helpers({...})` threw.
+    The shim is now imported first in the test entry.
+  - With the suite finally running, 44 server tests failed because `meteor test` only loads what the
+    specs import (not the app's `/server/imports`). The specs now import the files that register the
+    methods / globals under test (`cards.vote` / `cards.pokerVote`, `api.attachment.*`, `cloneBoard`,
+    `getBackgroundImageURL`, `applyListWidth`, `updateListSort`, `moveChecklist`,
+    `userPositionHistory.*`, `archiveBoard`, `sendSMTPTestEmail`, and the `Attachments` global).
+    Also fixed genuine test bugs: the `cards.vote` / `cards.pokerVote` specs were written
+    synchronously against async methods; the header-login trust specs restored env vars with
+    `process.env.X = undefined` (which stores the string `"undefined"` and shadowed the trusted-IP
+    allowlist, making every trusted source read as untrusted); the DnsBleed decimal-loopback matcher
+    assumed the integer host survived URL normalisation; and the dependencies-OpenAPI spec could not
+    locate its source file from the built bundle. The two `cards.archive` / `cards.move` specs tested
+    Meteor methods that do not exist (archive / move are Minimongo document helpers secured by
+    `Cards.allow` / `Cards.deny`, already covered by the `cards security` tests) and were removed.
+    Server-side Mocha is now 409 passing, 0 failing.
+  Thanks to xet7.
+- [Fix translations at Login and Register pages](https://github.com/wekan/wekan/commit/b46d9588c7dc2d718e108972c97cbccadedb9b5f).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.73 2026-06-26 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Mobile UI still too large at All Boards / iPhone 12 mini](https://github.com/wekan/wekan/issues/6426),
+  [#6426](https://github.com/wekan/wekan/issues/6426): the first revert only cleaned
+  `boardsList.css`, leaving the same forced "2x/3x bigger on mobile" rules in `header.css`
+  (`#header-quick-access` logo/quick-access bar) and `boardBody.css` (`#content` — which the
+  All Boards list and popups render inside) and the iPhone card-details body text. Those are now
+  neutralized to normal size too, and the iPhone-12-mini header blocks that had grown tall and
+  wrapped (to fit the 3x text) are back to a compact single row. The #6419 mobile touch-target
+  icon sizes in the card-details header are intentionally kept.
+  Fixed in [219ee659e](https://github.com/wekan/wekan/commit/219ee659e).
+- Drag-to-scroll (dragscroll) not working on the Login, Register and All Boards pages: the page
+  helper tagged `<body>` with the `dragscroll` class, but on phones `body.mobile-mode` is
+  `position: fixed` and the real scroll container becomes `#content`, so tagging only `<body>`
+  could never scroll on those pages (Login/Register have no `#content` and correctly use
+  `<body>`). `enablePageDragscroll`/`disablePageDragscroll` now tag whichever element actually
+  scrolls — both `<body>` and `#content` when present — so only the overflowing one scrolls (no
+  double-scroll). Touch one-finger scrolling (`dragscrollTouch.js`) already picks the nearest
+  scrollable `.dragscroll` ancestor, so `#content` wins over `<body>` when both are tagged.
+  Fixed in [219ee659e](https://github.com/wekan/wekan/commit/219ee659e).
+- Drag-to-scroll now works on **every** whole-page layout in both mobile and desktop modes, not
+  just All Boards / My Cards / Login / Register. It was wired into only those few templates, so
+  Due Cards, Global Search, Public, Bookmarks, Broken Cards, Settings, People, Admin Reports,
+  Attachments, Translation, Import, board Rules and the Not Found page had no page drag-scroll at
+  all. The per-template enable/disable calls (which also fought each other when navigating between
+  two non-board pages) were replaced by a single route-aware autorun in `defaultLayout` (the
+  persistent shell that owns `#content`): every non-board route tags the real scroll container
+  (`<body>` + `#content`), and the board-canvas routes (`board` / `board-short` / `card`) leave it
+  off so their own `.board-canvas.dragscroll` keeps handling the drag. Login / Register keep their
+  own enable/disable because they use `userFormsLayout` (no `#content`).
+  Fixed in [88f353dc1](https://github.com/wekan/wekan/commit/88f353dc1).
+- Login / Register pages not scrollable on phones — the sign-up / sign-in link, legal notice and
+  language selector below the form were unreachable (and hidden behind the on-screen keyboard). On
+  mobile, `body.mobile-mode` pins `<body>` to `position: fixed` + `height: 100vh` (an iOS
+  board-view anti-bounce fix), but the auth pages have no inner `#content` scroller and their
+  `.auth-layout`/`.auth-dialog` were sized to the viewport height, so the page was trapped at
+  100vh. `userFormsLayout` now tags `<body>` with `.userform-layout` while mounted, and CSS lets
+  those pages scroll as a normal document on mobile (`position: static; height: auto;
+  min-height: 100vh`) with the layout/dialog growing to their content. Scoped to
+  `.userform-layout` so the board-view mobile lock is unchanged.
+  Fixed in [4a7df3745](https://github.com/wekan/wekan/commit/4a7df3745).
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.72 2026-06-26 WeKan ® release
+
+This release fixes the following bugs:
+
+- Fixed `api.py` `addcustomfieldtoboard` crashing on an empty `settings` argument. The CLI did
+  `settings = str(json.loads(sys.argv[6]))`, so `json.loads('')` raised `JSONDecodeError` and
+  the command aborted before sending the request (a bug api.py's own header comment flagged).
+  Empty settings now default to `{}` and are sent as valid JSON via `json.dumps` instead of
+  `str(dict)` (which produced invalid JSON with single quotes). Verified that both empty and
+  object settings (e.g. `{"currencyCode":"EUR"}`) create the custom field.
+  Fixed in [487cf3f96](https://github.com/wekan/wekan/commit/487cf3f9632d747665bd14e4a0e43159760a49c6).
+- [Mobile UI too large at All Boards and top bars](https://github.com/wekan/wekan/issues/6426),
+  [#6426](https://github.com/wekan/wekan/issues/6426): reverted the recent forced mobile
+  2x/3x UI scaling rules that made All Boards and quick-access/header controls render oversized,
+  while keeping the small-screen All Boards layout collapse so the left menu still stacks above
+  the board grid on narrow screens.
+  Fixed in [f7a2a3ace5ebc6ac2c8ecef10a2d0477ab7b3e2c](https://github.com/wekan/wekan/commit/f7a2a3ace5ebc6ac2c8ecef10a2d0477ab7b3e2c).
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.71 2026-06-23 WeKan ® release
+
+This release adds the following features:
+
+- [Sort, search and paginate the All Boards page](https://github.com/wekan/wekan/issues/5799),
+  [#5799](https://github.com/wekan/wekan/issues/5799): the All Boards page only offered the per-user manual drag order
+  with no obvious way to sort by name. Added a **Sort** button (Custom drag order / Title A→Z / Title Z→A, stored per
+  user), a **board-name search** box that spans every category (Starred, Templates, Remaining and all
+  (sub)workspaces), and **pagination of the board icons** — in the sorted modes the current page is computed on the
+  server (`getAllBoardsPage`) so only that page is rendered and the page scales to thousands of boards. The search box
+  and pagination controls are placed like Admin Panel > People. Custom (manual drag order) stays unpaginated so
+  drag-reordering keeps working. All server-side filtering/sorting resolves against the effective current user, so it
+  also works when a GlobalAdmin impersonates a user; added Playwright impersonation tests
+  (`tests/playwright/specs/38-impersonation.e2e.js`). Note: "Stop impersonating" is still a follow-up — impersonation
+  is connection-scoped and currently reverts on a full page reload.
+  Fixed in [f74ccbc8f](https://github.com/wekan/wekan/commit/f74ccbc8faf1c19f06775ca70306cf320e442dfb) and
+  [c1da7a4a3](https://github.com/wekan/wekan/commit/c1da7a4a332cd10bbd2ed3c93122fe0ea8864336).
+- [Fixed (same) width for all lists](https://github.com/wekan/wekan/issues/5729),
+  [#5729](https://github.com/wekan/wekan/issues/5729): the Set width popup now has a "Same width for all lists" toggle.
+  When enabled, every list on the board renders at one shared width for the current viewer, and dragging the resize
+  handle of ANY list updates that single value so ALL lists change together. The setting is per-viewer/per-board and
+  works for both logged-in users (stored in `profile.fixedListWidthBoards` / `profile.fixedListWidths`) and anonymous
+  public-board users (stored in `localStorage` keys `wekan-fixed-list-width-enabled` / `wekan-fixed-list-width`).
+  Enabling fixed width turns off auto-width (the two modes are mutually exclusive); widths below 270px are rejected.
+
+and fixes the following bugs:
+
+- [Due date does not work when the language uses non-Latin (e.g. Persian/Farsi) digits](https://github.com/wekan/wekan/issues/5752),
+  [#5752](https://github.com/wekan/wekan/issues/5752): in locales such as Persian/Farsi or Arabic, dates and times can be
+  rendered with non-Latin digits (Persian/Extended Arabic-Indic ۰۱۲۳۴۵۶۷۸۹, U+06F0–U+06F9, or Arabic-Indic ٠١٢٣٤٥٦٧٨٩,
+  U+0660–U+0669). The native JavaScript `Date` constructor only understands ASCII digits, so any such string fails to
+  parse and produces an Invalid Date when setting/updating or comparing dates. Added a `normalizeDigits()` helper in
+  `imports/lib/dateUtils.js` that converts those non-Latin digits to ASCII, applied it at every date-string parse
+  boundary in `dateUtils.js` (via an internal `toDate()` wrapper) and in the date/time picker submit/change handlers in
+  `client/lib/datepicker.js`. The normal ASCII path is unchanged.
+- [Impossible to create a Link to a whole BOARD if that board already has cards](https://github.com/wekan/wekan/issues/5715),
+  [#5715](https://github.com/wekan/wekan/issues/5715): in the link-card popup, choosing a board used to auto-populate the
+  List/Card sub-selects, with no way to clear them, so once the chosen board had cards you could only link to a card and
+  no longer to the whole board. The Swimlane/List/Card selects now default to a blank "(none)" option and are no longer
+  auto-selected when a board is chosen, and the popup's confirm ("link") button now falls back to creating a board-level
+  link when a board is selected but the Card field is left blank (matching the previously-only-empty-board behaviour).
+  Added `tests/linkCardPopup.test.js` covering the positive and negative cases.
+- [Internal Server Error (500) when attempting to reset a password](https://github.com/wekan/wekan/issues/5706),
+  [#5706](https://github.com/wekan/wekan/issues/5706): on the Forgot Password page, clicking "Email reset link" could
+  return a raw HTTP 500 instead of sending the reset email / showing success. This happens when the server's SMTP is not
+  configured (no `MAIL_URL` / `MAIL_FROM`, or a bad mail server): Meteor's `Email.sendAsync` throws, and the exception
+  propagated unhandled out of the `forgotPassword` method as an opaque 500. The reset-password / verify-email /
+  enroll-account email-template builders are now hardened so they never throw (guarded user name/language lookups and a
+  safe fallback if translation fails), and `Accounts.sendResetPasswordEmail` is wrapped so a send failure surfaces as a
+  clean `Meteor.Error('email-fail', ...)` instead of a 500. Note: this makes the failure graceful, but to actually
+  receive reset emails you must still configure SMTP (Admin Panel mail server, or `MAIL_URL` and `MAIL_FROM`). Logic
+  extracted to `server/lib/resetPasswordEmail.js` and unit-tested in `tests/unit/resetPasswordEmail.test.js`.
+- [Changing the UI language had no effect for some languages (e.g. Chinese zh-CN, zh-Hans/zh-Hant, Arabic ar-*) while others (de, fr) worked](https://github.com/wekan/wekan/issues/5756),
+  [#5756](https://github.com/wekan/wekan/issues/5756): the custom tap:i18n reimplementation registered each language's
+  resource bundle under the raw Wekan tag, but i18next (with `cleanCode: true`) resolves and looks translations up under a
+  normalised code. For region/script-tagged and legacy underscore tags (`af_ZA`, `en_AU`, …) the stored code and the
+  lookup code disagreed, so the bundle was never found and the UI silently fell back to English. The loader now normalises
+  every i18next call (`supportedLngs`, `addResourceBundle`, `changeLanguage`, `t`) through the same code — underscores
+  converted to hyphens and run through i18next's `formatLanguageCode` — so storage and lookup always agree for ALL
+  supported languages. Dynamic JSON imports that resolve to an ES-module namespace are now unwrapped safely (without
+  mistaking the data's own `"default"` translation key for the module's default export), and the language-switch handlers
+  in the user header and login form now surface a failed load instead of leaving the UI silently in English. Added
+  positive and negative regression tests in `imports/i18n/i18n.test.js`.
+- [Card labels took two lines / double height on minicards, wasting vertical space](https://github.com/wekan/wekan/issues/6424),
+  [#6424](https://github.com/wekan/wekan/issues/6424): each label's name is rendered inside a `.viewer`, whose global
+  `min-height: 2.5vh` (intended for the full content editor) forced every minicard label to roughly double height. The
+  minicard text labels now reset that `min-height`, render the viewer/paragraph inline and stay on a single compact line.
+  Fixed in [afbabccd2](https://github.com/wekan/wekan/commit/afbabccd2685af77ffddc1038f62823882615b74).
+- [REST API: moving a card to another list (PUT .../cards/:cardId with listId) returned HTTP 500 — "fieldNames.includes is not a function"](https://github.com/wekan/wekan/issues/6423),
+  [#6423](https://github.com/wekan/wekan/issues/6423): the list-move path called the `cardMove()` activity helper with
+  `{ fieldName: 'listId' }` (a plain object) as its `fieldNames` argument, but `cardMove()` does
+  `fieldNames.includes('boardId')`, so the object's missing `.includes` threw and the endpoint returned HTTP 500. The
+  changed field names are now passed as an array (`['listId']`), matching the cross-board move path.
+  Fixed in [69c899f1f](https://github.com/wekan/wekan/commit/69c899f1f99b0ea984d3b36f5d2a2aac67c4ff9a).
+- [Notification emails were sent in English despite the user's language setting](https://github.com/wekan/wekan/issues/5875),
+  [#5875](https://github.com/wekan/wekan/issues/5875): on the server only the default (English) translation bundle is
+  loaded at startup, so translating a notification to the user's language fell back to English because i18next never had
+  that language's bundle. Added `TAPi18n.ensureLanguageLoaded()` (loads the bundle on demand) and await it before
+  translating in the email notification, `EmailLocalization.sendEmail` and outgoing webhook paths.
+  Fixed in [22f996903](https://github.com/wekan/wekan/commit/22f996903b09d35e3aa959a9aa65b30204e12202).
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.70 2026-06-23 WeKan ® release
+
+This release fixes the following bugs:
+
+- **Copying a card to or from a board with no labels threw.** `Card.copy()`'s cross-board label-remap did
+  `oldBoard.labels.filter(...)` / `filterCopiedLabelIds(newBoard.labels, …)` without guarding a missing `labels` array.
+  Most boards always have default labels, but a board **created via the REST API** (`POST /api/boards`) has no `labels`
+  array — so copying a card to/from such a board (or copying the board itself, which copies its cards) threw
+  `Cannot read properties of undefined (reading 'filter')` and returned HTTP 500. Both label lookups now fall back to
+  `[]`. Cross-board copy regressions in `tests/playwright/specs/17-rest-api.e2e.js`.
+- [Copying a board did not copy its webhooks](https://github.com/wekan/wekan/issues/5592),
+  [#5592](https://github.com/wekan/wekan/issues/5592): `board.copy()` duplicated swimlanes/lists/cards, custom fields
+  and rules/triggers/actions, but had no loop for **Integrations** (outgoing webhooks), so a copied board lost all of
+  them (even though they are per-board children — `boardRemover` deletes them by `boardId`). `copy()` now also copies
+  the board's Integrations, remapping `boardId` (URL/token/activities carry over — the copying user is a board admin
+  with access to them). Regression in `tests/playwright/specs/17-rest-api.e2e.js`.
+- [Disabled user accounts could be added to boards](https://github.com/wekan/wekan/issues/1894),
+  [#1894](https://github.com/wekan/wekan/issues/1894): none of the add-member paths checked the target account's
+  `loginDisabled` flag, so a deactivated user could be invited/added and assigned to cards. `inviteUserToBoard` now
+  throws `error-user-disabled`, and the REST `POST /api/boards/:boardId/members/:userId/add` endpoint returns HTTP 400,
+  when the target account is disabled (re-enabling the account allows the add again). Regression in
+  `tests/playwright/specs/17-rest-api.e2e.js`.
+- [Admin Panel boards report listed removed members as current members](https://github.com/wekan/wekan/issues/5122),
+  [#5122](https://github.com/wekan/wekan/issues/5122): removing a member from a board marks the member entry
+  `isActive: false` (it is kept in `board.members` for role history / re-activation), but the Admin Panel → Reports →
+  Boards member column listed **all** member entries, so removed users still appeared as members. The report now
+  filters to active members (`isActive !== false`). (The raw `GET /api/boards/:boardId` response intentionally still
+  returns the full `members` array with each entry's `isActive` flag, so API consumers can filter as they need.)
+- [Could not remove a deleted user from a card's members](https://github.com/wekan/wekan/issues/4847),
+  [#4847](https://github.com/wekan/wekan/issues/4847) (card side): when a user account is deleted, its entry stays in a
+  card's `members`, rendering as a blank avatar. Clicking it opened the member popup, whose template dereferenced the
+  now-missing user document (`user.profile.fullname` / `user.username`) and failed to render — so there was no way to
+  remove the orphaned member. The popup now detects a missing user, shows a **"Deleted user"** entry with the raw id, and
+  keeps the **Remove from Card** control (the remove handler keys off the member's `userId`, not the user document), so
+  orphaned card members can be removed. (No automated regression — a self-evident Blaze template guard; the underlying
+  `unassignMember` removal already worked. The board-members *list* still hides such entries because `activeMembers()`
+  also intentionally filters members whose user doc is merely not-yet-loaded, so surfacing board-side orphans cleanly is
+  a separate follow-up.)
+- [A newly added board member was missing from the card members popup](https://github.com/wekan/wekan/issues/4965),
+  [#4965](https://github.com/wekan/wekan/issues/4965): the card "add members" popup snapshotted the board's member list
+  **once** when it opened, so a member added to the board afterwards (or whose user document finished loading just after
+  the popup opened) did not appear until the popup was reopened. The popup now derives its candidate list **reactively**
+  (it stores only the filter term and re-reads `board.activeMembers()` on each render), so newly-added members show up
+  without reopening. No change to `activeMembers()` itself (its deleted-user filtering is unchanged).
+- [Editing a linked card you cannot write to failed silently](https://github.com/wekan/wekan/issues/5809),
+  [#5809](https://github.com/wekan/wekan/issues/5809): a linked card whose target lives on a board the user cannot
+  write to (e.g. a private board) rejected title/description edits at the server allow rule, but the card-detail edit
+  handlers had no error handling, so the edit just vanished with no feedback. The title and description submit handlers
+  now catch the failure and show the error (mirroring the existing label-color handler), so the user sees why the edit
+  did not save. (No automated regression — surfacing a permission denial across a private linked board is a UX/error
+  path that is not cleanly reproducible in the test harness.)
+- **Performance: copying a card with many checklist items took minutes** ([#5688](https://github.com/wekan/wekan/issues/5688)).
+  `Checklist.copy()` duplicated each checklist item with the hooked `insertAsync`, so collection-hooks fired each item's
+  `after.insert` — every one doing a `getCard` and inserting an `addChecklistItem` activity. Copying a card with ~100
+  items meant ~100+ activity inserts (plus per-item DB round-trips), taking minutes and spiking CPU. The copy now uses
+  `.direct` for the checklist and its items (skipping the per-item activity hooks — pure churn for a wholesale copy) and
+  sets `boardId` itself, the same approach as the `cardRemover` delete path. Copy regression (checklist + all items
+  duplicated) in `tests/playwright/specs/17-rest-api.e2e.js`.
+- **Copying a card to another board orphaned its subtasks on the old board**
+  ([#5347](https://github.com/wekan/wekan/issues/5347) data symptom): `Card.copy()` re-pointed each subtask's
+  `parentId` to the copied card but left its `boardId`/`swimlaneId`/`listId` pointing at the **source** board — so a
+  cross-board copy created subtasks stranded on the original board whose parent lives on another board (and it mutated
+  the cached source docs in place). Copied subtasks are now re-homed onto the destination board/swimlane/list alongside
+  the copied parent, via a fresh object (no cache mutation). Cross-board copy regression in
+  `tests/playwright/specs/17-rest-api.e2e.js`. (This fixes the orphaned-cross-board-subtask data symptom noted in
+  #5347; the separate "Maximum call stack" error there is not yet root-caused — see the issue.)
+- [Error when clicking the notification icon](https://github.com/wekan/wekan/issues/5325),
+  [#5325](https://github.com/wekan/wekan/issues/5325): a notification whose referenced activity no longer existed (its
+  card/board was deleted) left an entry whose `activityObj` was null, and the notifications drawer dereferences it
+  (`activity.user`, `activity._id`, …) — so one orphaned notification threw and broke the whole popup. `user.notifications()`
+  now drops entries whose activity can't be resolved. (No automated regression — an orphaned-notification state is not
+  cleanly reproducible in the harness; the fix is a self-evident filter.)
+- [Deleting a custom field from a board could throw](https://github.com/wekan/wekan/issues/5390),
+  [#5390](https://github.com/wekan/wekan/issues/5390): removing a (multi-board) custom field from one board runs a
+  `before.update` hook that logged a `setCustomField` activity by reading `(await getActivity({customFieldId})).value` —
+  with **no null guard**, so a field that never had a value set (no such activity) threw `Cannot read properties of
+  undefined` and aborted the removal. The lookup is now guarded. ([server/models/customFields.js](server/models/customFields.js))
+- [Board "show checklists on minicard" setting had no effect](https://github.com/wekan/wekan/issues/5565),
+  [#5565](https://github.com/wekan/wekan/issues/5565): the sidebar toggle writes `board.allowsChecklistsOnMinicard`, but
+  the minicard render checked a different, UI-less field (`board.allowsChecklistAtMinicard`), so enabling the board-wide
+  setting never showed checklists on minicards. The minicard now reads the field the toggle actually sets.
+  ([client/components/cards/minicard.js](client/components/cards/minicard.js))
+
+and these issues are verified resolved in current code (could not reproduce / no error observed here; re-test on the
+reporter's data requested):
+
+- [#5388](https://github.com/wekan/wekan/issues/5388) (collapsing a list affected all users): list collapse state is
+  now stored **per user** (`profile.collapsedLists[boardId][listId]`, or a cookie for logged-out users) instead of a
+  shared `collapsed` field on the list document — so one user collapsing a list no longer changes it for everyone
+  (resolved by commit 414b8dbf4, which postdates the report; mirrors the per-user swimlane-collapse handling).
+- [#3894](https://github.com/wekan/wekan/issues/3894) (board import failed when the JSON's `members` referenced a user
+  not present in `users`): the importers already guard a missing user entry (skip the dangling member instead of
+  dereferencing `undefined`) in `client/components/import/wekanMembersMapper.js`, `models/wekanmapper.js` and
+  `models/wekanCreator.js`, with a dedicated test (`tests/wekanCreator.inconsistent.test.js`).
+- [#5411](https://github.com/wekan/wekan/issues/5411) (non-super-admin board admins could not see the add-member "+"):
+  the sidebar add-member button is gated on `currentUser.canInviteToBoard`, which returns `true` for any board admin
+  (`board.hasAdmin`), and the secure default invite roles include `board-admin`. So board admins (not just site admins)
+  see the "+". This was resolved by the "Allow Invite to Board" roles feature (commit c956ab5a4), which postdates the
+  report; a site admin can additionally let other board roles invite via Admin Panel → People → Roles.
+- [#5627](https://github.com/wekan/wekan/issues/5627) (rules not copied when creating a board from a template):
+  `board.copy()` already copies the board's rules + triggers + actions (remapping `boardId` and the rule's
+  `triggerId`/`actionId`); the report predates that code. Now covered by the #5592/#5627 copy regression in
+  `tests/playwright/specs/17-rest-api.e2e.js` so it cannot silently regress.
+- [#5630](https://github.com/wekan/wekan/issues/5630) (cannot save Admin Panel Layout settings): already fixed — the
+  Layout save handler had referenced form fields that were moved to the separate Accessibility settings template,
+  throwing before the save; the current `js-save-layout` handler no longer reads those fields.
+- [#5117](https://github.com/wekan/wekan/issues/5117) (a TeX formula rendered both an SVG and a `<math>` tag): already
+  fixed by migrating math rendering from `markdown-it-mathjax3` (which emitted both SVG and MathML) to **Temml**, which
+  outputs MathML only (`packages/markdown/src/template-integration.js`).
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.69 2026-06-23 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Can't edit a card's members in the UI after removing them via the REST API](https://github.com/wekan/wekan/issues/3697),
+  [#3697](https://github.com/wekan/wekan/issues/3697): clearing a card's `members` (or `assignees`) over REST left the
+  field uneditable in the UI. The card PUT handler guarded with `if (req.body.members)` — falsy for the two natural
+  clear payloads (`null` and `""`) — so "remove the last member" was a silent no-op, and its string branch was written
+  to store `null` rather than `[]`; a card with `members: null` then breaks UI code that treats it as an array. The
+  handler now uses an `!== undefined` guard plus a shared coercion helper so any clear payload (`null` / `""` / `[]`)
+  stores a clean `String[]` (never null), a single id is wrapped into an array, and stray non-string entries are
+  dropped; `getMembers()`/`getAssignees()` also coerce a legacy `null` to `[]` on read so existing corrupted documents
+  edit cleanly. Pure logic in `models/lib/restArrayParam.js` with a Meteor-free Node unit test
+  (`tests/restArrayParam.test.cjs`, `npm run test:unit:node`, incl. a **negative test** reproducing the old
+  null-writing logic), plus a REST regression in `tests/playwright/specs/17-rest-api.e2e.js`.
+- [Can't create a card with no member via the REST API](https://github.com/wekan/wekan/issues/2875),
+  [#2875](https://github.com/wekan/wekan/issues/2875): the card-create endpoints (`POST .../cards` and
+  `POST .../cards/bulk`) wrote `req.body.members`/`assignees` straight to the insert with no normalization — the
+  create-side twin of #3697 — so a `null`/`""` payload persisted as `null` (breaking later UI editing). Both handlers
+  now run the same `coerceRestArrayParam` helper: the field is omitted when not provided (so the schema default `[]`
+  applies), any clear payload becomes `[]` (never null), and a single id is wrapped into an array. REST regression in
+  `tests/playwright/specs/17-rest-api.e2e.js`.
+- [Board created through the REST API shows in the API but not in the browser UI](https://github.com/wekan/wekan/issues/5650),
+  [#5650](https://github.com/wekan/wekan/issues/5650): `POST /api/boards` set the board's sole member's `userId` from
+  `req.body.owner` with no fallback, so a request that omits `owner` created a board whose only member had
+  `userId: undefined`. The board-list publication matches `members.$elemMatch: { userId, isActive: true }`, which can
+  never match an undefined id — so the board was returned by the REST API but invisible in the browser. `owner` now
+  falls back to the authenticated caller (`req.body.owner || req.userId`), mirroring the Meteor create method. REST +
+  DB regression in `tests/playwright/specs/17-rest-api.e2e.js`.
+- [Copying a card to another board left its comments on the wrong board](https://github.com/wekan/wekan/issues/5166),
+  [#5166](https://github.com/wekan/wekan/issues/5166): `CardComments.copy()` cloned a comment but only changed its
+  `cardId`, so a card copied to another board produced comments that kept the **source** board's `boardId`. Comment
+  permission checks key off the comment's `boardId`, so edit/delete on a copied comment was validated against the wrong
+  board, and any board-scoped query saw it on the old board. `copy()` now also sets the destination `boardId` (the
+  author `userId` is intentionally preserved). Cross-board copy regression in
+  `tests/playwright/specs/17-rest-api.e2e.js`. *Note:* the related "wrong author shown" symptom is a separate display
+  issue — when a copied comment's author is **not a member of the destination board**, their user document isn't
+  published there, so the UI can't resolve the name; adding those users to the board resolves it. A broader fix
+  (publishing comment authors' minimal profile on boards where their comments appear) is left as a follow-up.
+- [Exception "Removed nonexistent document" when deleting a card detail](https://github.com/wekan/wekan/issues/3252),
+  [#3252](https://github.com/wekan/wekan/issues/3252) (partial): deleting a comment or checklist/checklist-item could
+  throw `Removed nonexistent document` on the client. The delete handlers called `Collection.remove(_id)` directly, but
+  under heavy archive/delete churn the target doc can already have been evicted from the client's Minimongo cache, and
+  removing a missing `_id` throws. The comment / checklist / checklist-item delete handlers now check the doc still
+  exists in the local cache before removing it
+  (`client/components/activities/comments.js`, `client/components/cards/checklists.js`). The server-side
+  `before.remove` hooks were already hardened to guard + log instead of throwing. (No automated regression for the
+  thrown exception — the eviction race is not deterministically reproducible; the guard itself is a self-evident
+  findOne-then-remove.) The **high CPU on bulk delete** the issue also reports is reduced by the cascade change below;
+  the remaining cost is on the **archive** path (a bulk update, not a delete) and is a separate follow-up.
+- **Performance: deleting a card no longer fans out per-child activity churn** ([#3252](https://github.com/wekan/wekan/issues/3252),
+  [#5322](https://github.com/wekan/wekan/issues/5322)). `cardRemover` removed a card's checklist items, checklists and
+  comments with the hooked `removeAsync`, so collection-hooks fired each child's `before.remove` **once per document** —
+  every one doing a `getCard` and inserting an activity (e.g. a `removedChecklistItem` per item), which then triggered
+  the notification + publication observers. Deleting (or bulk-deleting) a card with many children produced an
+  activity-insert storm and pegged the CPU. `cardRemover` now removes those children with `.direct` (skipping the
+  per-child hooks — they only logged activities that are unviewable once the card is gone) and clears **all** of the
+  card's activities in a single bulk op, which also removes the activities that a delete previously left orphaned. The
+  `deleteCard` activity is still logged afterward (so the outgoing webhook fires), and attachments still go through the
+  normal remove so their files are deleted. Cascade + activity-cleanup regression (also a negative test) in
+  `tests/playwright/specs/17-rest-api.e2e.js`.
+
+and this issue is verified resolved in current code (could not reproduce / no error observed here; re-test on the
+reporter's data requested):
+
+- [#2292](https://github.com/wekan/wekan/issues/2292) (archiving a swimlane appeared to delete all its cards):
+  `Swimlane.archive()` ([models/swimlanes.js](models/swimlanes.js)) only sets `archived: true` on the swimlane — it
+  does **not** touch or delete the cards, and `restore()` brings the swimlane and its cards back. While a swimlane is
+  archived its cards are merely hidden from the board view (board queries filter to `archived: false` swimlanes), not
+  lost — the v2.27-era cascade described in the report no longer happens. (A dedicated way to view an archived
+  swimlane's cards before restoring would be a separate UX improvement.)
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.68 2026-06-23 WeKan ® release
+
+This release adds the following updates and developer tooling:
+
+- **rebuild-wekan.sh / rebuild-wekan.bat: multi-forge mirroring.** Two new menu options: *Install forge CLI
+  tools* (installs the gh-like CLIs `gh`, `glab`, `tea`, `git-bug`, and the unified [`forge`](https://github.com/git-pkgs/forge)
+  via the detected package manager / `go install`), and *Mirror repo GitHub → GitLab/Codeberg/Forgejo/Gitea*. The
+  mirror flow selects source + target by number (e.g. `1 3` = GitHub → Codeberg), pushes all branches/tags with
+  `git push --mirror`, then runs a cross-platform Node engine (`tools/forge-mirror.js`) that syncs only the issues and
+  pull requests **missing** at the target (driving the authenticated CLIs; de-duplicated by title; dry-run by default)
+  and converts the GitHub Actions workflow syntax for the target: an annotated `.forgejo/workflows/` copy that flags
+  the known Forgejo/Gitea incompatibilities (`hashFiles()`, `permissions:`, `continue-on-error:`, complex `runs-on:`),
+  or for GitLab a `.gitlab-ci.yml` scaffold plus a guide pointing at GitLab's official converter skill.
+- **Updated Meteor to 3.5-rc.2** ([#6413](https://github.com/wekan/wekan/pull/6413), thanks harryadel;
+  merged in [d5be28bc2](https://github.com/wekan/wekan/commit/d5be28bc2)).
+- **Dependency updates** (merged the low-risk Dependabot PRs that pass build + unit tests):
+  `@swc/helpers` 0.5.22 → 0.5.23 ([#6416](https://github.com/wekan/wekan/pull/6416)) and the test-only
+  `sinon` 21 → 22 ([#6418](https://github.com/wekan/wekan/pull/6418)). The major **production** bumps were held back
+  for individual testing rather than merged: `jquery` 3 → 4 ([#6417](https://github.com/wekan/wekan/pull/6417),
+  risks Blaze / jQuery-UI compatibility), `@babel/runtime` 7 → 8 ([#6415](https://github.com/wekan/wekan/pull/6415)),
+  and `@tweedegolf/sab-adapter-amazon-s3` 1 → 3 ([#6414](https://github.com/wekan/wekan/pull/6414), S3 storage is not
+  exercised by CI).
+- **rebuild-wekan.sh: run the Chromium / Firefox / WebKit Playwright matrix with or without Docker.** The
+  WebKit-only Docker support is generalized so any browser can run natively or inside the official Playwright Docker
+  image, selectable via `WEKAN_PLAYWRIGHT_DOCKER=1/0` (whole matrix) or per-browser
+  `WEKAN_CHROMIUM_DOCKER` / `WEKAN_FIREFOX_DOCKER` / `WEKAN_WEBKIT_DOCKER`. Defaults are unchanged (Chromium/Firefox
+  native, WebKit via Docker on Linux arm64). Adds an "Install Playwright browsers" menu item that does
+  `playwright install --with-deps` and/or pulls the Playwright Docker image.
+  [commit c3e6d97bd](https://github.com/wekan/wekan/commit/c3e6d97bd).
+- **E2E reliability:** the Playwright suite was red on `main` because the **rspack client JS bundle was not being
+  served** by `meteor run` (dev mode) in headless CI — browser requests for the bundle returned the SPA HTML fallback
+  (`Unexpected token '<'`), so Meteor never initialised and all ~212 specs timed out in `waitForMeteor` (confirmed: a
+  CI readiness probe got an empty response from the bundle URL for 10 minutes straight). The CI E2E job now runs
+  against a **production build** (`meteor build` → `node bundle/main.js`), where the client JS is baked into the bundle
+  and served statically by the Meteor server — no rspack dev server, no chunk-serving race. The production run also
+  needed two env vars the dev runner sets but CI did not: `WRITABLE_PATH` (without it `server/00checkStartup.js` exits
+  before listening) and `WITH_API=true` (without it every REST-API spec gets HTML instead of JSON). The suite is also
+  **sharded 2× per browser** (6 parallel jobs) to cut wall-clock time, and the per-spec `waitForMeteor` timeout was
+  raised 30s → 60s. **Confirmed:** the suite went from *0 tests running* (all timed out) to ~**119/120 passing per
+  shard**. The handful of residual specs were then triaged locally: two were **real product bugs** (below — the
+  sort-cards button and Template Container deletion); the RTL/LTR i18n-text spec was CI-only timing on the production
+  bundle, made robust by waiting for the async result instead of reading it immediately. Two specs are **quarantined**
+  (`test.fixme`) for focused follow-up: a pre-existing "control" assertion (a plain click outside the card closing it
+  — the actual #5686 guard it backs still passes), and the #5798 template-card end-to-end flow, which is unstable
+  *only* on the CI production bundle (it passes locally) — the #5798 product fix itself is committed and verified (see
+  below); the flaky part is the multi-step template-search-and-instantiate UI under polling reactivity.
+- **Sort-cards button stayed clickable after sorting.** In the board header the `js-sort-cards` class (which carries
+  the handler that opens the sort popup) was *replaced* by `emphasis` once a sort was active, so after sorting once the
+  button was dead — the popup could not be reopened to change or clear the sort. It now keeps `js-sort-cards` and only
+  *adds* `emphasis` when active.
+- **Deleting a Template Container board threw and aborted.** `boardRemover` cleared the user's template profile
+  pointers with `$unset`, but those four `profile.*` fields were non-optional `String` in the schema, so SimpleSchema
+  rejected the update ("Templates board ID is required") and the whole board removal failed. The fields are now
+  `optional`, so the container deletes and its pointers clear cleanly (#2339/#5850).
+- **Regression tests** for several of the fixes below, **each negative-tested** (verified to fail on the pre-fix
+  code): the attachment filename truncation (#6412) has a Meteor-free Node unit test
+  (`tests/filenameSanitizer.test.cjs`, `npm run test:unit:node`) plus the `meteor test` mocha test, and Playwright
+  specs (`tests/playwright/specs/36-fixed-bug-regressions.e2e.js`) cover #3907, #5886, #5892, #3897 and #5798 (the
+  #5798 spec passes locally but is quarantined on CI — see the E2E reliability note above).
+
+and fixes the following bugs:
+
+- [Cannot delete some boards from Archive](https://github.com/wekan/wekan/issues/4255),
+  [#4255](https://github.com/wekan/wekan/issues/4255): the Archive listed boards the user could not actually delete —
+  clicking *Delete* did nothing and the console showed `remove failed: Access denied`. The `archivedBoards`
+  publication scoped its list to admin members (`isAdmin: true`) but ignored the **active** flag, whereas the
+  `Boards.remove` permission (`hasAdmin()`) requires an **active** admin (`isActive: true && isAdmin: true`). A user
+  who was an admin on a board but no longer active still saw it in the Archive, then hit "Access denied" on delete.
+  The publication now matches the remove permission exactly (`isActive: true && isAdmin: true`), so the Archive only
+  lists boards the user can really delete.
+- [Weird moving card bug — cross-board move could silently lose a card](https://github.com/wekan/wekan/issues/5874),
+  [#5874](https://github.com/wekan/wekan/issues/5874) (data loss): rarely, moving a card from board A to board B left
+  it in a **corrupt half-moved state** — the card's `boardId` became B but its `listId`/`swimlaneId` still belonged to
+  board A. The reporter saw exactly this: the card existed in board B's JSON but with board A's list/swimlane, so it
+  was invisible in every normal view on both boards and clicking its link reopened board A. **Root cause:** the
+  Move/Copy-card dialog resolves the destination board's swimlanes and lists from the *client* Minimongo cache, which
+  can still be empty at the moment the user clicks "Done" — the destination board's `publishComposite('board')` data
+  has not finished merging — so the dialog keeps the *source* board's `swimlaneId`/`listId` while the `boardId` is
+  already the destination. (`setFirstSwimlaneId()`/`setFirstListId()` swallow the lookup miss in a silent
+  `try/catch`, leaving the stale ids in place.) Several other callers — drag reorder, multi-card move in the filter
+  sidebar, board-action rules, the REST API — can in principle produce the same mismatch. **Fix:** a new server-side
+  `Cards.before.update` guard (`enforceCardBoardConsistency`, registered first so the corrected modifier is what every
+  later hook and the persisted write see) runs whenever a card's `boardId` changes and rewrites the pending update so
+  the swimlane/list always belong to the destination board, falling back to that board's default swimlane and first
+  list when they don't. It runs on the server, where the destination board's swimlanes/lists are always present
+  regardless of client cache state, and is **corrective only** — a cross-board move whose targets already belong to the
+  destination board is left untouched, and a same-board reorder is ignored. The decision logic was extracted into a
+  pure, dependency-injected module (`models/lib/cardBoardConsistency.js`) with a Meteor-free Node unit test
+  (`tests/cardBoardConsistency.test.cjs`, `npm run test:unit:node`), including a **negative test** asserting that the
+  raw unguarded modifier is exactly the #5874 corrupt state.
+- [Responsive views still seem broken](https://github.com/wekan/wekan/issues/6419),
+  [#6419](https://github.com/wekan/wekan/issues/6419) (partial): the most concrete, "stops-work" part is fixed — on
+  mobile an **open card could not be closed** because the card-details overlay (z-index 100) sat *below* the app
+  header bar (`#header-main-bar`, z-index 1000), so the header covered the close (X) button. The full-screen mobile
+  card now uses z-index 1100 — above the header, still below popups (2000+) so card menus/date pickers open over it.
+  Mobile header action icons were also enlarged and **verified on a real iPhone profile via Playwright screenshots**
+  (`tests/playwright/mobile-shot.js`): the top bar and the board action bar buttons were only ~28–32px tall with a
+  13–15px font (below the comfortable ~44px touch-target / 16px readable minimum). They are now ~44px tall with a 16px
+  font, applied **by viewport width** (`@media (max-width: 800px)`) so they work on any phone without toggling
+  Desktop/Mobile mode — the board header renders as a clean row of large, icon-only buttons.
+  **Two deeper root causes were then found and fixed (verified on an iPhone profile via Playwright screenshots):**
+  (1) **No viewport meta tag.** WeKan's server-rendered `<head>` (`server/lib/customHeadRender.js`) had no
+  `<meta name="viewport">`, so mobile browsers laid the page out at their default ~980px virtual width and scaled it
+  down — making the whole UI tiny, reporting `window.innerWidth === 980` on a 390px phone, and preventing every
+  `@media (max-width: 800px)` rule (and the width-based mobile detection) from ever matching. Added
+  `width=device-width, initial-scale=1, viewport-fit=cover` (user zoom left enabled for accessibility).
+  (2) **`profile.mobileMode` defaulted to `false`.** The user schema set `mobileMode: false` on *every* user, so
+  `Utils.getMobileMode()` always returned the profile value and the auto-detection below it was dead code — every user
+  was locked to desktop-mode even on a phone. The field is now `optional` (no default), so it stays unset until the
+  user explicitly toggles; auto-detection was also rewritten to use reliable `matchMedia` width/pointer queries instead
+  of fragile user-agent sniffing (cf. **Meteor [#12421](https://github.com/meteor/meteor/issues/12421)**, where Mobile
+  Safari UA version parsing was wrong — this instance reports `isModern: true`, so #12421 is not the cause here, but it
+  is the same class of UA-detection fragility this rewrite avoids), and a `matchMedia` listener now re-applies
+  mobile-mode on resize/orientation when the user has no explicit preference. Net: phones auto-detect mobile mode at
+  the correct device width, with large tappable icons, no manual toggle.
+  Also fixed the **Admin Panel's secondary top bar** in small-width mode: those tab buttons (Settings / People /
+  Reports / Attachments / Translation / Info) are rendered inside `#header-quick-access`, whose mobile rules scale all
+  text/icons 2× — so the admin tabs rendered at 28px text / **56px icons**, huge and overlapping the "Version" label.
+  A scoped override caps them at a normal touch size (15px text / 18px icons).
+  And fixed **overlapping text in the Admin Panel settings body** on phones: the layout forced a side-by-side
+  menu+content row "even on narrow windows", so the ~127px side menu and the content were crammed together and the long
+  (e.g. Finnish) section labels overflowed the menu box rightward, visually overlapping the content. On small screens
+  the layout now **stacks** — a full-width compact section menu on top, full-width settings content below — verified via
+  iPhone-profile screenshots.
+- [Missing voting buttons](https://github.com/wekan/wekan/issues/6420),
+  [#6420](https://github.com/wekan/wekan/issues/6420): the `showVotingButtons` (and `showPlanningPokerButtons`)
+  helpers in `cardDetails.js` referenced an **undefined `currentUser`** variable, so every card render threw
+  `ReferenceError: currentUser is not defined` and the vote / planning-poker buttons silently disappeared. The helpers
+  now resolve `currentUser` via `ReactiveCache.getCurrentUser()` and null-guard the board-member check. Regression test
+  in `tests/playwright/specs/36-fixed-bug-regressions.e2e.js`.
+- [ENAMETOOLONG: very long attachment filenames could not be migrated to filesystem storage](https://github.com/wekan/wekan/issues/6412),
+  [#6412](https://github.com/wekan/wekan/issues/6412): attachment filenames were sanitized for path traversal but
+  never length-limited, so a very long name (worse with multibyte UTF-8 like German umlauts) produced an on-disk
+  `<id>-<version>-<name>` component exceeding the filesystem's 255-byte limit and failed with `ENAMETOOLONG`.
+  `sanitizeFilename` now truncates to 200 UTF-8 bytes (measured in bytes, never splitting a codepoint) while
+  preserving the file extension. Done:
+  [commit 5e26cf004](https://github.com/wekan/wekan/commit/5e26cf004).
+- [Card "added label" history was deleted whenever the card was moved](https://github.com/wekan/wekan/issues/3907),
+  [#3907](https://github.com/wekan/wekan/issues/3907): `updateActivities` removed all `addedLabel` activities whenever
+  `boardId` appeared in a card update, but `Card.move()` always re-sets `boardId` (even moving within the same board),
+  so every move wiped the card's label history (data loss in the `activities` collection). The removal/remap now only
+  runs on an actual board change (comparing the pre-update `boardId` with the new value). Done:
+  [commit 6382ad6a8](https://github.com/wekan/wekan/commit/6382ad6a8).
+- [Public boards did not fully load longer lists when viewed as a guest](https://github.com/wekan/wekan/issues/3897),
+  [#3897](https://github.com/wekan/wekan/issues/3897): a guest (no logged-in user) hit
+  `getCurrentUser().isBoardAdmin()` in template helpers, throwing `Cannot read property 'isBoardAdmin' of null` and
+  aborting the Tracker render so lists stopped loading partway. The helpers now use optional chaining
+  (`getCurrentUser()?.isBoardAdmin()` / `?.isWorker()`), which is falsy for guests instead of throwing. Done:
+  [commit fc0fe0b61](https://github.com/wekan/wekan/commit/fc0fe0b61).
+
+- [Changed order of lists is not persisted](https://github.com/wekan/wekan/issues/5997),
+  [#5997](https://github.com/wekan/wekan/issues/5997): the server side was verified working end-to-end (a DDP call to
+  `updateListSort` reorders the `lists` collection and the `sort:1` query returns the new order), so the regression was
+  client-side. `saveSorting` read the neighbouring lists with `.prev('.js-list')` / `.next('.js-list')`, which jQuery
+  only matches when the sibling is *immediately* adjacent; the lists container also renders the add-list composer and a
+  `+cardDetails` element (when a card is open) between lists, so an interspersed non-list sibling made `calculateIndex`
+  mis-detect the first/last position and compute a wrong sort. Now uses `prevAll/nextAll('.js-list').first()`. Done:
+  [commit 1165c9b6d](https://github.com/wekan/wekan/commit/1165c9b6d).
+- [Cards made from a template link to the template itself](https://github.com/wekan/wekan/issues/5798),
+  [#5798](https://github.com/wekan/wekan/issues/5798): a card instantiated from a template was copied with the
+  *templates* board id (the template-search source), so it had `boardId` = templates board. It still showed in the
+  target list (the list renders cards by `listId` and the templates board is subscribed), but clicking it navigated to
+  the templates board instead of opening the card. It is now copied into the current board. Done:
+  [commit 097806984](https://github.com/wekan/wekan/commit/097806984).
+- **Creating a card from a template threw "There is no current view" and created no card.** Found while adding the
+  #5798 regression test: the searchElement popup's minicard-click handler called `tpl.getSortIndex()` (which reads
+  `Template.currentData()`) *after* `await tpl.board.getNextCardNumber()`, and Blaze's synchronous current-view context
+  is lost across an `await`. The sort index is now computed before the await. Done:
+  [commit 612ed3e51](https://github.com/wekan/wekan/commit/612ed3e51).
+- [Lists do not collapse correctly with the Modern theme](https://github.com/wekan/wekan/issues/5892),
+  [#5892](https://github.com/wekan/wekan/issues/5892): the list-width rework (#6409) added a persistent
+  `.list[style*="--list-width"] { width: … !important }` rule that overrode the 30px collapsed width, so a list with a
+  custom width stayed full width when collapsed. Collapsed lists are now excluded from that rule and the 30px width is
+  `!important`. Done: [commit 5e9b2bccd](https://github.com/wekan/wekan/commit/5e9b2bccd).
+- [Sort by due date is not remembered as the default view](https://github.com/wekan/wekan/issues/5886),
+  [#5886](https://github.com/wekan/wekan/issues/5886): the card sort was kept only in an in-memory Meteor `Session`
+  variable, which resets on page reload, so the chosen sort reverted to the default. The sort is now persisted to
+  `localStorage` and restored on load (sorting and the sort icon). Done:
+  [commit 6aad946bc](https://github.com/wekan/wekan/commit/6aad946bc).
+- [Change card's parent shows no cards the first time you select a board](https://github.com/wekan/wekan/issues/3745),
+  [#3745](https://github.com/wekan/wekan/issues/3745): `Template.cardMorePopup`'s `cards()` helper queried
+  `ReactiveCache.getCards({ boardId })` from client minimongo the instant a board was picked, before that board's card
+  subscription had loaded, so the parent-card list was empty the first time (and only worked on reopen, once the data
+  had arrived). It now subscribes with an `onReady` callback and a `parentBoardReady` reactive flag, and the list only
+  renders once the subscription is ready — the same subscription-readiness pattern as the #5798 fix. Done:
+  [commit f999b9e74](https://github.com/wekan/wekan/commit/f999b9e74).
+
+and these issues are verified resolved in current code (could not reproduce / no error observed here; re-test on the
+reporter's data requested):
+
+- [#3826](https://github.com/wekan/wekan/issues/3826) (cannot reorder cards in a list whose cards have parents): built a
+  **drag-sort reproduction harness** (`tests/playwright/helpers/dragSort.js`) that drives jQuery-UI sortable with a
+  realistic stepped mouse gesture (Playwright's `dragTo()` does not trigger it), plus a regression spec
+  (`tests/playwright/specs/37-card-drag-sort.e2e.js`). Dragging a sub-task card (one with a `parentId`) to a new
+  position in its list **persists** the new order both with a few cards and at 15 cards — it does not revert.
+- [#1289](https://github.com/wekan/wekan/issues/1289) (card with a deleted member user): verified via the Playwright
+  harness — a card whose `members`/`assignees` reference a non-existent user renders its board minicard and opens the
+  card detail with **zero console errors**, so `userAvatar` null-guards missing users correctly.
+- [#1389](https://github.com/wekan/wekan/issues/1389) (edge-to-edge URL makes the description uneditable): the card
+  detail has an explicit edit (pencil) control rather than relying on clicking the rendered text, so a full-width link
+  no longer blocks editing.
+- [#5808](https://github.com/wekan/wekan/issues/5808) (bidirectional cross-board card link makes both cards hang on
+  open): a Playwright repro that mutually links two cards across two boards opens the card detail in ~1s with no errors
+  and no redirect loop — the link only navigates on an explicit click, not on open, so there is no auto-bounce.
+- [#5757](https://github.com/wekan/wekan/issues/5757) (card activities jump to a recent date after changing the due
+  date): activity `createdAt` is set once in the `Activities.before.insert` hook, nothing bulk-updates it, and the UI
+  renders `activity.createdAt` directly — so changing a due date inserts one new `a-dueAt` activity and cannot re-date
+  existing ones.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.67 2026-06-21 WeKan ® release
+
+This release fixes the following bugs:
+
+- Updated to Meteor 3.5-rc.2.
+
+- [Reworked confusing and unreliable list widths](https://github.com/wekan/wekan/issues/6409),
+  [#6409](https://github.com/wekan/wekan/issues/6409): a list now has **one** width instead of the old
+  "min width / max width / automatic" trio, and it reliably persists across reloads (the render now drives the
+  `--list-width` CSS variable the styles actually use, so a width no longer reverts to `auto` after reload).
+  A new board setting **Personal list widths** chooses the scope:
+  - **Off (default) — Shared:** the width lives on the list (`lists.width`), is the same for everyone on the board,
+    and only members with write access can change it (read-only/comment-only members no longer see the resize
+    handle). Shared widths are included in board **export/import** (the importer previously dropped `lists.width`;
+    it now preserves width, color and collapsed state, and the board's list-width scope).
+  - **On — Personal:** each user keeps their own widths (profile, or localStorage when not logged in), falling back
+    to the shared width then the default. The per-list popup is simplified to a single width value plus an
+    **Auto list width** toggle (fit lists to content); the advanced per-list min/max pixel options were removed.
+    Auto-width follows the same Shared/Personal scope (per-board for everyone, or per-user) and is carried through
+    export/import. Documented in `docs/Features/Lists/Lists.md`.
+
+- `rebuild-wekan.sh` / `rebuild-wekan.bat` menu option 2 ("Build WeKan") now also clears the rspack dev-build caches
+  (`_build` and `node_modules/.cache`) in addition to `node_modules` / `.meteor/local` / `.build`, so the next
+  `meteor run` recompiles from scratch instead of occasionally serving stale modules after a `git` checkout/merge.
+- `rebuild-wekan.sh` / `rebuild-wekan.bat` now give the Meteor build tool and Node a larger heap by default
+  (`TOOL_NODE_FLAGS` and `NODE_OPTIONS` = `--max-old-space-size=8192`) for every dev-run, test and build option, so
+  long development sessions and test runs no longer crash with "FATAL ERROR: ... JavaScript heap out of memory".
+  Both honor an existing value, so you can lower it on machines with less RAM.
+
+- [Fixed editing the 2nd/3rd organization or team in Admin Panel › People always showing the FIRST one](https://github.com/wekan/wekan/issues/6411),
+  [#6411](https://github.com/wekan/wekan/issues/6411): on `/people`, clicking *Edit* on any organization or team filled
+  the form with the first one's values (so you could never edit the others). The edit/settings popups are opened from
+  the row with data context `{ org }` / `{ team }`, but their helpers read `this.orgId` / `this.teamId` (undefined
+  there) and called `getOrg(undefined)` / `getTeam(undefined)`, which `findOne({})` resolves to the first document.
+  The popup helpers, the save handlers and the delete (settings) handlers now resolve the clicked row's id from the
+  `{ org }` / `{ team }` context. Verified against a running instance (each org/team now edits its own values).
+
+- **Fixed boards not rendering at all (blank board view) after the mongodb/bson 7.3.0 dependency bump.** bson 7.x runs
+  `const { startupSnapshot } = globalThis?.process?.getBuiltinModule('v8') ?? {}` at module-load time; the optional
+  chaining stops before the *call*, so in the browser — where a partial `process` polyfill exists but has no
+  `getBuiltinModule` — it threw `TypeError: getBuiltinModule is not a function` while evaluating
+  `client/components/cards/attachments.js` (`import { ObjectId } from 'bson'`). That aborted the client bundle
+  bootstrap part-way through `client/imports.js`, so every feature imported after it (notifications, swimlanes,
+  rules, …) was never registered and the board view died with `No such template: notifications`. Added a tiny browser
+  shim (`client/lib/bsonBrowserShim.js`, imported first in `client/main.js`) that gives the browser `process` a no-op
+  `getBuiltinModule`, so bson takes its intended `?? {}` fallback. New unit tests
+  (`client/lib/tests/bsonBrowserShim.tests.js`); also hardened the #5686 Playwright spec to run against a rendering
+  board. ([PR #6410](https://github.com/wekan/wekan/pull/6410))
+
+- [Fixed REST API returning HTTP 500 with a stack trace for an invalid request](https://github.com/wekan/wekan/pull/6406),
+  [#5804](https://github.com/wekan/wekan/issues/5804): posting a comment without the required `comment` parameter (or
+  to a board that does not exist) returned an HTTP 500 error page. The schema-validation error thrown on insert is a
+  circular object (`SimpleSchemaValidationContext` → `SimpleSchema` → …), and serializing it crashed the response
+  writer (`Converting circular structure to JSON`). Now: the `comment` parameter is validated and a missing/empty one
+  returns **HTTP 400**; an unknown board returns **HTTP 404** (the board-access checks no longer dereference
+  `board.members` of a non-existent board); the JSON response writer is crash-proof (falls back to a safe
+  `{ "error": … }` payload instead of throwing); and REST comment errors now use their real status code instead of
+  `200`. New unit tests in `server/lib/tests/apiResponseHelpers.tests.js`. ([PR #6406](https://github.com/wekan/wekan/pull/6406))
+- [Fixed selecting text in a checklist closing the card](https://github.com/wekan/wekan/pull/6407),
+  [#5686](https://github.com/wekan/wekan/issues/5686): selecting the text of a checklist item and releasing the
+  mouse outside the card detail pane closed the card. The checklist items template stops `mousedown` propagation
+  (for item sorting), so the existing `cardDetailsIsDragging` guard never engaged and the document-level
+  "click outside to close" handler closed the card. The close handler now also keeps the card open whenever a
+  live text selection is anchored inside the card pane (new propagation-independent guard
+  `client/lib/cardCloseGuard.js`), so a deliberate click on empty board space still closes the card. New unit
+  tests in `client/lib/tests/cardCloseGuard.tests.js` and a Playwright regression test in
+  `tests/playwright/specs/34-checklist-text-selection.e2e.js`. ([PR #6407](https://github.com/wekan/wekan/pull/6407))
+- [Fixed list reordering throwing `403 Access denied` for read-only members](https://github.com/wekan/wekan/issues/5462),
+  [#5462](https://github.com/wekan/wekan/issues/5462): read-only / comment-only board members could still drag-reorder
+  lists, which fired a server write that allow/deny rejected with `403 Access denied` (the list then snapped back). Of
+  the three list jQuery-UI sortables in `client/components/swimlanes/swimlanes.js`, one was not gated on
+  `Utils.canModifyBoard()`; it now is, consistent with the other two, plus a defense-in-depth guard so a logged-in
+  user without write access can never persist a reorder (anonymous public-board reordering via localStorage is
+  unaffected). The server already enforced this; the fix stops the unauthorized drag and the console error. New
+  Playwright regression test in `tests/playwright/specs/35-list-sort-permissions.e2e.js`. ([PR #6408](https://github.com/wekan/wekan/pull/6408))
+
+Thanks to GitHub users Atry, mueller-ma and liferadioat for reporting.
+
+# v9.65 2026-06-20 WeKan ® release
+
+This release adds the following updates:
+
+- Issue triage: closed 13 already-fixed Bug issues (with evidence), relabeled ~25 mislabeled feature requests to `Feature` with a "Feature Request:" title prefix, and prefixed ~35 environment-specific reports "Environment specific:" and gave them the `Bug:Environment-specific` label.
+- Audited labels on all 533 open issues for correctness (type, `Feature:Area`, `Targets:`, `Severity:`, etc.).
+- Added 23 missing GitHub labels found by auditing `docs/Login` and `docs/Features` against the issue labels, matching the existing label style and colours (`Feature:*` = `#0052cc`, `Targets:*` = `#fbca04`), and applied them across open and closed issues:
+  - Login methods (`Feature:User-accounts:*`): ADFS, Azure, B2C, Google, Header-Login, Nextcloud, Oracle, Zitadel, Autologin, Accounts-Lockout, Forgot-Password.
+  - Features: `Feature:LaTeX`, `Feature:Mermaid-Diagram`, `Feature:Emoji`, `Feature:Python`, `Feature:Cards:Cover`, `Feature:Cards:Location`, `Feature:Custom-Logo`, `Feature:RTL`, `Feature:Members`, `Feature:Multitenancy`, `Feature:Allow-private-boards-only`.
+  - Platform: `Targets:Apache`.
+
+and adds the following new features:
+
+- [Threaded comment replies](https://github.com/wekan/wekan/commit/bdb8e6254): card comments gain an optional
+  `parentId`; a "Reply" link links a new comment to its parent, rendered with an "in reply to" quote. Initial MVP
+  (single-level visual threading).
+- [Restrict board admins from editing/deleting other users' comments](https://github.com/wekan/wekan/commit/bdb8e6254):
+  new board setting `restrictCommentEditing` (default off). When on, only a comment's author may edit/delete it;
+  enforced server-side via collection hooks.
+- [Visible status of sub-tasks](https://github.com/wekan/wekan/commit/d7ae93bb2): each subtask now shows its current
+  list (prefixed with the board title when on a different board) read-only next to its title.
+- [Drag-and-drop search results into board columns](https://github.com/wekan/wekan/commit/b998246c3): cards in the
+  search-results list can be dragged onto board lists, reusing the existing `card.move()`. MVP: drops append to
+  the end of the target list (no pixel-precise insertion index yet).
+- [Per-user permanent dismissal of the Announcement banner](https://github.com/wekan/wekan/commit/bf75efaef): a user
+  can permanently close the current announcement so it does not reappear on reload/board-switch, until the admin
+  edits the announcement text (which makes it reappear for everyone).
+- [Show how many times a card's due date was changed](https://github.com/wekan/wekan/commit/a8ed326a5): the card detail
+  now displays a "due date changed N times" count (derived from existing `a-dueAt` activities) for deadline
+  accountability.
+- [Restrict adding board members to the same Organization or Team](https://github.com/wekan/wekan/commit/371258a6d):
+  new global admin setting `boardMembersFromSameOrgOrTeamOnly` (default off). When on, a user can only be added to
+  a board if they share an Organization or Team with the inviter or an active board member; enforced server-side in
+  the invite/search paths. Site admins bypass.
+- [Import Google Calendar `.ics` files into board cards](https://github.com/wekan/wekan/commit/0a43d8ac3): MVP,
+  import-only. New dependency-free iCalendar parser (`server/lib/icsImport.js`) maps each `VEVENT` to a card with
+  `startAt`/`dueAt` so events appear on Calendar/Gantt views, plus an `importIcsToBoard` Meteor method and a REST
+  endpoint `POST /api/boards/:boardId/swimlanes/:swimlaneId/lists/:listId/ics` (documented in the OpenAPI spec, with
+  an `importics` example in `api.py`). Two-way Google Calendar sync is not included (see
+  [wekan-ical-server](https://github.com/wekan/wekan-ical-server) for read-only WeKan→calendar export).
+
+and fixes the following bugs:
+
+- [Fixed OIDC/OAuth2 "Log Out" redirecting to the identity provider home page instead of back to Wekan](https://github.com/wekan/wekan/commit/9e50c69eaaec8928b4eb8a122f9cb6f0447464a9).
+  With autologin (`OIDC_REDIRECTION_ENABLED=true`), clicking Log Out redirected to the OAuth2 server URL
+  (for example the Keycloak base URL `https://id.company.com`), which shows an error page for non-admin
+  users. Added the new optional `OAUTH2_LOGOUT_ENDPOINT` setting: when set to the provider's
+  `end_session_endpoint` (Keycloak example `/realms/<realm>/protocol/openid-connect/logout`), Wekan now
+  performs an OIDC RP-initiated logout that ends the identity provider session and returns the user to
+  Wekan (`ROOT_URL`) via `post_logout_redirect_uri`. When unset, logout behaviour is unchanged, so this
+  is backward compatible. For Keycloak 18+, add your Wekan `ROOT_URL` to the client's
+  *Valid post logout redirect URIs*. See [docs/Login/Keycloak/Keycloak.md](https://github.com/wekan/wekan/blob/main/docs/Login/Keycloak/Keycloak.md).
+  Thanks to zambalee and xet7.
+- [Fixed due dates not correctly colour coded](https://github.com/wekan/wekan/commit/086254e10): future due dates
+  more than 48 hours away are now shaded grey (`not-due`) instead of amber (`due-soon`). Root cause was a
+  call to `diff(theDate, now, 'days')` where `'days'` is not a valid unit, so the threshold compared raw
+  milliseconds; replaced with a precise hours-based comparison in a single shared helper.
+- [Fixed due date colour mismatch between list and card detail](https://github.com/wekan/wekan/commit/086254e10):
+  an overdue card now shows red in both the minicard/list and the opened card detail. The card-detail status
+  colours now use `!important` so overdue red overrides the due-date yellow base (matching the minicard), and
+  the colour-decision logic is unified into one shared helper used by both views.
+- [Fixed unable to view all cards by due date](https://github.com/wekan/wekan/commit/b3acbd692): removed the
+  `limit: 100` cap in the `dueCards` publication so all of a user's due cards across boards are shown.
+- [Fixed unable to scroll past the first cards in the Due Cards view on mobile](https://github.com/wekan/wekan/commit/b3acbd692):
+  the due-cards list now has a scoped scroll container with a viewport-relative max height.
+- [Fixed card-detail sub-popups disappearing on mobile](https://github.com/wekan/wekan/commit/5c890baca): assigning
+  a user or setting the due date on touch devices no longer closes the popup (touch events inside the popup no
+  longer bubble to the click-outside close handler on mobile viewports).
+- [Fixed mobile board layout and tiny Home button](https://github.com/wekan/wekan/commit/5c890baca): minicards now
+  render one per row (full width) on narrow screens and the header Home / All Boards button is a proper tap target.
+- [Fixed enormous icons/menus/text after upgrade](https://github.com/wekan/wekan/commit/5c890baca): clamped runaway
+  icon/label sizing on mobile.
+- [Fixed oversized padding/margins and stray ➕ emoji from recent UI changes](https://github.com/wekan/wekan/commit/5c890baca):
+  trimmed excessive padding/margins on mobile; remaining stray plus emojis are tracked for replacement with a
+  Font Awesome icon.
+- [Fixed board-level search not including comments](https://github.com/wekan/wekan/commit/b998246c3): in-board search
+  now matches text inside card comments, consistent with global search.
+- [Fixed "create list" not available in Lists board-view mode](https://github.com/wekan/wekan/commit/c18ae388b): the
+  "Add list" composer now appears in Lists mode (using the board's default swimlane), not only in Swimlanes mode.
+- [Fixed board/list/swimlane numbering breaking first-letter keyboard navigation](https://github.com/wekan/wekan/commit/fe4d2a56f):
+  the move/copy card popups no longer prefix a number to each option, so options start with their name again and
+  digit-named boards are readable.
+- [Fixed missing notification and card-history entry when a new attachment is uploaded](https://github.com/wekan/wekan/commit/f59273508):
+  uploading an attachment now creates an `addAttachment` activity, so card members and subscribers are notified
+  (consistent with attachment removal); previously the activity was never created because the store-strategy
+  upload hook was dead code.
+- [Fixed copying a card selecting all/unnamed labels on the destination board](https://github.com/wekan/wekan/commit/d26d117e3): `Cards.copy()` now applies the same unnamed-label
+  guard as `Cards.move()` and persists the remapped labels onto the inserted card.
+- [Fixed copied card losing its cover ("show as thumb")](https://github.com/wekan/wekan/commit/a0e701708): `coverId` is now remapped to the newly copied
+  attachment instead of pointing at the original (now-unresolvable) attachment id.
+- [Fixed deleting a date on a linked card not taking effect](https://github.com/wekan/wekan/commit/09e9c993e): `unsetReceived/unsetStart/unsetDue/unsetEnd` now
+  resolve the real card id via `getRealId()` (consistent with the `set*` methods) so they update the underlying
+  linked card, not the link placeholder.
+- [Fixed comment-only members being able to archive cards from the UI](https://github.com/wekan/wekan/commit/aa412b2a1): the archive action now respects
+  `Utils.canModifyCard()` like every other mutating card action (the server allow-rule already rejected the write;
+  this closes the client-side UX gap).
+- [Fixed sub-task board being inaccessible until a reload](https://github.com/wekan/wekan/commit/45bd7dcc8): the "view subtask" navigation now guards against a
+  not-yet-loaded board, mirroring the sibling handler.
+- [Fixed the "When a card is moved to Archive" rule trigger not being activatable](https://github.com/wekan/wekan/commit/da7c06ec6): a CSS class-name mismatch (`js-add-arc-trigger` vs
+  `js-add-arch-trigger`) between the board-triggers template and its click handler is fixed, with a regression test.
+- [Fixed "select all in list" crossing swimlanes](https://github.com/wekan/wekan/commit/300a9751e): list select-all is now scoped to the current
+  swimlane in swimlanes view (`allCards()` gained an optional swimlane scope); list-wide behaviour is preserved
+  where there is no swimlane context.
+- [Fixed copying a swimlane to another board losing card labels](https://github.com/wekan/wekan/commit/9643dcded): missing board-level labels are now recreated on the
+  destination board (preserving colour) before the per-card copy so label assignments survive.
+- [Fixed Calendar View ignoring the start-day-of-week setting](https://github.com/wekan/wekan/commit/7eec78c04): FullCalendar's `firstDay` is now derived from
+  `getStartDayOfWeek()` instead of the locale default.
+- [Fixed deleted-attachment notification crediting the uploader instead of the deleter](https://github.com/wekan/wekan/commit/2ba8882d8): the `deleteAttachment` activity now records the
+  acting user (falling back to the uploader for server/system removals).
+- [Fixed updating a card title not firing the outgoing webhook](https://github.com/wekan/wekan/commit/9aa97ab8f): a title change now logs an `a-changedTitle` activity
+  (rendered in the activity feed) so the existing outgoing-webhook hook fires, consistent with description/date changes.
+- [Fixed @mention: pressing Enter to pick a user closed the card / submitted the comment](https://github.com/wekan/wekan/commit/3ce75dd87), also [#4172](https://github.com/wekan/wekan/issues/4172)
+  and [#5457](https://github.com/wekan/wekan/issues/5457): when the @mention autocomplete dropdown is open, Enter now
+  selects the highlighted user instead of submitting/closing (shared textcomplete keydown guard hardened).
+- [Fixed REST card API move/sort/date/archive bugs](https://github.com/wekan/wekan/commit/39e12035e): consolidated duplicated board-move variable names
+  (#5398); moving a card to another list via the API now puts it on top of the destination list like the Move Card
+  dialog ([#5399](https://github.com/wekan/wekan/issues/5399)); due/received/start/end dates set via the API now
+  persist instead of being stripped ([#5537](https://github.com/wekan/wekan/issues/5537)); and archived cards can be
+  inspected via the single-card GET and de-archived without needing a `list_id` ([#5546](https://github.com/wekan/wekan/issues/5546)).
+- [Fixed the per-checklist "Hide checked items" toggle being inverted and affecting all checklists](https://github.com/wekan/wekan/commit/e98aae278): it is now read per checklist and hides an item exactly
+  when it is checked and that checklist's toggle is on.
+- [Fixed setting a list/swimlane colour to `silver` saving it as None](https://github.com/wekan/wekan/commit/6f8543322): list/swimlane colours are normalized through a shared
+  canonical allowed-colour helper, so `silver` (and every offered colour) is accepted and rendered.
+- [Fixed internal caret `^board^` helper boards appearing in board lists and the REST API](https://github.com/wekan/wekan/commit/f819054bb): caret-wrapped titles and non-`board` types are now
+  filtered from `/api/users/:userId/boards`, `/api/boards` and the `Boards.userBoards` helper, consistent with the UI.
+- [Fixed being unable to remove a deleted (non-existent) user from a board's members](https://github.com/wekan/wekan/commit/beac9e3d7): orphaned member entries are now hard-removed by userId
+  even when the user account no longer exists.
+- [Fixed a custom number field displaying as `NaN` when cleared after being set](https://github.com/wekan/wekan/commit/98315c26c): an empty number value is stored as `''` and rendered as
+  empty via a shared `formatNumberValue` helper.
+- [Fixed subtask creation producing extra swimlanes/columns and only allowing one subtask](https://github.com/wekan/wekan/commit/4b27313c7), also [#5788](https://github.com/wekan/wekan/issues/5788),
+  [#2256](https://github.com/wekan/wekan/issues/2256) and [#4782](https://github.com/wekan/wekan/issues/4782): subtask
+  creation is now server-authoritative (`addSubtaskCard` Meteor method) and client-side auto-creation of the default
+  subtasks board/list is guarded to the server, so the client can no longer create duplicate subtasks boards/swimlanes
+  and multiple subtasks can be created reliably.
+- [Fixed board "always on card" custom fields not being applied to new subtask cards](https://github.com/wekan/wekan/commit/4b27313c7), also [#3562](https://github.com/wekan/wekan/issues/3562):
+  the destination board's automatic custom fields are now added to a new subtask.
+- [Fixed a circular subtask/parent reference hanging the whole board](https://github.com/wekan/wekan/commit/4b27313c7): the parent-chain guard compared array indices instead of
+  ids; it now compares by value and `setParentId` refuses a cyclic re-parent.
+- [Fixed the board Subtasks "Landing list for subtasks deposited here" setting not saving / showing the wrong list](https://github.com/wekan/wekan/commit/774289f92), also [#3876](https://github.com/wekan/wekan/issues/3876),
+  [#4849](https://github.com/wekan/wekan/issues/4849) and [#4947](https://github.com/wekan/wekan/issues/4947): the
+  settings popup now reads the deposit board's lists and matches the stored `subtasksDefaultListId`.
+- [Fixed the subtask "View it" button opening the parent card instead of the subtask](https://github.com/wekan/wekan/commit/c5cdc7b65): navigation now targets the subtask's own board/card.
+- [Fixed deleting a card not firing the outgoing webhook](https://github.com/wekan/wekan/commit/7bb7540ba): card deletion now creates a `deleteCard` activity (in the
+  before-remove hook and the REST delete endpoints) so the outgoing webhook fires; board/list/swimlane deletion already
+  emitted their delete activities ([#2950](https://github.com/wekan/wekan/issues/2950)).
+- [Fixed a configured outgoing webhook making it impossible to set card members](https://github.com/wekan/wekan/commit/8863ec24a): outgoing webhook delivery is now fire-and-forget and
+  error-isolated, so a slow/unreachable/failing webhook endpoint can no longer abort the member update.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.64 2026-06-20 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUE of [ChecklistBleed](https://wekan.fi/hall-of-fame/checklistbleed/):
+
+- [Fixed ChecklistBleed: any authenticated user can write checklist data into a private board they are not a member of (cross-board write via collection allow rule)](https://github.com/wekan/wekan/commit/b1ca76007)
+  ([GHSA-gv8h-5p3p-6hx7](https://github.com/wekan/wekan/security/advisories/GHSA-gv8h-5p3p-6hx7),
+  CWE-863 Incorrect Authorization). This is the same class as [BoardBleed](https://wekan.fi/hall-of-fame/boardbleed/)
+  (GHSA-gm7v-pc38-53jr), but for the card-attached Checklist and ChecklistItem documents that the
+  `boardId`-only `denyCrossBoardMove` fix did not cover. Checklists and checklist items are attached
+  to a card and carry a denormalized `boardId`; they are MOVED between cards by `$set`-ting a new
+  `cardId` (and, for items, a new `checklistId`) in a direct DDP collection update, after which the
+  `Checklists.before.update` hook re-derives `boardId` from the destination card. The collection
+  allow rules (`server/permissions/checklists.js`, `server/permissions/checklistItems.js`)
+  authorized an update by checking only the document's CURRENT (source) `cardId` — i.e. the
+  attacker's own board — and never inspected the new destination `cardId`/`checklistId`/`boardId`.
+  Because every logged-in user can create a board where they are a write-capable member, a
+  low-privileged user with write access to one board could create a checklist/item on their own
+  card and then, in a single `/checklists/update` or `/checklistItems/update` DDP call, set its
+  `cardId` to a card in a private board where they are not a member (if they know the target card
+  id): the allow rule saw the attacker's source card, approved the write, and the before-update hook
+  attached the attacker-controlled document to the victim's private board. The protected
+  `moveChecklist` Meteor method correctly checks both source and destination board membership, but a
+  DDP client can bypass that method and update the collections directly. CVSS:3.1 Moderate
+  (AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N). Fixed by adding `denyCrossBoardMoveByCard` and
+  `denyCrossBoardMoveByChecklistItem` helpers in `server/lib/utils.js` and a `Checklists.deny`/
+  `ChecklistItems.deny` `update` rule on each collection that rejects any update whose destination
+  board — resolved from a new `boardId`, `cardId`, or `checklistId` in the modifier — the caller has
+  no write access to. Legitimate moves into boards the user belongs to and same-card edits keep
+  working, and the server-side `moveChecklist` method (which bypasses allow/deny) is unchanged.
+  A regression test (`server/lib/tests/checklistbleed.security.tests.js`) was added.
+  Affected Wekan v9.62 and earlier.
+  Thanks to DavidCarliez and xet7.
+
+and adds the following updates:
+
+- [Fix the Docker pre-build version guard false-failing the release](https://github.com/wekan/wekan/commit/069dbc11f).
+  The bundle-version guard added for the Admin-Panel-version fix assumed the WeKan app
+  `package.json` ships as a standalone file with a `v`-prefixed version, and made "not found"
+  fatal. Meteor does not ship it that way — it inlines the app `package.json` into the compiled
+  `bundle/programs/server/app/app.js` as a JSON module (`{"name":"wekan","version":"v9.63.0",...}`),
+  so the guard found no v-prefixed `package.json` and aborted the v9.63 Docker build. The guard now
+  reads the version from that inlined module (anchored on `"name":"wekan"`, exactly what
+  `require('/package.json')` resolves to), and a detection miss is now a warning that continues
+  rather than a hard failure — only a confirmed version MISMATCH blocks the release, since
+  `--build-arg VERSION` is the actual guarantee.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.63 2026-06-19 WeKan ® release
+
+This release adds the following features:
+
+- [Fix the wekan.fi install page version never updating from a stale value](https://github.com/wekan/wekan/commit/40c3ee098).
+  The `release-all.yml` website job ran every release but the install page's
+  version stayed frozen at v9.57: `releases/release-website.sh` updated it with a
+  sed anchored on `>v$OLD</span>`, which silently no-op'd once the published
+  page's value no longer matched the `old_version` passed for a release. Anchor
+  on the stable `<span class="version-number">` instead and re-normalize whatever
+  version is there to the new one, with an assert so a miss fails loudly. Same
+  self-healing fix applied to the local-flow copy in `releases/version.sh`. The
+  live wekan.fi install page was also corrected to the current version.
+  Thanks to xet7.
+
+- [Make the remaining release version substitutions self-healing](https://github.com/wekan/wekan/commit/1e5ae8f64).
+  Hardened the last `$OLD_VERSION`-anchored seds in `releases/version.sh` — the
+  same fragile pattern that froze the Docker `ARG VERSION` and the install page.
+  The snapcraft.yaml bundle download was release-critical (same class as the
+  Docker bug: the snap downloads `wekan-<v>-<arch>.zip`, so a stale value ships
+  the wrong bundle under the right name) and was stuck at v9.57; it now anchors
+  on the `wekan-<v>-` / `releases/download/v<v>/` shapes and asserts. The
+  sandstorm `appVersion` rewrite is now global and self-healing (the redundant
+  `$OLD_NO_DOTS`-anchored fixup is dropped), and the Windows Offline.md doc links
+  self-heal with a soft warning (cosmetic, so they must not fail the release).
+  snapcraft.yaml and Offline.md were also corrected from their stale v9.57.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.62 2026-06-19 WeKan ® release
+
+This release adds the following features:
+
+- [Release All Platforms: Fix Docker image showing a stale Admin Panel version (image tagged vX reported v9.57)](https://github.com/wekan/wekan/commit/b30f4967c).
+  The Admin Panel reads the WeKan version from the bundled `package.json`, which
+  comes verbatim from the `wekan-<version>-<arch>.zip` the Dockerfile downloads
+  and unzips into `/build`. The `docker` job never passed `--build-arg VERSION`,
+  so every image was built against the Dockerfile's hardcoded `ARG VERSION`
+  default — and that default was stuck at `9.57` because `releases/version.sh`
+  rewrote it with a sed anchored on the *old* version number, which silently
+  no-op'd whenever `old_version` did not match (e.g. the skipped 9.58 numbering).
+  The result: images tagged v9.59/v9.60/v9.61 shipped the v9.57 bundle and
+  reported 9.57 in the Admin Panel. Fixed three ways: the `docker` job now passes
+  `--build-arg VERSION=${VERSION}` (the release version is authoritative); the
+  `version.sh` Dockerfile rewrite now anchors on the `^ARG VERSION=` prefix and
+  asserts the result, so the default can never go stale again; and a new
+  pre-build guard downloads the release bundle and fails fast if its app
+  `package.json` version does not match the release tag, before pushing a
+  mislabeled image to the registries. Already-pushed v9.58–v9.61 images need a
+  rebuild to carry their correct contents.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.61 2026-06-19 WeKan ® release
+
+This release adds the following features:
+
+- [Release All Platforms: Set GH_REPO on the bundle-attach steps so gh finds the repository](https://github.com/wekan/wekan/commit/b6facc2412e37b4c365a8f6c667894794bf2af0c).
+  The win64 / mac-arm64 / s390x / ppc64le bundles each finished building but
+  then failed on `gh release upload` with `failed to run git: fatal: not a git
+  repository`. `gh` tries to detect the target repo from a git remote, but
+  `build-win64` checks the repo out into `src/` (so the workspace root is not a
+  git repository) and `build-mac-arm64` / `build-extra-arches` do not check it
+  out at all. Set `GH_REPO=${{ github.repository }}` on all three attach steps
+  so `gh` targets `wekan/wekan` directly without git remote detection. The snap
+  job is unaffected (it does a full checkout into the workspace root).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.60 2026-06-19 WeKan ® release
+
+This release adds the following features:
+
+- [Release All Platforms: Drop armv7l from extra-arch bundles, because Node.js 24 ships no armv7l binaries](https://github.com/wekan/wekan/commit/869cc694f58df49022081e7bc82d4c3c4a6b3792).
+  The `build-extra-arches` armv7l matrix entry failed with `no matching
+  manifest for linux/arm/v7` when pulling `node:24-slim`. Root cause: Node.js
+  24 publishes no armv7l (32-bit ARM) binaries at all — neither the official
+  dist nor unofficial builds — so there is no `node:24` arm/v7 image to rebuild
+  native modules against, and no Node 24 runtime to run such a bundle on an
+  armv7 device. The armv7l matrix entry is removed; extra-arch bundles are now
+  s390x + ppc64le. armv7 was already excluded from the Docker image and snap,
+  so those are unaffected.
+  Thanks to xet7.
+
+- [Release All Platforms: Move win64 and mac-arm64 into the post-release extra-platform phase](https://github.com/wekan/wekan/commit/32ddf29142c463e65028ebb81619c142ea37d27b).
+  `build-win64` and `build-mac-arm64` were prerequisites of the `release` job,
+  so a slow or flaky Windows/macOS runner blocked creation of the GitHub
+  Release (and thus the Docker and snap jobs, which depend on it). They now
+  depend on `release` instead — alongside `build-extra-arches` — and each
+  attaches its own `wekan-<version>-<platform>.zip` to the already-created
+  Release via `gh release upload --clobber`. The core release now waits only on
+  the amd64 + arm64 bundles. No build steps changed; only the dependency
+  wiring, upload mechanism, and section grouping.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.59 2026-06-19 WeKan ® release
+
+This release adds the following features:
+
+- [Release All Platforms: Fix duplicate mapping keys in generated OpenAPI spec that broke API docs rendering](https://github.com/wekan/wekan/commit/69236a90620b792bbe95b9e60caef2ecd172b327).
+  The **Release All Platforms** bump job regenerates `public/api/wekan.yml`
+  via `openapi/generate_openapi.py` and then renders it with `@redocly/cli`,
+  whose strict YAML parser rejects duplicate mapping keys. The 3-level nested
+  SimpleSchema in `models/attachmentStorageSettings.js`
+  (`storageConfig.filesystem.enabled`, `storageConfig.gridfs.enabled`, …)
+  exposed two generator bugs: the sub-schema name was derived from only the
+  first dotted path segment, collapsing `filesystem.*` and `gridfs.*` leaf
+  keys (`enabled`/`read`/`write`) into one mapping; and the linear emitter
+  reopened the parent schema header for each interleaved nested object. The
+  generator now builds sub-schema names from all leading path segments and
+  groups each sub-schema's fields contiguously, so deeply nested objects emit
+  distinct, valid sub-schemas. Output is unchanged for existing 1- and
+  2-level schemas.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.58 2026-06-19 WeKan ® release
+
+This release adds the following features:
+
+- [Release: bump both WeKan version fields in package-lock.json](https://github.com/wekan/wekan/commit/7c8ef380f54a6f1fe45ea834ee5927996631fe6c).
+  `releases/version.sh` updated only the top-level `version` in
+  `package-lock.json`, leaving the nested `packages.""` version stale
+  (lockfileVersion 3 stores the root version twice). The local `release.sh`
+  flow hid this because `rebuild-release.sh` re-runs `meteor npm install`
+  before committing, but the remote **Release All Platforms** flow
+  (`release-all.yml` bump job) commits `version.sh`'s output directly, so a
+  stale `package-lock.json` was pushed to `main`. The bump now anchors on the
+  `v`-prefixed WeKan version and replaces both root fields, never touching any
+  dependency version (those are plain semver, no `v` prefix). Node.js (24.x)
+  and MongoDB (7.x) bumps are unchanged — the pinned major is intentional and
+  the minor/patch already updates any older 24.x/7.x to the newest. Thanks to
+  xet7.
+
+- [Don't auto-create an empty Template Container, and make user-created ones functional](https://github.com/wekan/wekan/commit/2a713a60b8620fe2b1d20968f2cd1ed88abf18a9).
+  Opening **All Boards / Templates** no longer auto-creates an empty Template
+  Container board (the board-list autorun that called `ensureTemplatesBoard` on
+  view open is removed); the container is created only on demand via the
+  **Add Template Container** button. To make a user-created container actually
+  usable, `createBoardWithInitialSwimlanes` now wires the user's profile template
+  pointers (`templatesBoardId` and the card/list/board template swimlane ids,
+  keyed by a new per-swimlane `role`) when the board type is `template-container`
+  — without this the container looked right but stayed inert, since
+  `swimlane.isCardTemplatesSwimlane()`/… compare against those pointers to decide
+  that an added card/list/swimlane/board becomes a template. Deleting a Template
+  Container now clears those pointers for any user referencing it, so no
+  save/insert-from-template path is left pointing at a dead board and a fresh
+  container can be created. Adds Playwright e2e coverage
+  ([#5850](https://github.com/wekan/wekan/issues/5850),
+  [#2339](https://github.com/wekan/wekan/issues/2339)). Thanks to xet7.
+
+- [Make the All Boards / Templates redesign and org/team/domain board sharing work end-to-end](https://github.com/wekan/wekan/commit/422e70329).
+  Fixes bugs the new Playwright e2e tests surfaced in the recently added features:
+  the new server method modules are now actually loaded (they use an explicit
+  server mainModule, so unimported files never registered their methods); the
+  per-org/team feature-toggle methods and `setUserOrgsTeamsFromLdap` check their
+  arguments before the admin guard (an unchecked-argument rejection was being
+  turned into a full app crash by SyncedCron's global handler) and authorize from
+  `this.userId`; the `boards` publication now publishes template-container and
+  domain-shared boards (not only `type:'board'`); and the `/templates` and
+  `/remaining` All Boards routes apply the same membership filtering as the home
+  route ([#5850](https://github.com/wekan/wekan/issues/5850),
+  [#4737](https://github.com/wekan/wekan/issues/4737),
+  [#2339](https://github.com/wekan/wekan/issues/2339)). Thanks to xet7.
+
+- [Enforce the per-org/team "Shared Templates" flag for drag-to-share](https://github.com/wekan/wekan/commit/8af4d7bfd).
+  The All Boards / Templates drag-to-share now offers only the Organizations and
+  Teams whose **Shared Templates** flag is enabled (previously the flag had no
+  effect). A new non-admin `getMyShareableGroups` method returns the
+  user's flagged orgs/teams (plus their email domains), since the org/team
+  publications are admin-only ([#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [Enforce the per-org/team "Propagate Members To Boards" flag](https://github.com/wekan/wekan/commit/27c2e4f2ced3515a1aae5c49138963b483763a36).
+  When **Propagate Members To Boards** is enabled for an Organization or Team,
+  its member users are now added as members of the regular boards that list that
+  group (new admin- and server-callable `propagateOrgTeamMembersToBoards` method,
+  also run at the end of the LDAP background sync). It is strictly add-only and
+  skips template boards (which stay group-only)
+  ([#5850](https://github.com/wekan/wekan/issues/5850),
+  [#4737](https://github.com/wekan/wekan/issues/4737)).
+  Thanks to xet7.
+
+- [Drag a Template Board onto an Organization, Team or Domain to share it](https://github.com/wekan/wekan/commit/0d0f5c8a5).
+  On the **All Boards / Templates** view, the left menu shows the user's
+  Organizations, Teams and Domains as drop targets (gated by the admin's Shared
+  Templates scopes). Dragging a Template Board onto one shares the board with that
+  org/team/domain (via `setBoardOrgs`/`setBoardTeams`/`setBoardDomains`) — add-only
+  and adding no individual members ([#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [GlobalAdmin REST API for the Admin Panel global settings](https://github.com/wekan/wekan/commit/89481302d).
+  Adds `GET /api/settings` and `PUT /api/settings`, restricted to the global
+  admin, to read and update the Admin Panel global settings (registration,
+  product name, logos, custom head/manifest, accessibility and support pages,
+  etc.). A whitelist of fields is exposed; `mailServer`/SMTP credentials are
+  never returned or writable over REST. Documented with `@operation` JSDoc
+  (OpenAPI) and `api.py` examples (`getsettings`, `editsettings`).
+  Thanks to xet7.
+
+- [REST API for board domain sharing](https://github.com/wekan/wekan/commit/98a910917f4b37b5c4bec2525d8af0e45315b5b3).
+  `GET` / `POST` / `DELETE /api/boards/:boardId/domains` list, add and remove the
+  email domains a board is shared with, reusing the `setBoardDomains` validation
+  and requiring board-admin (or site-admin) rights for changes. Documented in the
+  generated OpenAPI spec with matching `api.py` examples
+  ([#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [Admin Panel / People / Domains: list domains with per-domain user counts](https://github.com/wekan/wekan/commit/bdedb23add5160b1fd40ce6d68e3f1b5a89224f0).
+  A new **Domains** tab in Admin Panel > People lists every email-address domain
+  across all users with the count of users in each (each user counted once by
+  their primary email's domain), backed by an admin-only
+  `getDomainsWithUserCounts` method. This is the per-domain piece of the Template
+  Boards sharing feature ([#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [Template boards: members tab is group-only and shows only the creator](https://github.com/wekan/wekan/commit/3d7087365).
+  On template boards (template-board / template-container) the board members
+  **People** tab now shows only the original creator and hides the
+  add-individual-member button, so these shared boards are shared only with
+  groups (Organizations, Teams, Domains) — not individual users. Regular boards
+  are unchanged ([#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [Share a board with an email domain from the board members sidebar](https://github.com/wekan/wekan/commit/d4136a616076ed61a572e7905a49dc1169aafd0b).
+  A new **Domains** tab in the board members sidebar lets a board admin type a
+  domain (e.g. `example.com`) and add or remove it, backed by a board-admin-gated
+  `setBoardDomains` method that trims, lowercases, validates and de-duplicates
+  domains. Combined with the `board.domains` access wiring, every user whose
+  primary email is in an active domain on the board gets access
+  ([#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [Domain-based board sharing: board can be shared with an email domain](https://github.com/wekan/wekan/commit/c7c43fe78).
+  Adds a `board.domains` field (mirroring `board.orgs`/`board.teams`) so a board
+  can be shared with an email-address domain — every user whose primary email is
+  in an active domain on the board gets access. Adds a `User.emailDomains()`
+  helper and wires the new dimension into the board visibility selector, the
+  board publications and the All Boards membership query
+  ([#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [Auth sync marks the orgs/teams it manages as "Sync Members From Auth Provider"](https://github.com/wekan/wekan/commit/4973f68a2).
+  When the LDAP/OIDC group sync creates or assigns an Organization or Team, it now
+  sets that org/team's `orgSyncMembersFromAuth` / `teamSyncMembersFromAuth` flag,
+  so the **Sync Members From Auth Provider** column in Admin Panel > People
+  reflects which orgs/teams are auth-managed
+  ([#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [All Boards / Templates: URL routes, link redirect, no auto-created templates board](https://github.com/wekan/wekan/commit/6dd360ad37d0509d3f425a6d04797a3fe3e79b1a).
+  The All Boards page's **Templates** and **Remaining** sub-views are now
+  addressable by their own URLs (`/templates`, `/remaining`), so they can be
+  linked and redirected to and switch the view live. The **Member Settings →
+  Templates** menu link now opens the **All Boards / Templates** page instead of
+  opening or creating a specific board. New users no longer get an auto-created
+  "Templates" board at signup; the templates-container board (with its Card /
+  List / Board Templates swimlanes) is instead created lazily on first use of the
+  Templates view via a new `ensureTemplatesBoard` server method. This works for
+  any authentication method (password, LDAP, OAuth2), existing users keep their
+  templates board and all save-as-template functionality, and any user can still
+  create additional template boards through **Create Board → Add template board**
+  ([#2339](https://github.com/wekan/wekan/issues/2339),
+  [#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [Optional setting to set admin status from OAuth2/OIDC groups](https://github.com/wekan/wekan/commit/392df15394937806b3c022998535fc78687c6809).
+  Optional and off by default: when `OAUTH2_ADMIN_GROUPS` is set to a comma- or
+  whitespace-separated list of group names, a user logging in via OAuth2/OIDC
+  whose OIDC `groups` claim intersects that list is granted Wekan admin
+  (`isAdmin`), applied both at login and at first-time account creation; the
+  group data is accepted as either plain strings or objects with a display name.
+  This mirrors the existing LDAP `LDAP_SYNC_ADMIN_GROUPS` behaviour. When
+  `OAUTH2_ADMIN_GROUPS` is empty/unset (the default), admin status is left
+  completely unchanged ([#5876](https://github.com/wekan/wekan/issues/5876)).
+  Thanks to xet7.
+
+- [Per-organization and per-team feature toggle columns in Admin Panel > People](https://github.com/wekan/wekan/commit/036bdffb940c906ae50f837d74f7cbaba3e6fb9a).
+  Admin Panel > People > Organizations and Teams each gain three per-record
+  checkbox columns, all disabled by default: **Shared Templates** (allow members
+  to drag personal Template Boards onto this org/team), **Propagate Members To
+  Boards** (add this org/team's members to the boards that list it), and **Sync
+  Members From Auth Provider** (this org/team's membership is maintained by the
+  authentication provider's group/membership sync — LDAP, OAuth2/OIDC, SAML,
+  etc.). Each column header has **select-all / unselect-all**, and the
+  per-tab search box filters the rows. All three flags are enforced: **Shared
+  Templates** gates which orgs/teams are offered as drag-to-share targets,
+  **Propagate Members To Boards** adds a flagged group's members to the regular
+  boards that list it, and **Sync Members From Auth Provider** is set by the
+  LDAP/OIDC group sync for the orgs/teams it manages
+  ([#4737](https://github.com/wekan/wekan/issues/4737),
+  [#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [Added Admin Panel setting to block avatar uploads](https://github.com/wekan/wekan/commit/d0a8b149ea7f81169dc44761b01b738009bc1126).
+  Admin Panel > Attachments > Transfer limits now has an "Avatars" option that
+  blocks users from uploading new avatars (board setting
+  `limitSettings.avatarsUploadBlocked`, unchecked by default so avatars stay
+  enabled). When blocked, the avatar upload option is hidden in the user's
+  avatar popup and new uploads are rejected server-side — useful when avatars
+  are synced from another source ([#4740](https://github.com/wekan/wekan/issues/4740)).
+  Thanks to xet7.
+
+- [Improvements to Template Boards and sharing them with Organizations, Teams and Domains](https://github.com/wekan/wekan/commit/aeb894feadbe4ae1fe2a6486953d36995646506a).
+  Card and board templates already exist in WeKan; these are improvements to how
+  Template Boards are managed and shared on the **All Boards** page
+  ([#5850](https://github.com/wekan/wekan/issues/5850)):
+  - At **All Boards / Templates**, all of the user's own Board Templates are
+    shown, with a dedicated **Add Template Board** button that creates a new
+    Template Board there.
+  - The **+ Add board** button at **All Boards / Remaining** no longer has an
+    "Add template board" checkbox; creating a Template Board is now done only
+    with the **Add Template Board** button under **All Boards / Templates**.
+  - A Template Board can contain **Board, Swimlane, List and Card templates**.
+  - Members of a Template Board can, on any board where they are a member, add
+    those templates to their current board.
+  - If a user belongs to an Organization, Team or Domain, and the Admin Panel
+    has **Shared Templates for Organizations / Teams / Domains** enabled, then
+    everyone in that Organization, Team or Domain can drag a personal Template
+    Board at **All Boards / Templates** onto that Organization, Team or Domain
+    board to share it.
+  - **Domain** means the domain part of a user's email address (for example
+    `example.com`): users that belong to that domain can drag a Template Board
+    to that domain so it is shared with everyone in the domain.
+  - New **Admin Panel / People / Domains** page that lists the domains and the
+    count of users per domain.
+  Thanks to xet7.
+
+- [Optional setting to refuse unknown OAuth2/OIDC logins](https://github.com/wekan/wekan/commit/a64865f82626eb954028a718cc8e660d2b39065f).
+  Optional and off by default: when `OAUTH2_AUTO_REGISTRATION=false`, a first-time
+  OAuth2/OIDC login that does not already match a Wekan account (by verified
+  email — the same secure key the existing account-merge logic uses) is rejected
+  instead of silently creating a new account. This lets an instance allow only
+  already-provisioned users (for example synced from LDAP) to sign in via OAuth2.
+  The default `true` keeps the previous behaviour, so existing deployments are
+  unaffected ([#4736](https://github.com/wekan/wekan/issues/4736)).
+  Thanks to xet7.
+
+- [Notify the assigned card member/assignee directly](https://github.com/wekan/wekan/commit/761b8fc82bb0c10767d868f7948f6a3bb9fac477).
+  When a user is added as a card member or assignee, that user is now notified
+  directly, so an assignment reaches the assignee themselves — instead of only
+  board watchers, or (with `BIGEVENTS_PATTERN`) every active board member. The
+  user who performed the assignment is still skipped, so self-assignment does
+  not self-notify. Optional: opt out with `NOTIFY_ON_ASSIGN=false`; on by
+  default ([#5833](https://github.com/wekan/wekan/issues/5833)).
+  Thanks to xet7.
+
+- [Export big boards: optional JSON export without attachments](https://github.com/wekan/wekan/commit/0557282c3f567ddf538e58631f4605310dfbd0e6).
+  Very large boards could fail to export as JSON because every attachment is
+  base64-encoded inline into a single object, which overflows the JSON
+  serializer's maximum string length (and loads every attachment into memory at
+  once). A new optional `?attachments=false` query parameter on
+  `GET /api/boards/:boardId/export` exports the board structure and attachment
+  metadata while skipping the base64 file data, so big boards export
+  successfully; a matching **Export / JSON (without attachments)** entry is added
+  to the board export menu. The default export is unchanged
+  ([#5870](https://github.com/wekan/wekan/issues/5870)).
+  Thanks to xet7.
+
+- [Fix LDAP sign-in failing when a DN or cn contains parentheses](https://github.com/wekan/wekan/commit/4dc955ed230b0df4d12dcbac5f450ccdf51fb8fb).
+  The user's group-member value (e.g. a member DN or cn) was interpolated into
+  the LDAP group search filter unescaped, so a value containing `(` or `)`
+  produced `illegal unescaped char: (` and broke sign-in when
+  `LDAP_SYNC_ADMIN_STATUS` (or any group sync) was enabled. Adds RFC 4515
+  escaping for `( ) * \` and NUL in the group filter (also prevents filter
+  injection) ([#5236](https://github.com/wekan/wekan/issues/5236)).
+  Thanks to xet7.
+
+- [Fix snap build failing to download Node.js (404)](https://github.com/wekan/wekan/commit/f74467837).
+  The snapcraft Node.js download used the floating `latest-v24.x/` path with a
+  pinned `node-v24.16.0` filename, which 404'd once upstream Node advanced past
+  that release — failing the amd64 and arm64 snap builds. Pinned to the explicit,
+  stable `https://nodejs.org/dist/v24.17.0/` path (matching the Dockerfile).
+  Thanks to xet7.
+
+- [Keep LDAP admin status updated during background sync](https://github.com/wekan/wekan/commit/08b15929f15ad10c71d39a01da3ed961c727a4e9).
+  `LDAP_SYNC_ADMIN_STATUS` previously only updated a user's admin status at
+  login, so an admin-group change in LDAP was never reflected for existing users
+  who did not log in. The background sync now applies the same admin-status logic
+  to each existing LDAP user it syncs. Gated by the existing
+  `LDAP_SYNC_ADMIN_STATUS` flag (default off), so default behaviour is unchanged
+  ([#4739](https://github.com/wekan/wekan/issues/4739)).
+  Thanks to xet7.
+
+- [Optionally make LDAP authoritative for user active status](https://github.com/wekan/wekan/commit/ba37ccb8e63ed9a9719694fb66448fb87037f4fa).
+  New optional `LDAP_BACKGROUND_SYNC_DISABLE_NONEXISTANT_USERS` (default false):
+  when enabled, the background sync disables (`loginDisabled`) LDAP-sourced users
+  that are no longer found in the directory, and
+  [re-enables](https://github.com/wekan/wekan/commit/d74105d43520950b269721747fa2f576504302e2)
+  users that are present in LDAP again — so LDAP is the authoritative source of
+  active status (matching the external `docs/Login/ldap-sync/ldap-sync.py`). Off
+  by default; only LDAP-sourced users are considered. With the flag on, a manual
+  disable of an LDAP user is overridden on the next sync
+  ([#4738](https://github.com/wekan/wekan/issues/4738)).
+  Thanks to xet7.
+
+- [Optionally sync LDAP groups as Organizations or Teams](https://github.com/wekan/wekan/commit/5a516b223e57cffd361a836a02e629188494c85e).
+  New optional, default-off settings sync a user's LDAP groups into Wekan
+  Organizations and/or Teams during background sync: `LDAP_SYNC_ORGANIZATIONS`
+  and `LDAP_SYNC_TEAMS`, with optional comma-separated allowlists
+  `LDAP_SYNC_ORGANIZATIONS_GROUPS` / `LDAP_SYNC_TEAMS_GROUPS` restricting which of
+  the user's groups become orgs/teams (empty = all). The user's groups are read
+  with the existing `LDAP_GROUP_FILTER_*` machinery; matching orgs/teams are
+  created (active) if missing and added to the user's membership (add-only — no
+  existing membership is ever removed). The sync runs both during background
+  sync and at login ([commit](https://github.com/wekan/wekan/commit/a8eb12dcdf9a19d97457578c3ce00a65c763299d)).
+  Off by default, so existing deployments are unaffected
+  ([#4737](https://github.com/wekan/wekan/issues/4737)).
+  Thanks to xet7.
+
+and updates the documentation:
+
+- [Documented the new LDAP/OAuth2 env vars and template-sharing features](https://github.com/wekan/wekan/commit/fb856e3f7).
+  Documents `LDAP_SYNC_ORGANIZATIONS`/`LDAP_SYNC_TEAMS` (+ group allowlists),
+  `LDAP_BACKGROUND_SYNC_DISABLE_NONEXISTANT_USERS`, the LDAP admin-status and
+  group-filter-escaping fixes, `OAUTH2_AUTO_REGISTRATION`, `OAUTH2_ADMIN_GROUPS`,
+  `NOTIFY_ON_ASSIGN`, the Admin Panel Domains tab and org/team toggle columns,
+  sharing a board with a domain, and group-only template boards.
+  Thanks to xet7.
+
+and adds the following tests:
+
+- [Added e2e tests for domain-based board sharing](https://github.com/wekan/wekan/commit/2955c45330ff17be4d047441d6e707b00d42335a).
+  Verifies `setBoardDomains` normalizes, validates and de-duplicates board
+  domains (rejecting malformed entries), that the admin-only
+  `getDomainsWithUserCounts` returns correct per-domain counts and denies
+  non-admins, and that a board shared with a user's email domain becomes visible
+  to that user ([#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [Added e2e tests for the All Boards / Templates redesign](https://github.com/wekan/wekan/commit/e3f6b44982752a14813582d84881632983f2681a).
+  Verifies the `ensureTemplatesBoard` method creates the templates container and
+  is idempotent, that the `/templates` and `/remaining` routes show the right
+  boards (template-container vs regular), and that the Member Settings → Templates
+  link navigates to `/templates`
+  ([#2339](https://github.com/wekan/wekan/issues/2339),
+  [#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [Added e2e tests for the per-org/team feature toggle methods](https://github.com/wekan/wekan/commit/0a23f4c6d279ed45f66a6c49d671a3d2d22e8cd8).
+  Verifies the admin-only per-org and per-team toggles (Shared Templates,
+  Propagate Members To Boards, Sync Members From Auth Provider), the select-all /
+  unselect-all bulk methods, and that a non-admin call is a silent no-op
+  ([#4737](https://github.com/wekan/wekan/issues/4737),
+  [#5850](https://github.com/wekan/wekan/issues/5850)).
+  Thanks to xet7.
+
+- [Added a unit test for the OAuth2 admin-from-groups logic](https://github.com/wekan/wekan/commit/8110008efd634ea182bcfa3fb09be2d3ecfbada8).
+  A runnable Node unit test for `oauth2AdminStatusFromGroups`: string and object
+  group forms, comma/whitespace parsing, intersection with `OAUTH2_ADMIN_GROUPS`,
+  and the default-off behaviour (no admin change when unset)
+  ([#5876](https://github.com/wekan/wekan/issues/5876)).
+  Thanks to xet7.
+
+- [Test harness: `db.insertOne` / `db.insertMany` now return the driver result](https://github.com/wekan/wekan/commit/4d7b0cf2f8d62b4108961f7205d931477f11fd18).
+  The Playwright `mongo-runner` discarded the insert result, so `db.insertOne(...)`
+  returned `null` and specs could not read `insertedId`; it now returns the
+  result (empty `insertMany` yields `insertedCount` 0).
+  Thanks to xet7.
+
+- [Added e2e test for LDAP group → Organization/Team sync](https://github.com/wekan/wekan/commit/168e541f5b83327f4ed3b0209681321efa78cab9).
+  Verifies a group is created as a Team/Organization (active), added to the user,
+  add-only (existing memberships preserved), idempotent, and that a non-admin
+  call is rejected ([#4737](https://github.com/wekan/wekan/issues/4737)).
+  Thanks to xet7.
+
+- [Added more tests](https://github.com/wekan/wekan/commit/bbdbff7589bf6fe3a84aa95d701ca5f9dce6d1fd).
+  Playwright e2e tests for the "Mark as complete" Show at Minicard option
+  (`allowsDueCompleteOnMinicard` — hidden by default, shown when enabled) and the
+  Admin Panel avatar-upload block (`isAvatarUploadBlocked` /
+  `limitSettings.avatarsUploadBlocked` — disabled by default).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.57 2026-06-19 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix Docker builds](https://github.com/wekan/wekan/commit/b46e1e7dcb584a1f5d60297e88aa7ec3b2ddd475).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.56 2026-06-18 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated dependencies](https://github.com/wekan/wekan/pull/6395).
+  Merged Dependabot update: dompurify 3.4.9 → 3.4.11
+  ([#6395](https://github.com/wekan/wekan/pull/6395)), a patch update of the
+  HTML sanitizer used for XSS protection.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.55 2026-06-18 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fixed "Release All Platforms" snap build failing at upload with exit 64](https://github.com/wekan/wekan/commit/ddfe351968f629b619cd757c410a222381d11f98).
+  The Launchpad snap build produced no `.snap` (only build logs), but
+  `snapcraft remote-build` exited 0 so the workflow reported success; the upload
+  step then globbed `wekan_<version>_*.snap`, matched nothing, and passed the
+  literal pattern to `snapcraft upload` ("is not a valid file", exit 64).
+  Hardened the workflow to verify a `.snap` was actually produced (instead of
+  trusting the exit code alone), print the Launchpad build logs when it was not,
+  and use `nullglob` + existence checks in the upload/attach steps so a no-match
+  fails clearly instead of cryptically. Also made `releases/version.sh` set
+  `snapcraft.yaml`'s `version:` robustly — matching `^version:` rather than a
+  hard-coded line number and tolerating any quoting, then verifying the change
+  applied — so the snap can no longer be built with a stale version that the
+  upload glob cannot match, and the snap job fails fast if the tagged version
+  does not match the release.
+  Thanks to xet7.
+
+and adds the following features:
+
+- [Build WeKan server bundles for s390x, ppc64le and armv7l](https://github.com/wekan/wekan/commit/61c8b2fb244dcdfbd097122de6f0250b10a8f151).
+  The "Release All Platforms" workflow now also builds the WeKan server bundle
+  for every other architecture Node.js 24.x publishes binaries for — s390x,
+  ppc64le and armv7l — by rebuilding the bundle's native modules under QEMU
+  emulation, and attaches each `wekan-<version>-<arch>.zip` to the GitHub Release
+  as an extra download. These extra-architecture bundles are not part of the
+  Docker image or snap (run a separate MongoDB on those platforms), and are built
+  independently so a slow or failing emulated build never blocks the main
+  amd64/arm64/win64/mac release, Docker or snap.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.54 2026-06-18 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated dependencies](https://github.com/wekan/wekan/commit/ebc0f017bf2d0a6183a35cdd2b829a0cfff436ed).
+  Merged Dependabot dependency updates: mongodb 6.21.0 → 7.3.0 in the
+  tests/playwright e2e harness ([#6393](https://github.com/wekan/wekan/pull/6393)),
+  @aws-sdk/client-s3 3.1054.0 → 3.1071.0 ([#6390](https://github.com/wekan/wekan/pull/6390)),
+  @google-cloud/storage 7.19.0 → 7.21.0 ([#6391](https://github.com/wekan/wekan/pull/6391)),
+  @typescript-eslint/eslint-plugin 8.60.1 → 8.61.1 ([#6392](https://github.com/wekan/wekan/pull/6392)),
+  and @tweedegolf/sab-adapter-google-cloud 1.0.10 → 3.0.2 ([#6389](https://github.com/wekan/wekan/pull/6389)).
+  Thanks to xet7.
+- [Updated docs](https://github.com/wekan/wekan/commit/85909d08cc8cb86299bf69b1c22cbded47f4c8c9).
+  Thanks to xet7.
+
+and adds the following features:
+
+- [Added a "Show at Minicard" option for the Card Settings "Mark as complete" toggle](https://github.com/wekan/wekan/commit/d6a8f4386671630468fa61a8e98c4435c2c97803).
+  The "Mark as complete" row in Board Settings → Card Settings now has its own "Show at Minicard"
+  checkbox (new board setting `allowsDueCompleteOnMinicard`), unchecked by
+  default — so the complete toggle is no longer shown on the current board's
+  minicards unless it is explicitly enabled.
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Updated tests](https://github.com/wekan/wekan/commit/6d6c26dd9bb2cac2c1660bf885078b1ae396fae6).
+  Thanks to xet7.
+- [Explain to Dependabot to not complain about rspack](https://github.com/wekan/wekan/commit/d09b72670cf07e358738717093ad138c33c9fd2c).
+  Thanks to xet7.
+- [Fixed Card Settings toggles (e.g. "Mark as complete") could not be reversed
+  without refreshing the page](https://github.com/wekan/wekan/issues/6385).
+  The Board Settings → Card Settings popup (`boardCardSettingsPopup`) cached the
+  board once in `onCreated` as a non-reactive snapshot, but its toggle handlers
+  computed the new value from that snapshot (`!tpl.currentBoard.allowsX`). So the
+  first toggle worked, but reversing it recomputed `!oldValue` from the stale
+  snapshot and set the same value again — it only "reset" after a page refresh
+  re-took the snapshot. Fixed by re-reading the board reactively in an `autorun`,
+  so every Card Settings toggle works both ways without a refresh. The same fix
+  was applied to the Subtask Settings popup, which had the identical pattern.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.53 2026-06-18 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fixed Playwright e2e tests all failing because `Meteor` was not a browser global](https://github.com/wekan/wekan/commit/640d8ddadba64fde43c49a28b0fa39e30fbed105).
+  Every Playwright end-to-end test (all 183, across Chromium, Firefox and WebKit) failed at
+  the `waitForMeteor` step with `TimeoutError: page.waitForFunction`, because
+  `typeof Meteor` was `undefined` in the browser `window` scope. Under the Meteor 3.5 +
+  rspack build, bare `Meteor` references in app code are rewritten by rspack's ProvidePlugin
+  into per-module imports, so `Meteor` is no longer placed on `window` the way the classic
+  Meteor linker did. The tests call `Meteor.loginWithToken` / `Meteor.userId` /
+  `Meteor.subscribe` etc. via `page.evaluate` (which runs in `window` scope), so they could
+  never proceed past login. Fixed by re-exposing `window.Meteor = Meteor` early in
+  `client/00-startup.js`, restoring the long-standing classic-Meteor behaviour where `Meteor`
+  is a global (also handy in the browser console).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.52 2026-06-18 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUE of [InputBleed](https://wekan.fi/hall-of-fame/inputbleed/):
+
+- [Fixed InputBleed](https://github.com/wekan/wekan/commit/8dfb54d9d5d68f120e3aa710c3521a9e9ac9670c):
+  incomplete multi-character HTML sanitization in card dependency
+  import allowed HTML/script element injection](https://github.com/wekan/wekan/blob/main/client/lib/importDependencies.js)
+  (CWE-79 Cross-site Scripting, CWE-80 Improper Neutralization of Script-Related HTML
+  Tags, CWE-116 Improper Encoding or Escaping of Output; GitHub CodeQL code scanning
+  alert #421, rule `js/incomplete-multi-character-sanitization`, severity High).
+  `stripHtml()` in `client/lib/importDependencies.js` removed HTML tags with a single
+  pass of `/<[^>]*>/g`. That is an incomplete multi-character sanitization in two ways:
+  removing one match can splice surrounding text into a new match (so the replacement
+  must be looped to a fixed point), and a dangling, unclosed tag that has no closing
+  `>` (for example a trailing `<script` or `<svg/onload=...`) is never matched by the
+  regex at all and survives untouched — leaving `<script` in the output, exactly as the
+  scanner warned. A crafted card-dependency ("Red Strings") import file (the
+  WeKan/generic JSON or Miro item titles and connector captions that pass through
+  `stripHtml`) could therefore smuggle an HTML/script fragment past the sanitizer.
+  Fixed by looping the tag-stripping replacement to a fixed point and then removing any
+  remaining stray `<`/`>` characters, so neither a complete nor a partial tag can
+  remain.
+  Thanks to GitHub CodeQL and xet7.
+
+and fixes the following bugs:
+
+- [Card Details popup](https://github.com/wekan/wekan/commit/15fcde99e2105075fe75ed4164a8b116b91d5606):
+  removed the redundant empty second popup that appeared at
+  the top of the page when a card was opened as a popup (for example from the
+  Board Table view Edit link or from search results). The card details content is
+  always position:fixed, so it renders as its own framed box and escapes the
+  generic popup wrapper, leaving that wrapper (with its "Card Details" title
+  header, border and background) visible as an empty box. The wrapper is now
+  collapsed and made invisible so only the card itself shows. The card's own close
+  button now closes the popup (in addition to clicking outside or pressing Escape).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.51 2026-06-17 WeKan ® release
+
+This release adds the following improvements:
+
+- [Board Table view](https://github.com/wekan/wekan/commit/73b4a97aaafc00baba260cfd16526d78e6372dee):
+  the table now has the columns Card, List, Swimlane, Assignees,
+  Members, Labels, Received, Start, Due and End. The Received, Start, Due and End
+  dates are formatted and styled the same way as on the opened card details and the
+  Gantt view (reusing the cardReceivedDate / cardStartDate / cardDueDate / cardEndDate
+  badge templates), and can be sorted by clicking their column headers. Clicking a
+  date opens the date-select popup so it can be changed, and an add (+) button is
+  shown for empty dates — both only for board roles that have permission to change
+  the card (the same `canModifyCard` check used on card details). A Received, Start,
+  Due or End column is hidden when both its "Show at Card" and "Show at Minicard"
+  Card Settings are unchecked for the board. The Labels cell now word-wraps so long
+  label names no longer overflow across the other columns. Each row also has a
+  leftmost "Edit" link (pencil icon + text) styled like the one on the Admin Panel /
+  People page; clicking it opens the Card Details popup on top of the Board Table
+  view.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.50 2026-06-17 WeKan ® release
+
+This release adds the following improvements:
+
+- [Board Table view](https://github.com/wekan/wekan/commit/a5d7e45200628e3112fd4fa297e26a381b985156):
+  render markdown with `+viewer` in the Card, List, Swimlane and
+  Labels cells, so emoji shortcodes and markdown (for example `:thumbsup:`) display
+  rendered instead of as literal text, and word-wrap the Card, List and Swimlane
+  cells so long text no longer overflows across the other columns.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.49 2026-06-17 WeKan ® release
+
+This release fixes the following bugs:
+
+- Fix Board Table view not loading with "No such template: tableView" error.
+  The `tableView.jade`, `tableView.js` and `tableView.css` files of the new Board
+  Table view were never imported in `client/features/boards.js`, so the `tableView`
+  template was not bundled and selecting the Table view threw a Tracker recompute
+  exception. Added the missing imports.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.48 2026-06-17 WeKan ® release
+
+This release adds the following updates:
+
+- [Added non-experimental docker settings](https://github.com/wekan/wekan/commit/0944f2af472c30d4d464850399ed9f5ffcca3a0f).
+  Thanks to xet7.
+
+and adds the following new features:
+
+- Board Table view.
+  [Part 1](https://github.com/wekan/wekan/commit/e085e5bfeb7b1a00be6d39b413cec7078a20134b),
+  [Part 2](https://github.com/wekan/wekan/commit/86bf48a626e2947836ae7dc5dda65c08d0174552).
+  The board view menu (Swimlanes, Lists, Calendar, Gantt) gains a new "Table" entry
+  below Gantt. It shows every card of the current board in a table — Card, List,
+  Swimlane, Members, Labels and Due Date — using the same styling as the My Cards
+  table view (the `.my-cards-board-table` CSS classes). Whereas My Cards' table spans
+  all of the user's cards across boards, this is the per-board equivalent showing all
+  of the current board's cards. The view is stored like the others as the user's
+  `board-view-table` boardView. It also has a search box and previous/next pagination
+  styled like the Admin Panel / People page, and Excel-like column sorting: click the
+  Card, List, Swimlane or Due Date header to sort by it, click again to reverse, with
+  an arrow showing the active column and direction. Search, sort and pagination run
+  client-side over the board's already-loaded cards.
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [List scrollbar disappeared after resizing a list width](https://github.com/wekan/wekan/commit/f621966f6143bb0d1c986507331d095ff81866d8):
+  Fixes [#6386](https://github.com/wekan/wekan/issues/6386). When changing the width
+  of a list by dragging the resize handle between lists, the list's vertical scrollbar
+  (used to scroll up and down through the cards in a list) disappeared. Cause: dragging
+  the resize handle sets an inline `--list-width` property on the list, which made the
+  resize CSS rules force `display: block` on the list permanently. That collapsed the
+  flex-column layout so `.list-body` was no longer height-bounded and its
+  `overflow-y: auto` scrollbar never appeared. Fixed by keeping the flex column layout
+  (`display: flex; flex-direction: column`) instead of `display: block` during and after
+  resize; the explicit inline width still pins the list width.
+  Thanks to xet7.
+- [Login and register pages are now scrollable to the bottom of the form](https://github.com/wekan/wekan/commit/ad2b969eb5aeea535e0392c9cf81d32a79f11657):
+  Tall authentication forms (many login methods, legal notice, language selector, etc.)
+  could overflow the viewport without a reliable way to scroll to all fields. The auth
+  pages render directly into `<body>`, which already has `overflow-y: auto`, so the
+  vertical scrollbar now appears whenever the form is taller than the viewport, with a
+  real draggable thumb, placed on the right for LTR and on the left for RTL (since
+  `<body>` inherits `direction` from the html `dir` attribute). Two `<br>` are added
+  below the dialog so the bottom of the form scrolls fully into view. An earlier attempt
+  forced `overflow-y: scroll`, which left a non-draggable empty scrollbar track in
+  Chromium and no scrollbar at all in Firefox when the form fit the viewport; using the
+  default `overflow-y: auto` shows the scrollbar only when there is something to scroll.
+  Thanks to xet7.
+- [Drag-to-scroll (dragscroll) now works on the All Boards, My Cards, Login and Register pages and in the board Lists view](https://github.com/wekan/wekan/commit/da93bfbca687e4ca9b1ed8798e9f07ec0d31bab7):
+  Dragging empty space to scroll already worked on the board Swimlanes view but not on
+  these pages. The dragscroll library scrolls whichever element carries the `dragscroll`
+  class, and that element must be the actual scroll container. On All Boards, My Cards,
+  Login and Register the page scroll container is `<body>` (the previous `dragscroll`
+  class on `ul.board-list` only scrolled in mobile view), so a small shared helper
+  (`client/lib/pageDragscroll.js`) now toggles the `dragscroll` class on `<body>` while
+  those templates are mounted and calls `dragscroll.reset()`; the library has a dedicated
+  `el == document.body` branch for whole-page scrolling. In the board Lists view the
+  `.board-canvas` only received `dragscroll` when the board had swimlanes, so vertical
+  drag-scroll failed on swimlane-less boards; the canvas now always carries the class.
+  One-finger touch scrolling (client/lib/dragscrollTouch.js) covers these too.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.47 2026-06-17 WeKan ® release
+
+This release adds the following updates:
+
+- [Developer test tooling: "Run ALL tests" now stops an existing dev server on port 3000 instead of aborting](https://github.com/wekan/wekan/commit/64aa784b2b2b9f96040aad066101aef3f8444da0):
+  `rebuild-wekan.sh` menu option 9 ("Run ALL tests") previously errored out with
+  "Port 3000 is already in use" when a dev server was already running, forcing the
+  user to stop it manually. It now detects and stops the existing Meteor dev server
+  before starting its own. Thanks to xet7. Details:
+  - When port 3000 is busy, option 9 finds the existing Meteor dev server
+    (`pgrep -f 'meteor run --port 3000'`) and sends it a normal `kill`, which also
+    tears down the node child it spawned.
+  - It then polls the port for up to 30s, escalating to `SIGKILL` at the 15s mark
+    and falling back to `lsof -ti tcp:3000` (or `fuser -k 3000/tcp`) to catch
+    anything still holding the port whose command line does not match.
+  - Only if the port is still occupied after all that does it print an error and
+    abort; otherwise it reports "Port 3000 is now free" and starts its own server.
+- [Fix moving/copying a card silently failing with a 403 validation error](https://github.com/wekan/wekan/commit/7db02489202c560d227a476db24cd761c66a0a00):
+  the move, copy, copy-many and convert-checklist-item card dialogs could leave a
+  card in its original list instead of moving it. Thanks to xet7.
+  Details:
+  - Root cause: the dialog's "Done" handler read the target board/swimlane/list by
+    scraping the DOM `<select>` elements. The reactive `boards()` helper can
+    transiently return `[]` while a `board` subscription re-resolves, leaving the
+    board `<select>` momentarily option-less, so `selectedIndex` was `-1` and the
+    scraped `boardId` was `undefined`. `card.move(undefined, …)` then failed
+    server-side with `ValidationError: Not permitted. Untrusted code may only
+    updateAsync documents by ID [403]`, and the card silently stayed put. This was
+    a gap in the earlier dialog fix, which bound only the swimlane and list options
+    to the live selection but left the board `<select>` on the (empty)
+    last-confirmed option.
+  - Fix: the Done handler now reads `boardId`/`swimlaneId`/`listId` from the
+    dialog's live reactive selection (`selectedBoardId`/`selectedSwimlaneId`/
+    `selectedListId`), which stays correct across re-renders, and the board
+    `<option selected>` attribute is bound to the live selection in all four
+    dialogs for UI consistency.
+  - Test hardening: three Playwright/Node E2E tests that flaked under the
+    all-parallel run (move-list-right, add-to-top/add-to-bottom, and the Node E2E
+    second-session list-order check) now wait for the board subscription to
+    populate before acting, instead of reading once after a fixed delay.
+- [Developer test tooling: run all tests in parallel against a single dev server](https://github.com/wekan/wekan/commit/19fe2e2b6f21b5206e29dcd568576f001abbf37a):
+  `rebuild-wekan.sh` and `rebuild-wekan.bat` now run all tests in parallel
+  against a single dev server, and fix the WebKit/Docker permission fallout.
+  Thanks to xet7. Details:
+  - "Run ALL tests" (menu option 9) now starts **one** WeKan server on
+    http://localhost:3000 (using `.meteor/local`) and runs every test job
+    concurrently with a live, refreshing progress display: import regression,
+    Node E2E, and Playwright Chromium + Firefox + WebKit all run against that one
+    server, while the Mocha server-side suite runs at the same time in its own
+    isolated Meteor build dir (`.meteor/local-test`, via `METEOR_LOCAL_DIR`) so the
+    two Meteor builds never share `.meteor/local`. A per-job PASS/FAIL summary and
+    per-job logs (`../wekan-alltests-<job>.log`) are written at the end. Previously
+    these ran strictly one after another.
+  - New menu option 16, "Test Playwright ALL browsers in parallel", runs
+    Chromium + Firefox + WebKit at the same time against a server that is already
+    running on :3000 (WebKit via the Playwright Docker image on Linux arm64, native
+    elsewhere; the others run with `--workers=3` on Windows).
+  - Each Playwright browser now writes to its own `test-results/<browser>` output
+    dir so parallel runs do not clobber each other's artifacts, and the WebKit
+    Docker run executes as the host user (`--user`) so it no longer leaves
+    root-owned files behind. A guard repairs an already root-owned `test-results/`
+    that caused `EACCES: permission denied, mkdir .../.playwright-artifacts-N`.
+- [Run ALL tests: start the :3000 server before Mocha so it boots fast again](https://github.com/wekan/wekan/commit/83963dce80909ae0c6dde512c297619e1213c502):
+  the parallel "Run ALL tests" flow launched Mocha (in its own `.meteor/local-test`
+  build) before the :3000 dev server, so two full Meteor builds competed for
+  CPU/disk and the server took a long time to become ready — shown as a long line
+  of dots during the readiness wait. Mocha and the import regression do not need
+  the server, so they are now launched only after the server build is underway;
+  the server builds alone and boots fast again, while they still run in parallel
+  with the E2E and browser jobs. Applied to both `rebuild-wekan.sh` and
+  `rebuild-wekan.bat`. Thanks to xet7.
+- [Fix #6380: login page missing username/password fields after upgrade](https://github.com/wekan/wekan/commit/8e70a2b6a95373125be222534cc2fd4da6c278e8):
+  the password form is hidden by default in CSS and only revealed by JS when
+  `isPasswordLoginEnabled` returns truthy; a slow/failed method call or a
+  not-yet-rendered accounts form left the login without username and password
+  fields. It now shows the form unless password login is explicitly disabled, and
+  waits for the form element to appear before showing it. Thanks to xet7.
+- [Fix #6381: make the card "Mark as complete" toggle configurable, hidden by default](https://github.com/wekan/wekan/commit/67d9de32db8829ae11ad654fee621162368eed36):
+  a new board setting `allowsDueComplete` (off by default) controls whether the
+  "Mark as complete" toggle is shown on cards, with a checkbox in the board Card
+  Settings popup to enable it per board. Thanks to xet7.
+- [Fix #6382: stop the client auto-creating thousands of empty swimlanes](https://github.com/wekan/wekan/commit/dd7306d8de1f8c49d2f80b6cb6b49994e7a5a94d):
+  `getDefaultSwimline()` inserted a swimlane whenever none was found, but on the
+  client it runs inside reactive renders — for a board whose swimlanes were not
+  yet loaded (e.g. the default subtasks board viewed via "All boards") every
+  re-render inserted another empty swimlane (2008 in the report), freezing the
+  browser. The default swimlane is now auto-created only on the server. Thanks to
+  xet7.
+- [Move/Copy/Convert card dialogs: bind swimlane and list select to live selection](https://github.com/wekan/wekan/commit/758f320969ccdbe2026cf1acb9d361906da3f76a):
+  the swimlane and list `<select>` `selected` option in the move, copy, copy-many
+  and convert-checklist-item card dialogs now follows the live selection instead
+  of the last-confirmed option, so a Blaze reactive re-render can no longer
+  silently revert the user's in-progress choice. Thanks to xet7.
+- [Playwright: probe browsers and skip ones that cannot launch on the host](https://github.com/wekan/wekan/commit/be44f9c3114fcef82847510058f8ccd014e32109):
+  the test runner now probes each browser and skips any that cannot launch (e.g.
+  the bundled WebKit needs old system libraries that newer Linux arm64 distros
+  like Ubuntu 26.04 no longer ship), removing false WebKit failures locally while
+  still running every browser on CI. Override with `WEKAN_PLAYWRIGHT_PROBE=1`/`0`.
+  Thanks to xet7.
+- [rebuild-wekan.sh: platform detection, Docker WebKit on Linux arm64, all browsers in ALL tests](https://github.com/wekan/wekan/commit/dac356ed061167cdf994bd9f82a849514922a92e):
+  detect OS/arch (Linux amd64/arm64, macOS arm64); run the WebKit Playwright specs
+  via the official Playwright Docker image on Linux arm64 where the bundled WebKit
+  cannot launch natively; and run Chromium, Firefox and WebKit in the "Run ALL
+  tests" option. Thanks to xet7.
+- [rebuild-wekan.bat: Windows menu parity for building, running and testing WeKan](https://github.com/wekan/wekan/commit/d5e5df6549f0496e4eaa54675eee2392cbebdd8d):
+  the Windows batch script now mirrors rebuild-wekan.sh's interactive menu so
+  building, running and testing WeKan (Mocha, import regression, Node E2E and
+  Playwright Chromium/Firefox/WebKit) works on Windows amd64/arm64 too. Thanks to
+  xet7.
+- [Bumped form-data from 2.5.5 to 2.5.6](https://github.com/wekan/wekan/pull/6375):
+  security fix for the CRLF-injection issue (CVE-2026-12143, GHSA-hmw2-7cc7-3qxx)
+  where CR/LF/`"` in multipart field names and filenames were not escaped. It is a
+  transitive dependency (pulled in via `@google-cloud/storage`); lockfile-only
+  change. Thanks to Dependabot and xet7.
+- [Bumped launch-editor from 2.13.2 to 2.14.1](https://github.com/wekan/wekan/pull/6376):
+  a dev-only dependency (used by `webpack-dev-server` / `@rsdoctor/sdk`, not in the
+  production bundle); lockfile-only change. Thanks to Dependabot and xet7.
+- [Bumped docker/setup-buildx-action from 3 to 4](https://github.com/wekan/wekan/pull/6377):
+  GitHub Actions workflow action update used by the Docker image build. Thanks to
+  Dependabot and xet7.
+- [Bumped azure/setup-helm from 4 to 5](https://github.com/wekan/wekan/pull/6378):
+  GitHub Actions workflow action update used by the Helm chart release workflow.
+  Thanks to Dependabot and xet7.
+- [Bumped dompurify from 3.4.6 to 3.4.9](https://github.com/wekan/wekan/pull/6379):
+  update of the HTML sanitizer used to sanitize card descriptions, comments and
+  other rendered markdown (XSS protection). Thanks to Dependabot and xet7.
+
+and adds the following new features:
+
+- [Added card dependency "Red Strings" / PI program board](https://github.com/wekan/wekan/commit/5bd1d0ae742e118561b0e9e3170c1e44bd579ad8):
+  visualize card-to-card dependencies as red, arrow-headed connection lines drawn on
+  top of the board (for SAFe PI-planning program boards). A card now has a
+  `cardDependencies` list edited from a new "Dependencies" section in the card detail
+  (pick or remove other cards on the same board), and a board header toggle
+  (`showDependencies`) renders an SVG overlay that draws a red curve from each card to
+  each of its dependencies, following the live card positions on scroll/resize. The
+  overlay is non-interactive (`pointer-events: none`) so cards stay clickable.
+  Each dependency is now **typed and customizable**: a relation `type`
+  (`related-to`, `blocks`, `is-blocked-by`, `fixes`, `is-fixed-by` — the type sets
+  the arrow direction; `related-to` is undirected), a per-line `color` (any color,
+  via a color picker, not just red) and an `icon` (FontAwesome). The card detail
+  "Dependencies" section edits all three (relation type, color, icon picker), with a
+  search-by-title picker to add one; a colored icon+count **badge** is shown on the
+  minicard; and the board Filter sidebar can **filter cards by dependency relation
+  type**. A **REST API** was added (tag `Dependencies`, documented in the OpenAPI
+  docs and `api.py`): `GET /api/boards/:boardId/dependencies`,
+  `GET/POST /api/boards/:boardId/cards/:cardId/dependencies` and
+  `PUT/DELETE /api/boards/:boardId/cards/:cardId/dependencies/:targetId`, each
+  accepting `type`/`color`/`icon`. Dependency lines can be **exported** (Board
+  Settings → Export → Dependencies / JSON and / SVG; the SVG is a standalone,
+  round-trippable diagram) and **imported** (All Boards → New → Import →
+  Dependencies (JSON/SVG)) into a chosen board, matching cards by id, then card
+  number, then title. Importing a **Jira** board now maps Jira `issuelinks`
+  best-effort to dependency relations. Card dependencies and the board's
+  `showDependencies` toggle are **preserved** through card/board copy and WeKan
+  board export/import/migrate (target ids are remapped, dangling ones dropped), and
+  a card **moved** to another board drops its now cross-board dependencies and
+  cleans inbound references. Covered by tests
+  ([Part 1](https://github.com/wekan/wekan/commit/536fc4913cab9b8fdbdf1cdd9827358a7d23a0b3),
+  [Part 2](https://github.com/wekan/wekan/commit/d2e928bb113c51a293105bfc0d7465e4836363e3),
+  [Part 3](https://github.com/wekan/wekan/commit/4152847483e168dd80d0f99b9a91c470765b6bc0)):
+  e2e specs `27-red-strings` (overlay, toggle, typed lines, minicard badge,
+  copyCard preservation, import matching) and `28-dependencies-rest` (REST CRUD +
+  schema validation), plus mocha unit tests for the metadata helpers, the REST
+  OpenAPI annotations, the filter selector, the cross-board move cleanup and the
+  Jira issue-link mapping.
+  [Fixed editing an existing dependency from the card detail throwing a client
+  403](https://github.com/wekan/wekan/commit/1db64f4ddeacb0f0ac130726a306df5dfce7fd19)
+  ("Untrusted code may only updateAsync documents by ID") — changing a relation's
+  type/color/icon or removing it now rewrites the `cardDependencies` array and
+  updates by `_id` instead of using a forbidden positional-`$` selector update, and
+  [fixed the dependency icon picker not applying the chosen
+  icon](https://github.com/wekan/wekan/commit/e8a8007814d777f2c89d26cfdc878912c7072c9b)
+  (the popup now edits the source card, not the dependency row), with an e2e test
+  for editing a dependency's type/color/icon.
+  Added a piplanning.io / Kendis / Miro-style **drag-to-connect**
+  ([Part 1](https://github.com/wekan/wekan/commit/06bc92c200b93ff6d233ba5d2a40c4d939922cd3),
+  [Part 2](https://github.com/wekan/wekan/commit/9fe9e6087899823df064cce7c640f88be43914a4)):
+  when the overlay is on, each minicard shows a small **connect handle** (right
+  edge, on hover) — **drag it onto another card to create a dependency** (a dashed
+  guide line follows the cursor) — and a **connection line is clickable** to
+  change its type/color/icon or delete it. It is **not** a mode: cards stay
+  clickable and the rest of the overlay is click-through.
+  The **Dependencies (JSON/SVG)** importer now also best-effort maps **Miro** REST
+  API data (items + connectors, resolved to card titles; "block"/"fix" captions →
+  relation type); Kendis/piplanning.io (and GitHub/GitLab) have no public
+  dependency format, so a generic `{ "lines": [...] }` JSON interchange is
+  documented for them. Documented in
+  [Features/RedStrings](https://github.com/wekan/wekan/blob/main/docs/Features/Editor/RedStrings/RedStrings.md).
+  Fixes \#3392. Thanks to CodeFreezr, dbt4u, helioguardabaxo and xet7.
+- [Added an Admin Panel "Shared templates" view grouped by Organization / Team / email
+  Domain](https://github.com/wekan/wekan/commit/fc9e8674d89ec5b045f2e2c1b14fade9e92baf0d):
+  a new admin-only "Shared templates" tab under Admin Panel → People lists users'
+  shareable template boards, grouped by Organization, Team or email Domain. The three
+  scope checkboxes are live view filters (default unchecked); checking one or more shows
+  the matching groups, and only users whose Templates board is non-empty are listed. A new
+  admin-only `adminSharedTemplates` method enumerates each user's linked template boards
+  (the `cardType-linkedBoard` cards in their Board Templates swimlane) and returns them with
+  the user's orgs/teams/email domains; the boards are shown as links into each template
+  board. Covered by an e2e suite (`tests/playwright/specs/26-shared-templates.e2e.js`).
+  Documented in
+  [Features/Templates](https://github.com/wekan/wekan/blob/main/docs/Features/Board/Templates.md#shared-templates-admin-view).
+  Fixes #3313. Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fixed duplicate `MONGO_URL` environment variable generated by the Helm chart](https://github.com/wekan/charts/commit/d1662fc3b91a6ce28d5ea92ec2ad06d0df3e0755),
+  which made `helm install`/`upgrade` fail with `duplicate entries for key [name="MONGO_URL"]`
+  when the default `env` list (which already includes `MONGO_URL`) was used. The chart now
+  emits its computed `MONGO_URL` only when one is not already provided via `env` or `secretEnv`.
+  Fixes #6289. Thanks to the reporter and xet7.
+- [Fixed GFM strikethrough (`~~text~~`) no longer rendering in card descriptions](https://github.com/wekan/wekan/commit/92b0f96387c831839eb299a8feb00fe614419783):
+  markdown-it renders `~~text~~` to `<s>…</s>`, but the DOMPurify allow-list did not
+  include `s`/`del`/`strike`, so the sanitizer stripped the tag (keeping the bare text).
+  Those inline tags are now allowed in both DOMPurify configs. Fixes #6008. Thanks to
+  Buo-ren Lin and xet7.
+- [Fixed the release pipeline's OpenAPI docs generator crashing on template-literal route
+  paths](https://github.com/wekan/wekan/commit/17bb7c1264969a50f778452b37335599e3af0518),
+  which failed the GitHub Actions "release-all" bump job (`AttributeError: 'NoneType'
+  object has no attribute 'rstrip'`) when a REST route is registered with a backtick path
+  such as `` `/api/boards/:boardId/export/${format}` ``. The generator now resolves such
+  paths (a `${identifier}` becomes a `{identifier}` path parameter) and skips any route
+  whose path cannot be resolved statically instead of aborting the whole release. Thanks
+  to xet7.
+- [Fixed the Member Settings "Change Avatar" entry rendering in a different (uppercase-looking)
+  style than the other menu items](https://github.com/wekan/wekan/commit/d241f9d8f6b20fb9bdc0f829a9ffb5f595c3b8bd):
+  its label was mis-nested inside the `<i class="fa fa-picture-o">` icon element instead of
+  being a sibling of it, so it inherited the FontAwesome icon font styling. The label now sits
+  directly under the menu link like every other entry. Thanks to xet7.
+- [Hardened the reactive `DataCache` teardown to re-check for dependents before stopping a
+  still-used entry](https://github.com/wekan/wekan/commit/82192d04703c3b4bc09b7f28b8923d979c3b8831):
+  the 60s teardown timeout could stop the computation and delete a value that a dependent
+  re-attached to during the window, surfacing as a transient `undefined` (a contributor to the
+  "Board not found" flicker). Thanks to xet7.
+- [Fixed board export error responses returning HTTP 200 with an empty body](https://github.com/wekan/wekan/commit/309425545ffa91747f1f8d7d8585ec04795e13bf):
+  the export endpoints passed a bare number to `sendJsonResult`, which treats its argument as an
+  options object, so 404/400/403/auth failures returned 200 with no body. They now return the
+  correct status code and a JSON error body. Thanks to xet7.
+- [Fixed the board create/delete REST handlers masking errors as success](https://github.com/wekan/wekan/commit/29631f6f4b61fcf19ec1517a2ce335f3de7ac4b0):
+  `POST /api/boards` and `DELETE /api/boards/:boardId` caught errors and returned `code: 200`
+  with the error as data; they now report the real status code (so e.g. an unauthorized delete
+  returns a 4xx). Thanks to xet7.
+- [Hardened board import against out-of-range swimlane/card colors](https://github.com/wekan/wekan/commit/5eeedf8744ce344e5258a2c26698b9af66c78142):
+  like the earlier board-color fix, a card or swimlane color is now applied only when it is a
+  recognized color value, so a foreign/old export carrying an unknown color can no longer fail
+  collection2 validation and abort the import. Thanks to xet7.
+- Fixed the GitHub Actions **Playwright E2E** workflow so the Firefox and WebKit
+  browsers can actually run
+  ([Firefox/WebKit](https://github.com/wekan/wekan/commit/351da691381c197d2fdb35c8d5a5da6e514a4085),
+  [mongosh](https://github.com/wekan/wekan/commit/a3d4848c88956e588ce46672c103f266d072f969)):
+  the test step now sets `WEKAN_PLAYWRIGHT_ALL=1` (so
+  `--project=firefox`/`webkit` resolve instead of failing with "Project not
+  found"), WebKit was added to the CI matrix (Playwright's bundled WebKit runs
+  headless on the Linux runner), and `mongosh` is now installed in the Playwright
+  and Puppeteer-regression jobs (the e2e DB helpers shell out to it, which was
+  failing with `spawnSync mongosh ENOENT`). `npm run test:playwright:all` got the
+  same `WEKAN_PLAYWRIGHT_ALL=1` fix. Thanks to xet7.
+- [Translated the remaining untranslated English strings in the Finnish
+  translation](https://github.com/wekan/wekan/commit/599687f507b5279156fe93c47a546ec74ba92fef)
+  (`fi.i18n.json`) — the Shared Templates, card-dependency ("Red Strings") and
+  dependency import/export strings — using the existing Finnish terminology.
+  Thanks to xet7.
+  - [Fix flaky Playwright card/board tests under the parallel run](https://github.com/wekan/wekan/commit/19fe2e2b6f21b5206e29dcd568576f001abbf37a):
+  the new 3-browser parallel run surfaced three load-induced (not product)
+  failures that took DOM snapshots before the UI had settled. Thanks to xet7. Details:
+  - `03-cards-operations` "move does not create duplicate cards" read the card
+    titles immediately after the move and could catch the card mid-flight
+    (already removed from the source list, not yet rendered in the target). It
+    now waits for the card to be visible in the target list and gone from the
+    source list before snapshotting.
+  - `03-cards-operations` "add-to-bottom places the card last" polls until the
+    reactive re-sort places the new card last, since `submitNewCard` only waits
+    for the card to exist, not for its final sort position.
+  - `helpers/auth.js` `openBoard` now retries up to 5 times at 20s each so the
+    slowest browser (WebKit) survives the contention of the 3-browser parallel
+    run against one shared dev server, instead of failing in test setup.
+- [Build scripts: At tests option 9, run option 2 build if .build or node_modules missing](https://github.com/wekan/wekan/commit/9f2a81349f6edafc4784bb508afe2df016deaa17).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.46 2026-06-15 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [ProxyBleed](https://wekan.fi/hall-of-fame/proxybleed/):
+
+- [Fixed ProxyBleed: Header-login IP allowlist bypass via X-Forwarded-For spoofing allows
+  unauthenticated full account takeover (incl. admin)](https://github.com/wekan/wekan/commit/b181889a565254bc9bf79379a34fc7f617ccda28)
+  ([GHSA-jggc-qvfc-jr6x](https://github.com/wekan/wekan/security/advisories/GHSA-jggc-qvfc-jr6x), CWE-290 Authentication Bypass by Spoofing, CWE-348 Use of Less Trusted Source). WeKan's
+  header-login (reverse-proxy SSO) feature gates passwordless login on a source-IP allowlist
+  (`HEADER_LOGIN_TRUSTED_IPS`), but `getRequestIp()` in `server/lib/headerLoginAuth.js` derived the
+  source IP from the client-supplied `X-Forwarded-For` request header (its left-most hop), falling
+  back to the real TCP socket peer only when that header was absent. Because `X-Forwarded-For` is
+  fully attacker-controlled, an unauthenticated attacker who can reach the app port directly (a
+  second ingress, a published container port, a k8s NodePort, SSRF — i.e. any path that does not
+  traverse the trusted reverse proxy) could send a single GET request with
+  `X-Forwarded-For: <an-allowlisted-ip>` plus the username header (e.g. `X-Auth-User: admin`) and be
+  minted a full passwordless login session (`meteor_login_token`) for any existing user, including
+  `admin` — complete account takeover and admin impersonation, with no password, token or shared
+  secret. An empty or unset allowlist additionally failed OPEN (it trusted every source). The minted
+  session is a real, persisted resume token that also authenticates the REST API as the spoofed user.
+  Fixed by deriving the source IP from the real TCP socket peer
+  (`req.socket.remoteAddress`/`req.connection.remoteAddress`, normalizing IPv4-mapped IPv6) and never
+  from `X-Forwarded-For`, and by making an empty/unset `HEADER_LOGIN_TRUSTED_IPS` fail CLOSED so
+  header-login authenticates no one until the trusted reverse-proxy IP(s) are configured (a startup
+  warning is logged in that case). The same `findOrCreateHeaderLoginUser` /
+  `isTrustedHeaderLoginSource` helpers back the attachment API, so that path is fixed by the same
+  change. OPERATOR ACTION REQUIRED: if you use header-login you must set `HEADER_LOGIN_TRUSTED_IPS`
+  to your reverse proxy's IP address(es) — after this change an unset allowlist disables header-login
+  instead of trusting everyone, and the source IP compared against the allowlist is now the real
+  proxy connection, not a forgeable header. For multi-hop proxy deployments an OPT-IN
+  `HEADER_LOGIN_TRUSTED_PROXIES` list was added: `X-Forwarded-For` is honored only when the immediate
+  TCP peer is one of those explicitly trusted proxies, and then only the right-most hop that is not
+  itself a trusted proxy (the real client) is matched against `HEADER_LOGIN_TRUSTED_IPS` — a direct
+  attacker's forged header is still ignored. Covered by regression tests
+  (`server/lib/tests/proxybleed.security.tests.js` and `server/lib/tests/headerLoginAuth.tests.js`),
+  documented in [Header-Login](https://github.com/wekan/wekan/blob/main/docs/Login/Header-Login.md),
+  and the new env vars were added to `docker-compose.yml`, `start-wekan.sh`, `start-wekan.bat`,
+  `Dockerfile`, `.devcontainer/Dockerfile`, `releases/virtualbox/start-wekan.sh` and the Snap config.
+  Affected Wekan v9.44 and earlier. Thanks to rz1027 and xet7.
+
+and adds the following updates:
+
+- [Improved accessibility across all pages following WCAG 2.1 AA guidelines](https://github.com/wekan/wekan/commit/255de2062ff9b54393fd603bfc6cabddb8ede66a):
+  - Added a visible keyboard focus indicator (`:focus-visible` outline) for links,
+    buttons and form controls. The global CSS reset previously stripped all focus
+    outlines, leaving keyboard users with no indication of focus (WCAG 2.4.7).
+  - Added a "Skip to main content" link that lets keyboard and screen-reader users
+    bypass the header chrome (WCAG 2.4.1 Bypass Blocks).
+  - Added landmark roles so assistive technology can navigate page regions:
+    `role="main"` on the content area, `role="navigation"` on the header quick-access
+    bar, and `role="search"` on the global search form (WCAG 1.3.1).
+  - Marked modals and popups as `role="dialog"` with accessible names, set
+    `aria-modal="true"` on modals, and moved keyboard focus into a modal when it
+    opens and back to the triggering element when it closes (WCAG 2.4.3 Focus Order).
+  - Added accessible names (`aria-label`) to icon-only controls that previously had
+    none: modal/popup close and back buttons, the announcement close button, the
+    sidebar close/back buttons and the global search input and clear button
+    (WCAG 4.1.2 Name, Role, Value).
+  - Marked decorative Font Awesome icons inside labelled controls as
+    `aria-hidden="true"` so they are not announced redundantly.
+  - Added a screen-reader-only `.sr-only` helper class.
+- [Reorganized and updated the documentation](https://github.com/wekan/wekan/commit/83a0dd2565cd723da18da13f9a24ac09c75eb0a0):
+  - Fixed 14 broken relative links in `docs/README.md` (verified with a link check).
+  - Split the monolithic `docs/Features/Features.md` into focused topic pages under
+    `docs/Features/` subdirectories: Boards, Lists, Cards, Members, Keyboard
+    Shortcuts, Admin Panel, WIP Limits, Cleanup and Stats; `Features.md` is now an
+    index linking to them, and `docs/README.md` links the new pages.
+  - Added documentation for previously-undocumented features: Right-to-Left (RTL)
+    UI, Stickers, Card Locations, Board Background Images, Attachments and File
+    Storage, the card "complete" checkbox, and a new Accessibility feature page
+    (covering both the Admin Panel / Settings / Accessibility info page and the
+    built-in accessibility features above).
+  - Updated outdated information based on the CHANGELOG: the Meteor/Node versions
+    (now Meteor 3.x / Node.js 24.x) and the obsolete feature wishlist (Custom
+    Fields, Subtasks, Swimlanes, Gantt, WIP limits, voting and templates are now
+    implemented).
+
+and adds the following new features:
+
+- [Added an accessibility end-to-end test suite](https://github.com/wekan/wekan/commit/9c39226a59f8fc156559315b85a1769e109c43e8)
+  that checks the page language, skip link, landmark roles, visible focus, dialog
+  roles, accessible names on icon controls, and the absence of duplicate element ids.
+- [Greatly expanded board automation **Rules**](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f):
+  - The Rules page is now a **fullscreen page** below the top bar (board sidebar →
+    Rules), instead of a cramped popup. It has its own route `/b/:id/:slug/rules`.
+  - **Scheduled rules**: run rules on a schedule (once on a date, or every day /
+    weekday / week / month at a chosen time), on **due dates** (set / approaching /
+    overdue), or by **card aging** ("a card has been in a list for N days"). A
+    SyncedCron job evaluates these every minute. This makes processes such as
+    "archive cards that have been in the Completed column for 90 days" work out of
+    the box.
+  - These long-standing automation feature requests are implemented by the above
+    rules work and can be closed: Fixes #1160, Fixes #2476, Fixes #4372, Fixes #5775,
+    Fixes #5825 — IFTTT-style rules including recurring cards (#1160), Trello-Butler-
+    like Scheduled Rules (#2476), rules that set a due date 1 day/week/month ahead via
+    the "set a date relative to now (+N days)" action (#4372), and automated recurring
+    cards/tasks on a daily/weekday/weekly/monthly schedule from the GUI (#5775, #5825).
+  - **More Trello-Butler-style automations**: card **buttons** (shown on the card)
+    and board **buttons** (shown in the board header) that run an action on demand,
+    and new actions — sort a list (by due/name/created/modified), move all cards in a
+    list, mark card complete/incomplete, and set a date relative to now.
+  - **Manage rules**: select all / unselect all, delete selected, edit (rename), and
+    a **drag-and-drop visual Workflow editor** (Jira-like): drag a trigger and an
+    action into a `When … → Then …` builder to create a rule, drag an action onto an
+    existing rule to change it, and delete rules from the graph.
+  - **Import / Export rules** to JSON (lossless) and CSV (round-trippable); export
+    only the selected rules; a **best-effort importer for Trello Butler** commands
+    (Trello board exports do not contain Butler rules, so they are pasted in and the
+    supported subset is mapped, with unmapped lines reported).
+  - **Import visual workflows from n8n and Node-RED** (best-effort: the workflow
+    graph's trigger→action edges are mapped to WeKan rules, unmapped nodes reported),
+    with an **Import target** selector to choose which personal **workspace** and
+    **board** the imported rules go into (applies to all importers in the dialog).
+- [Added a **whole-board import REST API**](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) (`POST /api/boards/import`) that recreates a
+  board — including its **rules/triggers/actions (workflows)** and other data — from a
+  WeKan board export. With the existing export endpoint this enables **migrating all
+  boards + workflows + rules from another WeKan over the API**; `api.py` adds
+  `importboard` and `migratefromwekan REMOTE_URL REMOTE_USER REMOTE_PASS`. The remote
+  fetch is done client-side, so the server never fetches arbitrary URLs. Covered by
+  an e2e test (export a board with a rule → import it → assert the rule, trigger and
+  action are recreated on the new board) in `tests/playwright/specs/23-rest-api-more.e2e.js`.
+  - **Rules REST API** to add/edit/remove/list rules
+    (`/api/boards/:boardId/rules`), documented in the OpenAPI docs and `api.py`
+    (`addrule` / `editrule` / `removerule` / `listrules` / `getrule`).
+  - Added a Rules e2e test suite (`tests/playwright/specs/20-rules.e2e.js`, covering
+    the fullscreen page, creating event rules, import/export, selecting rules, the
+    workflow view and board buttons) and docs
+    ([Features/Rules](https://github.com/wekan/wekan/blob/main/docs/Features/Automation/Rules/Rules.md),
+    updated IFTTT page).
+- [Added **Jira import**](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) ("All Boards → New → Import → From Jira"): import boards from
+  a Jira Cloud REST issue-search JSON, similar to the Trello importer. Jira statuses
+  become lists, issues become cards (with labels, due dates and assignees mapped),
+  and an optional `automationRules` array is imported as WeKan rules.
+- [Import from WeKan, Trello and Jira](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) can now be done **with or without mapping
+  members**: an "Import without mapping members (map later)" button skips the member
+  mapping step and imports immediately, so members can be mapped afterwards. Covered
+  by `tests/playwright/specs/21-import-without-mapping.e2e.js`.
+- [Rounded out board import/export menus](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f):
+  - **Excel (.xlsx) board import** ("All Boards → New → Import → From Excel"): the
+    spreadsheet is parsed on the server (exceljs) into rows and imported through the
+    CSV creator, so boards can round-trip through `.xlsx` (the matching Excel *export*
+    already existed).
+  - **Board PDF export** ("Board Settings → Export → Export board to PDF", and
+    `GET /api/boards/:boardId/exportPDF`): exports the board title, lists and cards to
+    a PDF (reusing the card PDF builder). Added `api.py exportboardpdf`.
+  - **Kanboard import and export**: "From Kanboard" in the import menu (columns →
+    lists, tasks → cards, tags → labels) and "Export board to Kanboard JSON" in the
+    export menu (`GET /api/boards/:boardId/export/kanboard`), which round-trips with
+    the importer.
+  - **Import and export to/from NextCloud Deck, OpenProject, GitHub, GitLab, Gitea
+    and Forgejo.** Implemented generically: each tool has a small parser that
+    normalizes its export/API JSON to a common shape (reusing one import engine) and
+    a formatter that emits the tool's JSON (reusing one export collector). Added to
+    the import and export menus, with a generalized REST API
+    (`POST /api/boards/import/:source`, `GET /api/boards/:boardId/export/:format`) and
+    `api.py` helpers (`importboardfrom`, `exportboardformat`) so all boards can be
+    migrated in bulk. Issue trackers (GitHub/GitLab/Gitea/Forgejo) map issues to cards
+    grouped into Open/Closed lists; Deck stacks and OpenProject statuses become lists.
+    Documented in [External-Tools](https://github.com/wekan/wekan/blob/main/docs/ImportExport/External-Tools.md).
+  - **Asana** and **ZenKit** are now fully built-in (import + export menus, REST
+    API and `api.py` — no external script needed).
+  - Together with the existing CSV/Excel import+export and the card PDF export, this
+    completes CSV / Excel / PDF import & export. Fixes #395.
+  - Covered by `tests/playwright/specs/25-excel-pdf.e2e.js` (Excel import + board PDF
+    export). Documented in [Excel-and-VBA](https://github.com/wekan/wekan/blob/main/docs/ImportExport/Excel-and-VBA.md)
+    and [Kanboard](https://github.com/wekan/wekan/blob/main/docs/ImportExport/Kanboard.md).
+- [Extended the **REST API**](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) so the newer card features are scriptable: the card edit
+  endpoint (`PUT /api/boards/:boardId/lists/:listId/cards/:cardId`) now accepts
+  `stickers`, `locations` and `dueComplete` (the complete checkbox), documented with
+  `api.py` examples (`setcardstickers` / `setcardlocations` / `setcardcomplete`).
+- [Added e2e tests for previously-untested documented features](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f)
+  (`tests/playwright/specs/22-card-features.e2e.js`): stickers, card locations, the
+  complete checkbox and WIP limits.
+- [Expanded REST API test coverage](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) (`tests/playwright/specs/23-rest-api-more.e2e.js`):
+  the Rules API (create/list/get/edit/delete), the new card `stickers` / `locations`
+  / `dueComplete` fields, and core CRUD for swimlanes, lists, custom fields,
+  checklists + items and comments.
+- [Added a **board background image upload/download API**](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) (the background counterpart
+  of the card-attachment upload API): `POST /api/attachment/upload-background` and
+  `GET /api/attachment/download-background/:boardId` (plus the DDP methods
+  `api.board.uploadBackground` / `api.board.downloadBackground`). Uploads use the
+  current **Admin Panel / Attachments / Default Storage** backend and set the image
+  as the board's active background (board-admin gated). Documented in the OpenAPI
+  docs and `api.py` (`uploadbackground` / `downloadbackground`).
+- [Added **Trello-Butler-style rule variables**](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) — `{cardname}`, `{cardnumber}`,
+  `{listname}`, `{boardname}`, `{duedate}`, `{username}`, `{date}` / `{time}` /
+  `{datetime}`, etc. — substituted in rule action text (email subject/body, created
+  card/checklist/swimlane names). Fixes #2475.
+- [Added **visual card aging**](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f): when enabled per board (board settings → "Card
+  aging"), cards that have not been touched for a while are progressively faded based
+  on their last activity, Trello-style. The three fade-tier **day thresholds are
+  board-configurable** (default 7 / 14 / 28 days). Toggleable and configurable in the
+  board settings and over the card-settings REST API
+  (`cardAging`, `cardAgingDays1/2/3`). Fixes #3984.
+- [Added **accessible reordering**](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) without drag-and-drop: visually hidden,
+  keyboard-focusable "Move card up/down" buttons on minicards and "Move list
+  left/right" buttons on list headers, for screen-reader and keyboard users. Fixes #459.
+- [The board's background image is now also shown as the board tile background](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) on the
+  **All Boards** list page (reusing the existing board background, with a dark overlay
+  for readability). Fixes #5157.
+
+and fixes the following bugs:
+
+- [Fixed rules that send an email crashing with `TAPi18n is not defined`](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f)
+  (`TAPi18n` was not imported in `server/rulesHelper.js`). Fixes #5822.
+- [Fixed the **WIP limit** counting](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) only the currently visible cards when a filter is
+  active, which let lists exceed their hard WIP limit; it now counts all cards in the
+  list. Fixes #2095.
+- [Fixed deleting a board leaving orphaned rule **Actions**](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) in the database (Rules and
+  Triggers were removed but Actions were not). Fixes #4266.
+- [Fixed the "check all / uncheck all / (un)check item" rule actions crashing](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) with
+  "Cannot read property 'uncheckAllItems' of undefined" when the named checklist or
+  item does not exist on the card; they now no-op safely. Fixes #5283.
+- [Added e2e tests for the above features and fixes](https://github.com/wekan/wekan/commit/f0bce67a3bf301c21ded3eb97e84a3be0010290f) in
+  `tests/playwright/specs/24-feature-issues.e2e.js` (accessible card/list reordering,
+  visual card aging with default and configurable thresholds, board-delete rule
+  cleanup, and the board background on the All Boards tile).
+
+- [Fixed duplicate `id="header"` attributes rendered inside loops on the My Cards page](https://github.com/wekan/wekan/commit/c8c0438d662426aaf246a6164d3c3b18bd3462f6),
+  which produced invalid HTML and broke assistive-technology navigation (WCAG 4.1.1).
+- [Fixed the My Cards table markup](https://github.com/wekan/wekan/commit/255de2062ff9b54393fd603bfc6cabddb8ede66a): header cells (`<th>`) are now wrapped in a `<tr>`
+  with `scope="col"`, and a caption was added, so the table is announced correctly.
+- [Added missing `alt` text to the user avatar image](https://github.com/wekan/wekan/commit/255de2062ff9b54393fd603bfc6cabddb8ede66a) (the surrounding link already
+  carries the accessible name).
+- [Fixed several bugs in the new features above](https://github.com/wekan/wekan/commit/073842b3c54f07205c5b0a9c519a665f920c768e) that were surfaced by running the full
+  test suite (`./rebuild-wekan.sh` → "Run ALL tests"), so the Playwright suite is
+  green again:
+  - **Board JSON export returned empty lists, swimlanes and rules.** A previous fix
+    that made attachment export use `meta.boardId` accidentally applied the same
+    selector to lists/swimlanes/rules, which store a flat `boardId`, so those came
+    back empty — and the whole-board import API then had nothing to recreate.
+    Attachments now use their own selector. (`models/exporter.js`)
+  - **Export, PDF export and board-delete REST endpoints required a global site
+    admin** (`Authentication.checkUserId`) instead of board-level access, so a board
+    owner using their own API token got `403`/empty responses and board deletion
+    silently did nothing (its rule/trigger/action cleanup never ran). They now require
+    only a logged-in user and rely on the existing per-board `canExport` / board-admin
+    checks. (`models/export.js`, `models/exportPDF.js`, `server/models/boards.js`)
+  - **Rules did not appear on the fullscreen Rules page.** The `boardRules`
+    publication passed the user id string to `Board.isVisibleBy()`, which expects a
+    user object, so a board's rules/triggers/actions were never published.
+    (`server/publications/rules.js`)
+  - **Card edit and checklist REST endpoints returned `500`.**
+    `PUT /api/boards/:boardId/lists/:listId/cards/:cardId` with `locations` stored
+    entries without the schema-required `_id` (and without numeric coordinates), and
+    the checklist `POST` referenced a permission helper it never imported.
+    (`server/models/cards.js`, `server/models/checklists.js`)
+  - **Excel/CSV import crashed on spreadsheets without date columns** (it read
+    `.length` of a missing cell); date columns are now treated as optional.
+    (`models/csvCreator.js`)
+  - **Importing a board whose export carried a non-WeKan board color aborted with a
+    `400`.** A WeKan/Trello export can contain `color: "bgnone"`, which is not an
+    allowed board color, so collection2 rejected the board insert and the import never
+    navigated to the new board. The imported color now falls back to the default when
+    it is not a recognized WeKan color. The post-import username bookkeeping was also
+    hardened to only record usernames on users that actually exist.
+    (`models/wekanCreator.js`)
+  - **Accessible "move card up/down" and "move list left/right" buttons did nothing.**
+    The buttons are visually hidden with an `.sr-only` container that clips them to a 1px
+    box (`clip: rect(0,0,0,0)`), so a click resolved (via hit-testing) to the element
+    behind them and the Blaze handler never fired. They are now kept in normal flow and
+    hit-testable while still visually hidden (a transparent, focusable control), so the
+    reorder handlers actually run. (`client/components/main/layouts.css`)
+  - **Board/card automation buttons never rendered.** The board-button/card-button
+    helpers joined a published rule to its `triggers` document to read the button
+    type/label, but the schemaless `triggers` collection's documents do not reach the
+    client over the board subscription in this Meteor 3 setup, so the lookup found
+    nothing. The button type/label are now denormalised onto the (schema-backed,
+    reliably-published) rule document by a new board-admin-gated `rules.createRule`
+    server method, and the header/card read them straight from the rule.
+    (`server/rulesButton.js`, `models/rules.js`, `client/components/rules/actions/boardActions.js`,
+    `client/components/rules/boardButtons.js`, `client/components/rules/cardButtons.js`)
+  - Hardened several tests that were checking the wrong state rather than a real product
+    bug: the accessibility test now polls for the `<html lang>` attribute (set by client
+    JS on startup) instead of reading it once before the page settles; the board-background
+    tile test selects the "Remaining" boards menu where the unstarred seeded board appears;
+    and the list-menu helper and a few card/list reads now poll/retry through a transient,
+    pre-existing "Board not found" re-render that can briefly tear down the board view
+    while its subscription settles.
+  Thanks to xet7.
+
+Known issues / possible later fixes (not addressed in this release):
+
+- **Transient "Board not found" flicker on an open board.** While a board's
+  subscription re-settles, the reactive board read (`Utils.getCurrentBoard()` →
+  `ReactiveCache.getBoard` → the memoizing `DataCache`) can momentarily return
+  `undefined` while the subscription is still `ready()`, so `client/components/
+  boards/boardBody.jade` briefly shows `board-not-found` and tears down the lists/
+  cards before the board re-renders. Real users on slow/reconnecting links can see a
+  flash and lose scroll/popup state. The test suite was made resilient to it, but the
+  underlying flicker is unfixed. A safe fix needs care because the obvious options
+  have trade-offs: a "was-ever-present" latch in the board template would replace the
+  flash with a spinner but still unmount the lists; making `getCurrentBoard()` sticky
+  would keep the board mounted but return a stale board after a genuine
+  delete/archive (global behavior change); and hardening `DataCache` (not storing a
+  transient `undefined` over a present value) risks masking legitimate removals across
+  every reactive read. Same root cause as the board/card automation-button flicker
+  fixed above (worked around there by reading Minimongo directly). (The `DataCache`
+  60s-teardown contributor to this flicker has since been hardened — see the Upcoming
+  release fixes above.)
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.45 2026-06-14 WeKan ® release
+
+This release adds the following updates:
+
+- [Made the "Release All Platforms" snap build resilient to transient Launchpad failures](https://github.com/wekan/wekan/commit/4a1eff22831b18bbf1a6b0defb4e8e9c6bacee1b).
+ `snapcraft remote-build` intermittently dies with a transient TLS
+  drop (`SSLEOFError: EOF occurred in violation of protocol`, exit 70) while
+  talking to Launchpad after pushing the repo — unrelated to the build itself —
+  which failed the whole release. The step now retries the remote build up to
+  three times before giving up.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.44 2026-06-14 WeKan ® release
+
+This release adds the following new features:
+
+- [Full right-to-left (RTL) UI for every page when an RTL language is selected](https://github.com/wekan/wekan/commit/3fa75de5df46b60615ca71721f4ac534a416cc1f)
+  (Arabic and its variants, Persian/Farsi, Hebrew, Uyghur, Uzbek-Arabic and
+  Yiddish — the languages flagged `rtl: true` in `imports/i18n/languages.js`).
+  Previously only some pages flipped. The root `<html>` element now gets a
+  reactive `dir="rtl"`/`dir="ltr"` attribute that follows the chosen language, so
+  the whole UI mirrors at once. To make this work on every page rather than a
+  handful, all directional component CSS was converted to CSS logical properties
+  (`margin-left`→`margin-inline-start`, `left:`→`inset-inline-start:`,
+  `text-align: left`→`text-align: start`, `float: left`→`float: inline-start`,
+  and the mirror-image right/end variants) across 48 stylesheets, which flip
+  automatically with `dir`. Horizontal-centering rules using
+  `left: 50%` + `transform: translate(-50%, …)` were intentionally kept physical,
+  since those already center correctly in both directions. The calendar view also
+  renders RTL. Thanks to xet7.
+- Tests for the RTL UI. A fast, server-less `tests/rtl.test.js` (run with
+  `node tests/rtl.test.js`) checks that exactly the expected languages are
+  flagged `rtl: true`, that the direction helper maps each language to the right
+  `dir` value, that the root `<html>` and the client keep `dir` in sync, and —
+  as a regression guard — that component CSS keeps using logical properties
+  (no physical `margin-left`/`float: left`/bare `left:` offsets sneak back in).
+  A Playwright browser spec `tests/playwright/specs/18-rtl-layout.e2e.js` drives
+  the app in both English (LTR) and Arabic (RTL) and asserts, on the boards list,
+  board view, card details, my-cards / due-cards / global-search, the admin
+  settings page and the login page, that the direction is correct, the
+  translated text is visible, and leading-edge content (the boards menu, the
+  first board list) sits on the correct side. Thanks to xet7.
+- Fixed the "Meteor unit tests" CI job hanging until its 45-minute timeout. The
+  workflow set `TEST_WATCH: '0'`, but meteortesting:mocha computes
+  `testWatch: TEST_WATCH || …` and the string `'0'` is truthy in JavaScript, so
+  it turned on watch mode and the process never exited. Removing the env var lets
+  `meteor test --once` finish and exit with the correct status. Thanks to xet7.
+- Fixed the GitHub Pages (docs) build failing with a Liquid syntax error. The
+  webhook reference page `docs/Webhooks/Webhook-data.md` documents payloads full
+  of `{{placeholder}}` tokens, and two had a typo (`{{swimlane-id}` with one
+  closing brace) that aborted Jekyll's Liquid parser. The placeholder-heavy doc
+  pages (Webhook-data, Translations, Troubleshooting-Mail, Original-Positions)
+  are now wrapped in `{% raw %}`/`{% endraw %}` so Jekyll emits the template
+  tokens literally instead of trying to evaluate them — fixing the build and
+  making the placeholders render correctly. Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.43 2026-06-13 WeKan ® release
+
+This release adds the following new features:
+
+- [Add/Edit location popup can also](https://github.com/wekan/wekan/commit/84dc493cf7bb26c8fbffffbcb36e691bcdcfcdb9)
+  detect a location from a map link from many providers,
+  grouped by region — USA: Google Maps, Bing Maps, Apple Maps, Waze;
+  Europe: OpenStreetMap, HERE WeGo, Yandex Maps, Mapy.cz, 2GIS; Asia: Baidu Maps,
+  Amap (Gaode) — plus generic `?q=`/`?ll=` links: paste the link, press "Detect",
+  and the latitude, longitude and (when present) the place name/address are
+  filled in automatically. Detection handles each provider's real-world URL
+  shapes, including percent-encoded commas (e.g. Waze/Yandex `ll=...%2C...`) and
+  alternate forms (HERE `share.here.com/l/`, Yandex `pt=`, 2GIS `m=`), and the
+  coordinate order (several non-US providers use lon,lat). For the Chinese
+  providers a datum conversion is applied — Baidu uses BD-09 and Amap uses
+  GCJ-02, both offset from WGS-84 — so pins land in the right place on the way in
+  and out. The popup also has an "Open map links at" setting (OpenStreetMap by
+  default) saved to the user profile, with the same region-grouped provider list,
+  controlling which map service the location "Open in map" links use.
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- Fix incomplete URL substring sanitization.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.42 2026-06-13 WeKan ® release
+
+This release adds the following new features:
+
+- [Greatly improved import from Trello to WeKan](https://github.com/wekan/wekan/commit/899617bd4d83905df05fd8aab1d26630e676fee5):
+  - Attachments now import. Trello attachment URLs require OAuth to download, so
+    WeKan could not fetch them. The Trello import page now has two separate file
+    fields: a **.json** field for a single Trello board, and a
+    **.zip** field for a package produced by the
+    [Trello Card Attachments Downloader](https://github.com/wekan/trello-attachments-downloader).
+    The .zip may contain one *or more* board .json files together with each
+    board's attachments in a board-name subfolder. The .zip is uploaded over HTTP
+    and processed entirely on the server (the attachment bytes never travel over
+    the realtime WebSocket, which previously overflowed the connection and made
+    the page flicker): WeKan detects every board .json, matches each board to its
+    attachment subfolder by name, streams each file straight into the Default
+    file storage, imports all boards, then opens All Boards. The upload is guarded
+    against abuse — it rejects oversized uploads, zip bombs (too many files or too
+    much uncompressed data, per-file size caps) and unsafe entry paths (absolute
+    paths or `..` traversal), and never overwrites existing files (stored under
+    generated ids). The importer also reads attachments from `card.attachments`
+    (newer Trello exports), not only from the action log, and uses the correct
+    Meteor-Files insert API (the previous calls were no-ops on Meteor 3). Single
+    board imports (the .json file or the pasted JSON, after the map-members step)
+    now run through the same server-side HTTP path rather than the realtime
+    `importBoard` method, so a heavy import can no longer drop the WebSocket and
+    get retried in an endless loop (the page flickering with "Invalid frame
+    header" / repeated "logged out" errors). When importing only a single board
+    .json and you have saved Trello API key and token, WeKan uses them on the
+    server to download that board's attachments, background image, member
+    avatars and card stickers from Trello (a .json export often omits stickers;
+    avatars only fill in mapped users who have none — an existing avatar is never
+    overwritten); each download is best-effort and a failure never aborts the
+    import. After a single-board import the new board's data is subscribed and
+    loaded before opening it, so it shows its swimlanes, lists and cards
+    immediately instead of needing a browser page reload (the HTTP import, unlike
+    the old realtime method, does not push the written documents to the client by
+    itself).
+  - Import Trello-only card features: stickers (shown as Font Awesome icons on
+    minicards and the card detail), card cover (color or attachment), card
+    location (name, address, coordinates with an OpenStreetMap link), and the
+    due-date "complete" checkbox shown on the minicard. Trello's two named
+    sticker packs are renamed and highlighted (the icon keeps its normal colour)
+    so they stay distinct: the "taco" pack becomes "mascot" with an underlined
+    icon, and the "pete" pack becomes "computer" with a ring around the icon,
+    e.g. "pete-ghost" imports as "computer ghost" with a Snapchat-ghost icon.
+    Several named stickers that used to share an icon now get their own Font
+    Awesome 4.7 icon (mascot active => heartbeat, pixel => qrcode, proto =>
+    flask, embarrassed => meh-o, clean => bath, computer shipped => truck).
+  - Live Trello API import: paste your Trello API key and token on the Trello
+    import page to list all your Trello workspaces and boards, then import all
+    or selected boards together with their attachments (downloaded
+    server-side). Imported boards are placed under a personal workspace named
+    after their Trello workspace, created by name if it does not exist, under an
+    optional parent workspace you choose. The API client respects Trello's rate
+    limits: it spaces out requests, honours `Retry-After` on HTTP 429, retries
+    transient 5xx and network errors with capped exponential backoff, and
+    reports a clear error on an invalid key/token (401). After a successful API
+    import you are taken to the All Boards page where the new boards appear.
+  - The live API import runs as a background job on the server: you can navigate
+    away and come back to the Trello import page to watch progress, see
+    per-board results, and read the full error log. Errors are shown in a
+    selectable text box with a one-click "Copy to clipboard" button (and you can
+    still select and copy just part of the text) so they are easy to share when
+    fixing issues. If the import stops on a fatal API error (invalid token, or
+    rate limit still failing after retries) you can fix the cause and Resume
+    from where it left off, and a server restart leaves the job paused for
+    resuming rather than lost. You can also Cancel the import, or Cancel and
+    delete the boards already imported, to start the whole process over cleanly.
+  - You can optionally save your Trello API key and token with the Save and
+    Delete buttons on the import page. When saved, they are stored only on the
+    server, never sent back to the browser, and are reused automatically when
+    you list workspaces or import (so you do not have to paste them again); a
+    "saved" indicator is shown, Save can overwrite them with new values, and
+    Delete clears them from the database. If you do not save them, they are kept
+    only in server memory for the running import and re-supplied when you resume.
+  - Larger Trello JSON exports can be selected as a file instead of pasted.
+  - Keep imported usernames for later mapping. Imported members that match an
+    existing WeKan user (by username, or by a previously recorded imported
+    username) are mapped automatically, and the imported username is remembered
+    on that user so future imports map too. Members with no matching WeKan user
+    are no longer lost: their usernames are kept on the board, so an admin can
+    map them to real users later in Admin Panel / People (Imported Usernames),
+    without having to map everyone up front at import time.
+  Thanks to xet7.
+- Board background images can now be stored in WeKan. A new `backgrounds` file
+  storage directory is created alongside `attachments` and `avatars` (using the
+  current default storage backend), and Board menu → Board backgrounds lets a
+  board admin upload background images, set one as the active board background,
+  download, and delete them. Board export now includes the board's background
+  images and re-imports them, and a Trello board's background image is
+  downloaded and stored on import (so it keeps working even if the original
+  Trello URL later changes). Thanks to xet7.
+- Stickers can be added to and removed from cards directly in WeKan, chosen from
+  a set of Font Awesome icons similar to Trello's stickers (previously stickers
+  only arrived via Trello import). The picker also includes every "mascot"
+  (underlined) and "computer" (ringed) highlighted sticker that a Trello import
+  can produce — generated from the same icon mapping the importer uses — so any
+  imported sticker can also be added by hand. Stickers show on the minicard and
+  in the card detail. Thanks to xet7.
+- The Trello-style "complete" checkbox (mark a card complete/incomplete,
+  independent of the due date) is shown as an animated green checkbox to the
+  left of the card title, both on the minicard and in the opened card, with
+  "Mark as complete" / "Mark as incomplete" tooltips. It uses the same animated
+  checkbox style as Admin Panel / Settings / Announcements and is vertically
+  centered with the title text, and the two stay in sync. The minicard and the
+  opened-card checkboxes use the same checked style (the board theme's colour, or
+  green when no theme is set), so they always look identical. Subtask checkboxes
+  and the card-detail custom-field checkbox now use the same animated checkbox as
+  checklist items (they previously used static square icons), so every checkbox
+  on a card animates consistently. Thanks to xet7.
+- Cards can now have multiple locations, similar to multiple members. The card
+  detail shows a Location section (after Labels and Stickers) listing each
+  location with its name, address and an OpenStreetMap link, with an "Add
+  location" button to add more and a button to edit or remove each one. A single
+  location imported from Trello keeps working and is shown in the same list. The
+  Add/Edit location popup can also detect a location from any map link (Google
+  Maps, OpenStreetMap, Bing Maps, Apple Maps, or generic `?q=`/`?ll=` links):
+  paste the link, press "Detect", and the latitude, longitude and (when present)
+  the place name/address are filled in automatically. The popup also has an
+  "Open map links at" setting (OpenStreetMap by default, or Google/Bing/Apple
+  Maps) saved to the user profile, controlling which map service the location
+  "Open in map" links use.
+  Thanks to xet7.
+- The opened card now docks to the top of the window, overlaying the global and
+  board header bars, instead of opening downward from the clicked minicard, and
+  it can be dragged all the way to the top without its top hiding behind those
+  bars. (At 100% zoom the board wrapper no longer sets a `transform: scale(1)`,
+  which had made it the containing block for the fixed card and trapped it below
+  the headers.) Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix Wrong card number after Import](https://github.com/wekan/wekan/commit/aabcaa658edc2135dfd035bedea186ddf6b26068).
+  Thanks to titver968 and xet7.
+- [Fix Board Export/Import error](https://github.com/wekan/wekan/commit/68e0032c6d3b23a195b4051e2853465965e073dc).
+  Fix import/clone of inconsistent board JSON so the newest WeKan can import
+  board exports from any newer or older WeKan version. A syntactically valid
+  export can still be internally inconsistent (a board member whose user
+  account was deleted is no longer in the export's `users`, cards pointing at a
+  missing `listId`, orphaned checklists, or a missing `lists` array). Such
+  exports previously failed import as "error-json-malformed" or silently
+  dropped data (cards with an undefined list never rendered). The importer now
+  skips dangling user references in the member mapper (client
+  `wekanMembersMapper`, server `wekanmapper` used by board cloning, and
+  `WekanCreator`), falls back to the first imported list — creating one default
+  list when the export has none — for cards with a dangling `listId`, and skips
+  orphaned checklists whose card is missing. The importer remains
+  version-agnostic: it never reads `_format`, normalizes old `id` vs `_id`
+  fields, and ignores the source `boardId`. Added `tests/wekanCreator.inconsistent.test.js`
+  covering these cases.
+  Thanks to titver968 and xet7.
+- Fix Trello import returning HTTP 500 on any card that has an attachment. A
+  past refactor removed the `links` variable declaration but left its consumer
+  in `models/trelloCreator.js`, so importing an attachment card threw
+  "ReferenceError: links is not defined". Also fixed a stray `return` that
+  silently aborted importing the rest of the cards when one attachment URL was
+  blocked (now `continue`), and Trello cards no longer all import as card
+  number #0 (the Trello short number `idShort` is preserved).
+  Thanks to xet7.
+- Fix attachments not importing from WeKan board JSON exports. The importer
+  called the old Meteor-Files `Attachments.load/insert(..., cb, true)` API,
+  which is a no-op on Meteor 3, so exported base64 attachments were silently
+  dropped. It now inserts them with `Attachments.insertAsync`, and one failed
+  attachment no longer aborts importing the rest of the cards.
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.41 2026-06-12 WeKan ® release
+
+This release adds the following new features:
+
+- [Add pagination and search to Admin Panel / Reports. Fix pagination at Admin Panel / Organizations and Teams](https://github.com/wekan/wekan/commit/a12b3f2cb21a067f80269be2a5080ca91046707b).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.40 2026-06-11 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix releasing Helm Charts](https://github.com/wekan/wekan/commit/21d18bddfb72543a812b516473a80ccf21dfda46).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.39 2026-06-11 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix building Docker image](https://github.com/wekan/wekan/commit/8c0681d4cf020ff453959cf7ac8cb74e0a69f128).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.38 2026-06-11 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix Docker image is broken](https://github.com/wekan/wekan/commit/108c33ab23d05ac586531c22e1fe4c4180546be9).
+  Thanks to titver968, planet-goldfish and xet7.
+- [Fix Admin Panel/People View is broken](https://github.com/wekan/wekan/commit/bcf55bdc3a804e5fae34850c0fcbf03e48c2f466).
+  Thanks to titver968 and xet7.
+- [Fix Incorrect link in invite email](https://github.com/wekan/wekan/commit/5844e20d5534d04dfefc4a965d93c55765bfc08e).
+  Thanks to sbaecker and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.37 2026-06-11 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [BoardBleed](https://wekan.fi/hall-of-fame/boardbleed/):
+
+- [Fixed BoardBleed](https://github.com/wekan/wekan/commit/d369a3614a4737c29d48a6345a790edf2506ddae):
+  Broken access control lets any authenticated user move their Cards/Lists/Swimlanes into
+  a private board they are not a member of (cross-board write via collection
+  allow rule)](https://github.com/wekan/wekan/security/advisories/GHSA-gm7v-pc38-53jr)
+  (CWE-284, CWE-639). WeKan boards are membership-scoped, but the DDP collection write
+  policies for Cards, Lists and Swimlanes (`server/permissions/cards.js`,
+  `server/permissions/lists.js`, `server/permissions/swimlanes.js`) authorized an update by
+  checking only the CURRENT (pre-update) `boardId` of the document — i.e. the attacker's own
+  source board — and never validated the NEW `boardId` supplied in the update modifier.
+  Because every logged-in user can create a board where they are admin, an attacker could take
+  a document they own and, in a single `/cards/update`, `/lists/update` or `/swimlanes/update`
+  DDP call, `$set` its `boardId` (plus `swimlaneId`/`listId`) to a victim's private board: the
+  allow rule saw the attacker's own source board, approved the write, and the document was
+  relocated into a board the attacker is not a member of and cannot even read. This let an
+  unprivileged user inject arbitrary cards/lists/swimlanes (attacker-controlled titles,
+  descriptions, assignees, etc.) into any private board by id, defeating board-level access
+  control. The REST API for the same operation
+  (`PUT /api/boards/:boardId/lists/:listId/cards/:cardId` with `newBoardId`) was not affected
+  because it correctly calls `Authentication.checkBoardWriteAccess(req.userId, newBoardId)` on
+  the destination board; only the DDP allow/deny layer was vulnerable. Fixed by adding a
+  `denyCrossBoardMove` helper in `server/lib/utils.js` and a `Cards.deny`/`Lists.deny`/
+  `Swimlanes.deny` `update` rule on each collection that rejects any update whose modifier
+  `$set`s a `boardId` on which the caller does not have write access, so a cross-board move is
+  only allowed into a destination board where the user is an active write-capable member.
+  Affected Wekan v9.35 and earlier. Thanks to 0xzap and xet7.
+
+and adds the following updates:
+
+- [Update release website script version numbering](https://github.com/wekan/wekan/commit/39d84f8fe893f9d64c1424730e48c2ed00193e97).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.36 2026-06-10 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [TokenBleed](https://wekan.fi/hall-of-fame/tokenbleed/):
+
+- [Fixed TokenBleed: unauthenticated login-token minting via un-awaited auth check in `POST /api/createtoken/:userId`](https://github.com/wekan/wekan/commit/08ae61161cd9602f79f441e3922ffe890b3f11de)
+  (CWE-863, CWE-287). `Authentication.checkUserId` in `server/authentication.js` is an
+  `async` function, so its 401 (undefined `userId`) and 403 (not an admin) throws become
+  rejected promises rather than synchronous exceptions. The REST handlers in
+  `server/models/users.js` and `server/models/boards.js` called it without `await` inside a
+  plain synchronous `try/catch`, which cannot catch a rejected promise, so the failed check
+  never stopped execution. `POST /api/createtoken/:userId` then went on to mint and return a
+  usable login token for any user ID in the URL — including an admin — with no credentials at
+  all (unauthenticated account takeover). The same detached-rejection bypass also affected
+  `GET /api/users`, `GET /api/users/:userId`, `PUT /api/users/:userId`, `POST /api/users/`,
+  `DELETE /api/users/:userId`, `POST /api/deletetoken`, `GET /api/boards`,
+  `GET /api/boards_count`, `DELETE /api/boards/:boardId`, `GET /api/users/:userId/boards` and
+  `POST /api/boards/:boardId/copy`. Fixed by awaiting every async `Authentication` check (and
+  making the two non-`async` handlers `async`) so a failed check rejects before any privileged
+  code runs. The same un-awaited pattern in the board/card/Excel/PDF export handlers
+  (`models/export.js`, `models/exportExcel.js`, `models/exportExcelCard.js`, `models/exportPDF.js`,
+  which were backstopped by `exporter.canExport()`) and in the checklist-create handler
+  (`server/models/checklists.js`) was given the same await pass. Affected Wekan v9.35 and earlier.
+  Thanks to Zion Boggan and xet7.
+
+and adds the following updates:
+
+- [Improved Security Advisory process](https://github.com/wekan/wekan/commit/f1c2f1f40f21b9f467cfe7265d22bc98fb401b57).
+  Thanks to xet7.
+- [Improved Contributing](https://github.com/wekan/wekan/commit/26a03f4845b9c81902f3f955d79287a4bc61d3c4).
+  Thanks to xet7.
+- [Improved Code of Conduct](https://github.com/wekan/wekan/commit/d1c71d0526eb8890fc0d8b875d94ab96f094a8c3).
+  Thanks to xet7.
+- Update release scripts, trying to fix GitHub Actions builds.
+  [Part 1](https://github.com/wekan/wekan/commit/8f59d76a4e38429b434dc9e4be66a30ac1dc156e),
+  [Part 2](https://github.com/wekan/wekan/commit/5357bb47c3cf09f60a9838aadb5d21e3895c4f39).
+  Thanks to xet7.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/447877733b40a085e347a9fd12ee09d8cb263d43).
+  Thanks to developers of dependencies.
+
+and fixes the following bugs:
+
+- [Fix Admin Panel / Reports icons and spacing](https://github.com/wekan/wekan/commit/77d60b21a1912cda81a6fa96449a8dd99761d5d7).
+  Thanks to xet7.
+- [Fix MultiSelect, so that it's possible to click select checkbox or minicard to select](https://github.com/wekan/wekan/commit/9cc066041040074befcf3dea49e7ef37b22816cc).
+  Thanks to xet7.
+- [Fix LDAP_SYNC_ADMIN_GROUPS](https://github.com/wekan/wekan/commit/3fe8f602c8c5ade128f5d7e439bff47f51a28045).
+  so that admin status sync and group/role sync no longer require
+  LDAP_GROUP_FILTER_ENABLE=true, which only controls the login restriction filter
+  Thanks to xet7.
+- [Expand and fix REST API](https://github.com/wekan/wekan/commit/d5f6aa196606f229c2c1871a56fb0549fbdab40e)
+  (Admin API, board member, card field, card copy/move).
+  REST routes live in `server/models/*.js` (using `WebApp.handlers.get/post/put/delete`),
+  their schemas in `models/*.js`, OpenAPI docs are generated by `openapi/generate_openapi.py`
+  into `public/api/wekan.yml`, and `api.py` is the Python CLI wrapper.
+  `api.py` already gained CLI wrappers for the endpoints that exist today:
+  `addboardmember`, `removeboardmember`, `setboardmemberrole`, `setcardmembers`,
+  `setcardassignees`, `setcarddate`, `setcardlabels`, `movecard`.
+- **Issue [#5998](https://github.com/wekan/wekan/issues/5998): Add/remove user to
+  board with a role (BoardAdmin, Normal, etc).**
+  Already exists server-side: `POST /api/boards/:boardId/members/:userId/add`
+  and `POST /api/boards/:boardId/members/:userId/remove` (action=add/remove), and
+  `POST /api/boards/:boardId/members/:memberId` to change an existing member's
+  permission flags (`isAdmin`, `isCommentOnly`, `isWorker`, `isNoComments`,
+  `isNormalAssignedOnly`, `isCommentAssignedOnly`, `isReadOnly`,
+  `isReadAssignedOnly`). `api.py` now wraps these with a friendly `ROLE`
+  name → flags mapping.
+  Implemented: the API itself now also accepts a single named `role`
+  (`admin`/`normal`/`commentOnly`/`worker`/`readOnly`/`normalAssignedOnly`/
+  `commentAssignedOnly`/`readAssignedOnly`/`noComments`), mapped to the permission
+  booleans server-side by `boardMemberRoleToFlags` (`server/lib/utils.js`). When
+  `role` is present it wins over the individual flags; an unknown role returns 400.
+  Members are identified by `userId` only. Wired into both
+  `POST .../members/:userId/add` and `POST .../members/:memberId`.
+  Thanks to xet7.
+- **Add/Remove board member to card as card member or card assignee.**
+  Already exists via `PUT /api/boards/:boardId/lists/:listId/cards/:cardId` with
+  `members` / `assignees` (array, or '' to clear). `api.py` now wraps these as
+  `setcardmembers` / `setcardassignees`. These REPLACE the list.
+  Implemented: merge-style endpoints to add/remove a single member or assignee
+  (`POST`/`DELETE /api/boards/:boardId/lists/:listId/cards/:cardId/members/:memberId`
+  and `.../assignees/:assigneeId`), using `$addToSet`/`$pull` so callers don't
+  read-modify-write the whole array. Adding validates board membership
+  (`canAssignCardMember`) and rejects non-members with 400; removing a stale id is
+  allowed. Wrapped in `api.py` as `addcardmember`/`removecardmember`/
+  `addcardassignee`/`removecardassignee`.
+  Thanks to xet7.
+- **Issue [#5897](https://github.com/wekan/wekan/issues/5897): Create Linked Card.**
+  Linked cards reference another card; the data model uses `linkedId` /
+  `type: 'cardType-linkedCard'`. Implemented by reusing the existing
+  `POST /api/boards/:boardId/lists/:listId/cards` route: when `linkedId` is present
+  in the body the new card is created via `Card.link` (type cardType-linkedCard)
+  instead of holding its own content. Linking across boards is allowed; the caller
+  must have write access to the destination board and read access to the linked
+  card's board (`checkBoardAccess`). Wrapped in `api.py` as `linkcard`.
+  Thanks to xet7.
+- **Fix Issue [#5846](https://github.com/wekan/wekan/issues/5846): Add/Remove card
+  dates (Received/Start/Due/End).** Setting dates already worked via `PUT` card with
+  `receivedAt`, `startAt`, `dueAt`, `endAt`, but the handler only wrote a date when
+  the value was truthy (`if (req.body.receivedAt)`), so an empty string could NOT
+  clear a date — removing a date via the API did not work. Fixed in
+  `server/models/cards.js`: whenever a date field is present in the request body, an
+  empty string / `null` / `"null"` now `$unset`s the date and any other value sets
+  it. `api.py` wraps this as `setcarddate ... DATETYPE [DATEVALUE]` (omit DATEVALUE,
+  or pass an empty string, to clear).
+  Thanks to xet7.
+- **Issue [#5819](https://github.com/wekan/wekan/issues/5819): Bulk add/remove labels
+  with API, and BoardAdmin label management in the right sidebar Labels
+  hamburger/trigram menu.**
+  `PUT` card `labelIds` REPLACES the whole label set (wrapped as `setcardlabels`).
+  Implemented: a multi-card bulk endpoint `POST /api/boards/:boardId/cards/labels`
+  taking `{cardIds, addLabelIds, removeLabelIds}` that MERGES — existing labels are
+  kept, `removeLabelIds` are dropped, `addLabelIds` are added, de-duplicated, across
+  all listed cards in one request. `addLabelIds` are validated against the board's
+  labels (request rejected with the offending ids otherwise); cards not on the board
+  are reported in `notFound`. Wrapped in `api.py` as `bulkcardlabels`.
+  Board label creation via `PUT /api/boards/:boardId/labels` is now gated to
+  BoardAdmin (`allowIsBoardAdmin`); normal members can still apply existing labels
+  to cards (including via the bulk endpoint). Still planned: the right-sidebar
+  Labels hamburger/trigram menu BoardAdmin-only UI. Thanks to xet7.
+- **Fix Issue [#5813](https://github.com/wekan/wekan/issues/5813): Card number is not
+  unique when concurrently creating multiple cards via REST API; many cards got the
+  same card number.** Root cause: `Board.getNextCardNumber()` (`models/boards.js`)
+  read the current max `cardNumber` and returned `max + 1`; two concurrent card
+  creations read the same max and both got the same number — a classic
+  read-then-increment race. Fixed by allocating card numbers from an atomic
+  per-board counter (`Counters.incrementCounterAsync('cardNumber-<boardId>')` in
+  `models/counters.js`), a single atomic `findOneAndUpdate($inc)` that is safe under
+  concurrency. Existing boards (and imported boards with existing cards) are
+  **lazy-seeded** on first use: the counter is initialized to the board's current
+  max `cardNumber` via an idempotent `$setOnInsert` upsert, so no migration is
+  needed and no number an existing card already has is reissued. Card numbers may
+  have gaps (deleting a card does not decrement the counter), which is intended.
+  Numbering stays per-board. The client keeps the old max + 1 read (card numbers are
+  not authoritative there; the server insert recomputes). See also #4743 below.
+  Thanks to xet7.
+- **Copy/Move Swimlane/List/Card to the same or a different board, before/after a
+  position counted (number of swimlanes/lists/cards) from the top-left.**
+  Implemented: target position is a 0-based index counted from the top-left
+  ("after N items"); the server converts it to a `sort` value between siblings via
+  `computeSortForIndex` (`server/lib/utils.js`). New endpoints:
+  `POST /api/boards/:boardId/lists/:listId/cards/:cardId/copy`,
+  `POST /api/boards/:boardId/swimlanes/:swimlaneId/copy` and `.../move`,
+  `POST /api/boards/:boardId/lists/:listId/copy` and `.../move`. Copy is a FULL
+  deep copy via the existing model `copy()` methods (cards, checklists,
+  attachments, custom-field values). Destination board write access is required
+  (may differ from source). Wrapped in `api.py` as `copycard`,
+  `copyswimlane`/`moveswimlane`, `copylist`/`movelist`. NOTE: `List.move` merges
+  into an existing same-titled list on the destination board when one exists (a
+  pre-existing model behavior); same-board list move is a pure reposition.
+  Thanks to xet7.
+- **Issue [#4815](https://github.com/wekan/wekan/issues/4815): API to get My Cards and
+  Due Cards (also needs a user-scoped API).**
+  The web UI already has My Cards and Due Cards views. Implemented: a single
+  `GET /api/user/cards` endpoint returning the current user's cards (where they are
+  a member or assignee), with a `?due=true` filter for cards that have a due date
+  and an optional `?from=`/`?to=` (ISO 8601) due-date range. Returns a compact
+  minicard-like field set, sorted by due date. Wrapped in `api.py` as `mycards`.
+  (Cross-user/admin querying, board filter and pagination were not requested for the
+  first version; revisit if needed for users in very many boards.)
+  Thanks to xet7.
+- **Issue [#4811](https://github.com/wekan/wekan/issues/4811): After adding a card via
+  the API, does the card count update properly?**
+  To verify: `GET /api/boards/:boardId/cards_count` and
+  `GET /api/boards/:boardId/lists/:listId/cards_count` after `POST` card creation.
+  Card counts are computed from the cards collection, so they should reflect
+  API-created cards; this needs a regression test confirming counts update
+  immediately after API create/delete (and are not stale due to caching).
+- **Issue [#3062](https://github.com/wekan/wekan/issues/3062): API for the Card
+  Settings that live under Board Settings.**
+  Board Settings card defaults (which fields/badges show on cards and minicards) are
+  the board's `allows*` toggles. Implemented: `GET`/`PUT
+  /api/boards/:boardId/cardSettings` exposing those board-level `allows*` settings
+  (read requires board access; write requires board write access). `PUT` accepts any
+  subset of the recognized keys and ignores unknown ones. Per-user card presentation
+  settings are intentionally out of scope. Wrapped in `api.py` as `getcardsettings`/
+  `setcardsetting`.
+  Thanks to xet7.
+- **Fix Issue [#4743](https://github.com/wekan/wekan/issues/4743): Using the REST API
+  to manipulate many cards crashes WeKan (100% CPU, server becomes
+  unreachable/unusable, REST calls time out with HTTP 408).**
+  Reported workflow: every night delete all cards in a board and recreate them
+  (create card → edit with custom fields/dates/labels → list all → delete all),
+  done in a tight loop with no delay; WeKan eventually pegs CPU and stops
+  responding. Same root area as #5813 (concurrent card creation), plus the cost of
+  per-card cascade work (activities, server-side reactivity, custom-field defaults,
+  before/after hooks) under bursts.
+  Implemented so far: (1) atomic card numbering (see #5813) removes the hot
+  read-modify-write contention; (2) bulk create/delete endpoints
+  `POST /api/boards/:boardId/lists/:listId/cards/bulk` (body
+  `{authorId, swimlaneId, cards:[...]}`) and
+  `DELETE /api/boards/:boardId/cards/bulk` (body `{cardIds:[...]}`), each capped at
+  500 items per request, so a sync job sends one request instead of hundreds —
+  directly addressing the reporter's nightly delete-all/recreate workflow. Wrapped in
+  `api.py` as `bulkaddcards` / `bulkdeletecards`. Bulk create returns a per-card
+  result/error array; bulk delete returns `{deleted, notFound}` and only touches
+  cards on the given board.
+  Still planned/optional: per-token rate limiting and batched/optional activity
+  logging were considered but not chosen for now; the bulk endpoints plus the atomic
+  card numbering are expected to remove the hot contention. Revisit rate limiting if
+  storms persist.
+  Thanks to xet7.
+- **Fix REST API auth bugs found by the new E2E tests: awaited the membership/admin
+  checks and return explicit status codes (CWE-862).** Several auth helpers
+  (`checkAdminOrCondition`, `checkUserId`) are async, so calling them without
+  `await` let a denied caller's rejection slip past while the handler kept running:
+  on card create that performed the write anyway (auth bypass), and on the board
+  member endpoints the un-awaited rejection surfaced to the client as an HTTP 503.
+  Fixes:
+  - The pre-existing single-card create (`POST .../cards`) and the new bulk-create
+    endpoint now `await` the membership check, so a logged-in non-board-member can
+    no longer create cards.
+  - The board member add/remove/permission endpoints
+    (`POST .../members/:userId/add`, `.../remove`, `POST .../members/:memberId`)
+    now require **board admin** (or site admin), awaited, returning a clean 401/403
+    — instead of the previous un-awaited `checkUserId` (nominally site-admin-only,
+    but effectively bypassed) that 503'd on denial.
+  - Board-label creation (`PUT .../labels`) is gated to board admin / site admin,
+    and it plus `GET /api/user/cards` return explicit 401/403 instead of letting an
+    auth helper throw (which, under Express 4, would otherwise leave the request
+    hanging). These were all found by the new REST API E2E test below. Thanks to
+    xet7.
+- **End-to-end tests for the new REST API behavior and permissions.** A new
+  Playwright spec `tests/playwright/specs/17-rest-api.e2e.js` exercises the new/changed
+  endpoints against a running server (real Bearer-token auth → real HTTP request →
+  MongoDB change verified directly), asserting both correct data AND correct
+  permissions: bulk create/delete (#4743), unique card numbers under bulk create
+  (#5813), bulk label merge + rejection of off-board labels + BoardAdmin-gated label
+  creation (#5819), add board member by named role + invalid-role rejection and
+  card-member add validated against board membership (#5998), add/clear card date
+  (#5846), linked-card creation (#5897), copy-card-to-position deep copy, board card
+  settings GET/PUT (#3062), `GET /api/user/cards` with due filter (#4815), and that an
+  unauthenticated request is denied. These use Playwright's HTTP `request` client (no
+  browser is launched, so they run fast). The pure data/permission helpers they rely
+  on live in `server/lib/utils.js` (`boardMemberRoleToFlags`, `computeSortForIndex`,
+  `mergeLabelIds`, `canAssignCardMember`, `isCardDateClear`).
+- **`rebuild-wekan.sh` test menu reorganized.** There is now a menu option per test
+  type so each can be run on its own: "Run ALL tests on http://localhost:3000 (start
+  server, progress + summary)" (starts the server and runs import regression + Mocha +
+  Node E2E + Playwright Chromium, streaming progress and printing a per-suite PASS/FAIL
+  summary), plus standalone "Test Mocha unit + security + API-logic tests", "Test import
+  regression", "Test Node E2E regressions", and the existing per-browser Playwright
+  options. Playwright holds the browser-UI specs (01–16) and the API E2E spec (17);
+  the fast unit/security/policy tests stay in the Mocha suite (`meteor test --once
+  --driver-package meteortesting:mocha`).
+  Thanks to xet7.
+- [Fix tests](https://github.com/wekan/wekan/commit/a532ee7f14726dbf1eec956978d08436d7c47550).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.35 2026-06-06 WeKan ® release
+
+TLDR:
+- Admin Panel/Attachments/Move Files works: CollectionFS/Meteor-Files/S3/Azure Blob/Google Cloud Storage.
+- To have attachments and avatars visible, move them from CollectionFS to any other Storage
+- To upgrade, mongodump/mongorestore (older with [LD_LIBRARY_PATH](https://github.com/wekan/wekan/blob/main/docs/Backup/Backup.md#backup-wekan-snap-to-directory-dump))
+  to MongoDB 7.x, and copy WRITABLE_PATH files/attachments/avatars if exists,
+  at Snap /var/snap/wekan/common/files/, at Docker /data/files etc.
+
+This release adds the following [CRITICAL SECURITY FIXES](https://github.com/wekan/wekan/commit/357de728c03113b787065bac2c5832ad77f1a117):
+
+- [Fix GHSA-qfqv-42qw-vvwh: `cloneBoard` Meteor method has no authorization check — any user can clone (read) any private board by ID (CWE-639, CWE-862)](https://github.com/wekan/wekan/security/advisories/GHSA-qfqv-42qw-vvwh).
+  The `cloneBoard` Meteor method in `models/import.js` copied an entire board —
+  including all cards, comments, attachments, member info and activities —
+  identified solely by a caller-supplied `sourceBoardId`, and performed no
+  authorization check: it never verified that the calling user was a member of
+  (or otherwise permitted to read) the source board. Any authenticated Wekan
+  user who knew a board's ID (board IDs appear in board URLs and remain known to
+  removed members) could call `Meteor.call('cloneBoard', '<targetBoardId>')`
+  over DDP and obtain a permanent, fully-readable copy of that board's contents,
+  even for private boards they had no access to. The method called
+  `exporter.build()` directly, skipping the `canExport()` guard
+  (`models/exporter.js`) that the REST export route correctly enforces. Fixed by
+  requiring `this.userId` and running the same `exporter.canExport(user)` check
+  the export route uses before building/cloning the board, so cloning a board
+  now requires the same read authorization as exporting it.
+  CVSS 6.5 (AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N).
+  Thanks to dizconnectz for the coordinated disclosure and xet7.
+
+and, while fixing the above, the following similar authorization issues found by code review were fixed (the [CloneBleed](https://wekan.fi/hall-of-fame/clonebleed/) group):
+
+- [Fix authorization guards that silently never ran in attachment, list, checklist, migration and webhook server methods (CWE-862, CWE-639)](https://github.com/wekan/wekan/blob/main/docs/hall-of-fame/clonebleed/).
+  A review for the same class of bug as `cloneBoard` found several server-side
+  methods whose access checks were present in the source but never actually
+  enforced, plus a few methods missing a check entirely:
+  - `server/models/checklists.js` `moveChecklist`: the membership guard called
+    `allowIsBoardMemberByCard(...)`, but that helper is `async` and was both
+    unimported and un-awaited, so `!allowIsBoardMemberByCard(...)` evaluated
+    `!Promise` (always `false`) and the check never ran — any logged-in user
+    could move a checklist between cards on boards they cannot access. Now
+    imported and awaited, and login is required.
+  - `server/models/lists.js` `updateListSort`: the guard read
+    `typeof allowIsBoardMember === 'function' && !allowIsBoardMember(...)`, but
+    `allowIsBoardMember` was never imported, so the `typeof` was always `false`
+    and the guard never ran — any caller could reorder/re-assign any board's
+    lists by ID. Replaced with a real `hasBoardWriteAccess` check, plus a check
+    that the list actually belongs to the named board, and a login check.
+  - `server/attachmentApi.js` and `server/routes/attachmentApi.js`: the
+    attachment Meteor methods and REST handlers called `board.isBoardMember(...)`,
+    which is not a method on the board model, so the permission check never
+    behaved as intended. Replaced with the real `board.hasMember(...)`, and the
+    upload path now also verifies the target card actually belongs to the named
+    board (so `boardId` cannot be spoofed to a board the caller is a member of).
+  - `server/models/users.js` `applyListWidth`: stored per-board list width with
+    no authorization. Now requires the caller to be a member of the board and
+    requires the list to belong to that board.
+  - `server/models/boards.js` `getBackgroundImageURL`: returned any board's
+    background image URL by ID. Now requires the board to be visible to the
+    caller.
+  - `server/migrations/fixMissingListsMigration.js` and
+    `server/migrations/migrateAttachments.js`: the migration status/execute
+    methods only checked that the caller was logged in. Reading status now
+    requires board visibility, executing a board-rewriting migration now requires
+    board admin (or instance admin), and the attachment migration methods now
+    require board access (global status reads require instance admin).
+  - `server/notifications/outgoing.js`: the webhook delivery method trusted the
+    caller-supplied `integration` object and only checked that *some* integration
+    with that URL existed. It now verifies a matching integration exists on its
+    own board and that the caller is a member of that board, closing a path where
+    any authenticated user could drive webhooks (and, via the two-way response
+    path, overwrite comments) on boards they cannot access.
+  - `server/models/userPositionHistory.js`: the
+    `userPositionHistory.createCheckpoint`, `.getRecent`, `.getCheckpoints` and
+    `.restoreToCheckpoint` methods only checked that the caller was logged in,
+    even though the sibling `positionHistory.track*` methods
+    (`server/methods/positionHistory.js`) already require the board to be visible
+    to the caller — the same PositionHistoryBleed class fixed in v8.20/v8.21.
+    All four now require board visibility (via the shared `isVisibleBy` guard)
+    before reading or restoring position history scoped to a board.
+  Thanks to xet7.
+
+and, while auditing that client-side permission checks are also enforced server-side, the following gaps where the server did not re-verify a UI-gated permission were fixed:
+
+- [Fix client-side permission gates not re-verified server-side (CWE-862, CWE-269)](https://github.com/wekan/wekan/blob/main/docs/hall-of-fame/clonebleed/).
+  The browser UI hides certain actions from read-only members and from
+  non-admins, but those are cosmetic — the server-side `allow` rules and Meteor
+  methods must enforce the same role. An audit found four places that did not:
+  - `server/permissions/customFields.js`: the Custom Field `allow`
+    insert/update/remove rules used `allowIsAnyBoardMember` (mere membership), so
+    read-only/comment-only/worker members could create/modify/delete Custom
+    Fields (board-wide schema) via direct DDP collection writes — the same
+    read-only-write class as GHSA-6733, which had only fixed the REST path. Now
+    uses the new `allowIsAnyBoardMemberWithWriteAccess` write-access helper.
+  - `server/permissions/cardCommentReactions.js`: the reaction `allow` rules used
+    `allowIsBoardMember`, letting read-only members add/remove comment reactions.
+    Reacting is a form of commenting, so it now uses `allowIsBoardMemberCommentOnly`
+    (Normal/Comment-only allowed, Read-only/No-comments denied), matching
+    `CardComments.insert`.
+  - `server/models/boards.js` `archiveBoard`: only required board membership, so
+    any member (including read-only) could archive a board (hiding it for
+    everyone) over DDP, although the UI gates archiving behind board admin. Now
+    requires board admin (or global admin), matching the `Boards.allow`
+    update/remove rules.
+  - `server/models/settings.js` `sendSMTPTestEmail`: only required login, so any
+    authenticated user could trigger the server to send an SMTP test (and have
+    the server's SMTP error messages surfaced to them), although the UI gates it
+    behind global admin. Now requires global admin.
+  Thanks to xet7.
+
+and, in the same access-control audit, the attachment write API was tightened:
+
+- **Security: attachment write operations in the REST/DDP API now require board
+  write access, not just membership (CWE-862, CWE-639).** Both attachment API
+  implementations (`server/routes/attachmentApi.js` HTTP routes and
+  `server/attachmentApi.js` Meteor methods) gated upload / copy / move / delete
+  on `board.hasMember()`, which is true for any active member regardless of role.
+  This let read-only, comment-only, no-comments, worker and assigned-only board
+  members add, copy, move and delete attachments through the API — actions the UI
+  forbids for those roles. They now require board write access (global site
+  admins still allowed); read operations (download / list / info) keep
+  membership-level access. Added security tests in
+  `server/lib/tests/attachmentApi.tests.js`.
+  Thanks to xet7.
+
+and adds the following new features:
+
+- **[Admin Panel / Attachments](https://github.com/wekan/wekan/commit/a86a087915aac9d204e157b1a698091c079e04e6):
+  "Calculate file counts" on every storage backend,
+  shown right below the "Read" toggle.** Azure Blob Storage and Google Cloud
+  Storage now have a "Calculate file counts" button (new `getAzureStorageStats` /
+  `getGcsStorageStats` methods) that reports how many attachments and avatars are
+  stored on that backend, matching what Filesystem, MongoDB GridFS and S3 already
+  offer. The count is read from the stored file metadata (fast, no cloud API
+  calls). The S3 button was also moved up to sit directly under its "Read"
+  checkbox, so all backends are consistent. Thanks to xet7.
+- **[Admin Panel / Attachments: the MongoDB GridFS page notes how to make legacy files visible](https://github.com/wekan/wekan/commit/dca9427bfb58532778bc705e4c8c8014ba4b01ae).
+  ** A translatable line under the "MongoDB GridFS Storage" title
+  reminds admins: "To have attachments and avatars visible, move them from
+  CollectionFS to any other Storage." Thanks to xet7.
+- **Admin Panel / Attachments: the Google Cloud Storage page now documents the
+  required bucket permission.** A note under the "GCS Storage" title explains that
+  the service account needs the **Storage Object Admin** role
+  (`roles/storage.objectAdmin`) on the bucket (Cloud Console → Cloud Storage →
+  Buckets → your bucket → Permissions → Grant access → add the service account →
+  role "Storage Object Admin"), and that the bucket must exist in the same
+  project — otherwise "Test connection" fails with `storage.objects.list denied`.
+  Thanks to xet7.
+- **Admin Panel / Attachments: a "Save" button next to the Enabled / Read toggles
+  at the top of each cloud storage.** S3, Azure and Google Cloud Storage now have
+  a Save button directly below the "[ ] Enabled  [ ] Read" row, so those toggles
+  can be saved without scrolling to the bottom of the (now quite long) storage
+  page. It saves the same way as the existing bottom Save button — the server
+  merges that provider's config and preserves secrets left blank — and the bottom
+  Save button is kept. (Filesystem and GridFS have only a Read toggle, which
+  already saves the instant it is toggled, so they need no button.) Thanks to xet7.
+- **Admin Panel / Attachments: bilingual, self-documenting cloud-storage fields
+  (S3, Azure and Google Cloud Storage).** Each cloud-storage setting now guides
+  the admin from top to bottom with both English and translated text, so it is
+  easy to follow along while clicking through the provider's Cloud Console:
+  - the field **label** uses the provider's own console wording in English
+    (e.g. *Access key ID*, *Secret access key*, *Storage account key*,
+    *Service account key (JSON)*), with the translated label shown below it;
+  - a literal **example** of what the value should look like
+    (e.g. `eu-west-1`, an example bucket name / endpoint / connection string),
+    which is intentionally not translated;
+  - a short **description** of the value, in English and then translated;
+  - the **Cloud Console menu path** showing exactly where to find or create the
+    value (e.g. *AWS Console → IAM → Users → your user → Security credentials →
+    Access keys → Create access key*; *Azure Portal → Storage accounts → your
+    account → Access keys → key1*; *Google Cloud Console → IAM & Admin →
+    Service accounts → … → Keys → Add key → Create new key → JSON*), again in
+    English and then translated.
+  The provider field names, examples and menu paths are kept in English so they
+  match what the Cloud Console actually shows, while the descriptions and menu
+  paths are also translatable; section titles, the enable/read/force-path-style
+  checkboxes and the Test/Save buttons remain fully translated. Thanks to xet7.
+- **Admin Panel / Attachments / Move Attachment: "Repair file locations" button
+  and a persistent "last move" message.** The new **Repair file locations** button
+  scans all attachments and avatars and finds any whose recorded storage
+  (`versions.<v>.storage` / `path` / `meta.gridFsFileId`) no longer matches where
+  the binary actually is — left inconsistent by an interrupted or failed move —
+  and fixes the database to point at the real location: it detects the binary in
+  GridFS (by the `metadata.fileId` stamped on upload, recovering files whose
+  GridFS id reference was lost) or on the filesystem (using the storage
+  strategy's own thorough path resolution, so the repair agrees with what a real
+  download/move would find even when `versions.<v>.path` is stale), then corrects
+  `storage`, `path` and `meta.gridFsFileId` accordingly. Cloud-stored files are
+  left untouched, and files found nowhere are reported as "Not found". The scan is
+  streamed (memory-safe) and shows a per-scope searched / repaired / not-found
+  summary. Separately, after a move finishes the page now keeps showing
+  the last move operation — source → destination (scope) and the date/time as
+  `YYYY-MM-DD HH:MM:SS` — so it is clear what was last done.
+  Thanks to xet7.
+- **SVG image uploads are now sanitized instead of rejected.** Uploaded SVGs
+  (attachments and avatars) are cleaned in place in `onAfterUpload` via the new
+  `models/lib/sanitizeSvg.js`, which removes JavaScript (`<script>`, inline
+  `on*=` event handlers, `javascript:`/`vbscript:` URIs, `<foreignObject>` /
+  `<iframe>` / `<object>` / `<embed>` and similar active content) and XML loops
+  (`<!DOCTYPE>` / `<!ENTITY>` entity-expansion / XXE constructs and
+  `<?xml-stylesheet?>`), so SVG images can be uploaded safely. Thanks to xet7.
+- **Unified attachment/avatar storage migration: move any → any.** Admin Panel /
+  Attachments / Move Attachment can now move **Attachments, Avatars, or both**,
+  from **any source to any destination** across Filesystem, Meteor-Files GridFS,
+  Cloud (S3/Azure/GCS) and legacy CollectionFS GridFS. The default source is
+  "All Read-enabled storages" (every backend whose Read flag is enabled and whose
+  settings work), so everything can be consolidated into one destination in a
+  single run. All metadata is preserved (board / swimlane / list / card / user /
+  uploaded date / name / type / size), attachment cover references
+  (`cards.coverId`) are remapped when an id changes, and the legacy source is
+  deleted only after the new copy is verified. Thanks to xet7.
+- **Legacy CollectionFS GridFS is now a first-class storage backend** (read,
+  migrate-from, and export-to) for both attachments and avatars, via the new
+  `models/lib/collectionFsStore.js` (binary keyed by `copies.<coll>.key` in the
+  `cfs_gridfs.<coll>` bucket, metadata in `cfs.<coll>.filerecord`). Thanks to xet7.
+- **The storage strategy layer is now collection-aware.** `moveToStorage` and the
+  GridFS/Cloud strategies previously hard-coded the `Attachments` collection, so
+  moving avatars to GridFS/cloud would have updated the wrong collection. The
+  factory now carries its collection (`Attachments` or `Avatars`), so **avatars
+  can be stored in Meteor-Files GridFS and cloud**, not only on the filesystem.
+  Attachment behavior is unchanged.
+  Thanks to xet7.
+
+and adds the following updates:
+
+- [Update Windows MongoDB](https://github.com/wekan/wekan/commit/beedf2fefa614018ce7ed499465092e814a050d9).
+  Thanks to xet7.
+- [Update DDP transport and reactivity order for multi-tenant deployment](https://github.com/wekan/wekan/pull/6365).
+  Thanks to italojs.
+- [Updated to Meteor 3.5-rc.1](https://github.com/wekan/wekan/commit/29b3f52e50ea2ee9bfbfb98d3842ce8a9b8e52e3).
+  Thanks to Meteor developers.
+- **Documented the attachment / file REST API in the OpenAPI docs** — file
+  upload, download, info, listing a board's files, copy, move and delete (the
+  `/api/attachment/*` endpoints registered via `WebApp.handlers.use()`, which the
+  generator cannot auto-discover) are now documented in `openapi/extra_paths.yml`
+  and injected into the generated docs, including their authentication and
+  permission requirements.
+  Thanks to xet7.
+
+and adds the following fixes:
+
+- **[Admin Panel / Attachments: "Run MongoDB compact" now actually compacts the database](https://github.com/wekan/wekan/commit/dca9427bfb58532778bc705e4c8c8014ba4b01ae).**
+  MongoDB refuses `compact` on an active replica-set primary unless
+  `force: true` is given, so every collection failed with "will not run compact
+  on an active replica set primary … use force:true to force" — and because the
+  usual Meteor setup is a single-node replica set (only a primary, no
+  secondaries), nothing was compacted at all and no disk space was reclaimed. The
+  primary is now compacted with `force: true` (secondaries are still compacted
+  without it, so the primary stays available while they run), so the GridFS
+  collections are actually rewritten and freed space is returned to the
+  filesystem. Thanks to xet7.
+- **Admin Panel / Attachments: clearer cloud "Test connection" errors, and cloud
+  config inputs are trimmed.** Testing an Azure/GCS/S3 connection used to report a
+  single generic `Incomplete configuration or adapter not installed` even when the
+  real problem was specific — e.g. Azure rejecting the config with `Invalid URL`
+  (a stray space/newline in the account name, or a bad endpoint / connection
+  string). `testCloudConnection` now reports the actual cause: adapter not
+  installed, required fields missing, the adapter's own configuration error (such
+  as `Invalid URL`), or the real `listFiles` error (auth failure, container not
+  found, …). It also pre-validates the config and gives an actionable message
+  before the adapter turns it into a cryptic error — e.g. for Azure it explains
+  that the **Storage account name** must be just the account name (3–24 lowercase
+  letters/numbers, e.g. `wekanstorage`, not a full `https://…` URL and with no
+  spaces), or that the **Connection string** is malformed; and when Azure still
+  returns `Invalid URL` the message appends which field to check. In addition, all
+  cloud-storage text fields are now trimmed when read from the form, so
+  leading/trailing whitespace from copy-paste no longer produces an invalid URL.
+  Thanks to xet7.
+- **[Fixed moving attachments to S3](https://github.com/wekan/wekan/commit/a86a087915aac9d204e157b1a698091c079e04e6)
+  (and other cloud storage) failing and crashing the server.**
+  Uploading to S3 failed two ways, each of which crashed
+  the whole server because the rejection was unhandled and SyncedCron treats
+  those as fatal. The `@tweedegolf/sab-adapter-amazon-s3` adapter uploaded with a
+  `PutObjectCommand` whose `Body` was a live stream: (1) with no `ContentLength`
+  the AWS SDK fell back to a chunked signed upload that needs a decoded content
+  length, which was undefined for a stream of unknown size — `Invalid value
+  "undefined" for header "x-amz-decoded-content-length"`; and (2) if the socket
+  dropped mid-upload (`socket hang up`), the SDK's body-stream promise rejected
+  unhandled. Fixed by uploading the file as a complete in-memory **buffer**
+  (`addFileFromBuffer`) instead of a live stream: a buffer has a known length (no
+  content-length error) and no socket-bound stream to re-reject. The cloud upload
+  promise now never rejects — any failure is captured and exposed via
+  `waitUntilStored()`, which `moveToStorage` checks inside a try/catch so a failed
+  upload leaves the source file intact and is logged cleanly. (Files are moved one
+  at a time, so peak memory is one file.) Thanks to xet7.
+- **Fixed `TypeError: Cannot read properties of undefined (reading 'on')` when
+  moving attachments between Meteor-Files/GridFS and Filesystem.** If a file's
+  source binary was missing at its recorded location (e.g. a file left
+  half-moved by an earlier interrupted run — storage says "gridfs" but the
+  GridFS id reference is gone, or a filesystem path that no longer exists),
+  `getReadStream()`/`getWriteStream()` returned `undefined` and `moveToStorage`
+  (and `copyFile`) called `.on()` on it, throwing. Both now detect a missing
+  read/write stream, log a clear message (which file, version, from→to storage,
+  and why), **skip that file and leave the source intact** so no data is lost,
+  and continue with the rest. Use the new "Repair file locations" button to fix
+  the underlying inconsistent records. Thanks to xet7.
+- **Fixed moving attachments/avatars from CollectionFS to Meteor-Files crashing
+  the server, hanging the Admin Panel move at "File 1 / N", and leaving broken
+  avatars.** Three problems in Admin Panel / Attachments / Move Attachment:
+  - **Server crash on the first file** (`uncaughtException: TypeError: Cannot read
+    properties of undefined (reading '_id')` at
+    `AttachmentStoreStrategyGridFs.writeStreamFinished`). The current mongodb
+    driver's GridFS `GridFSBucketWriteStream` `'finish'` event no longer passes
+    the stored file document, so `finishedData._id` threw and killed the process
+    (which is also why the move appeared stuck at "File 1 / 4" — the background
+    job died mid-file and its persisted status was frozen). The GridFS strategy
+    now reads the uploaded file id from the write stream itself (`gridFSFile._id`
+    / `id`), the `'finish'` handler is wrapped so it can never crash the process,
+    and a startup reconciliation clears a stale "running" move status left by a
+    crashed run so the UI un-sticks and a new move can be started.
+  - **Broken avatar after migrating avatars.** The bulk move only repointed card
+    cover references (`cards.coverId`); a user's `profile.avatarUrl` still pointed
+    at the deleted legacy `/cfs/files/avatars/<oldId>` URL, so the avatar rendered
+    broken. The move now repoints `profile.avatarUrl` to the migrated avatar
+    (`remapReferences` handles avatars), and migrated files stamp
+    `meta.migratedFromId` so references can be repaired to the **exact** new file.
+    The startup repair in `server/models/users.js` (previously a no-op: it
+    string-replaced the URL prefix while keeping the now-deleted id and never
+    saved the document) now points each affected user's avatar at their migrated
+    Meteor-Files avatar — matched precisely by `meta.migratedFromId`, otherwise
+    strictly by `userId` (newest migrated avatar first), so a user can only ever
+    be given their own avatar, never another user's.
+  - **`ObjectID` deprecation warning** from `models/lib/grid/createObjectId.js`
+    (`MongoInternals.NpmModule.ObjectID` → `ObjectId`).
+  Thanks to xet7.
+- [Fix Dropdown list cannot be created with values](https://github.com/wekan/wekan/commit/e01f99eb52812df5e2754c193860002ec2716ecb).
+  - **Fixed Dropdown custom field options not being addable / saving as empty.**
+    Creating a "Dropdown" custom field showed the "List Options" box, but pressing
+    Enter (or typing and saving) never added any option, and on the card the only
+    selectable value was `(none)`. The custom-fields sidebar component was migrated
+    from `BlazeComponent` to a plain `Template`, but the template still iterates the
+    options with `{{#each dropdownItems.get}}` — under BlazeComponent that resolved
+    to the instance's `dropdownItems` ReactiveVar, whereas a plain Template does not
+    expose instance variables to the template, so the list rendered nothing. Because
+    the options were never rendered as inputs, `getDropdownItems()` then overwrote
+    the ReactiveVar with the empty DOM on save and every entered value was dropped.
+    Fixed by re-adding the missing `dropdownItems` helper (returning the ReactiveVar),
+    matching the pattern the other migrated templates already use. Thanks to xet7.
+  - **Fixed `Exception in global helper _` when opening the Create Custom Field
+    popup (and any translation containing a literal `%`).** i18n is configured with
+    a global sprintf post-processor (`postProcess: ["sprintf"]`), so every
+    translation is run through `i18next-sprintf-postprocessor`. The help text
+    `custom-field-stringtemplate-format` (`"Format (use %{value} as placeholder)"`)
+    contains a literal `%{value}` that sprintf cannot parse, so `vsprintf` threw and
+    crashed the global Blaze `_` translation helper — breaking that popup and any
+    string (in any language, including user translation overrides) that contains a
+    stray `%`. `TAPi18n.__` now retries without the sprintf post-processor when it
+    throws, returning the raw string (so `%{value}` is shown literally) instead of
+    crashing.
+  Thanks to rouceto1 and xet7.
+- [Fixed new checklists (and checklist items) on a newly added card not being visible until logout/login](https://github.com/wekan/wekan/commit/075e86b00e1f0dc0dea519acd37cece4d0a1fad3).
+  The `board` publication batched checklists,
+  checklist items, comments and attachments into board-level cursors filtered by
+  `cardId: { $in: cardIds }`, where `cardIds` was a one-time snapshot. In
+  `reywood:publish-composite` a child cursor only re-runs when its parent (the
+  board) document changes, so the snapshot never refreshed when a card was added
+  — a checklist on a card created after subscribing matched no published card and
+  only appeared on the next subscribe (logout/login). This was a regression from
+  the "Optimized board loading" change, which had replaced the original reactive
+  per-card child cursors with these batched snapshots. Fixed by **denormalizing a
+  `boardId` field onto `Checklists` and `ChecklistItems`** so they can be
+  published with a single board-level cursor filtered by `boardId` — one cursor
+  per collection (keeping the load optimization) that still reacts to checklists
+  on newly added cards, because a new checklist is created already carrying the
+  board's id. `boardId` is set on insert (server `before.insert` hooks, plus
+  explicitly in the Trello/WeKan board importers, which use `direct.insert` and
+  bypass hooks), re-derived when a checklist/item or its card moves to another
+  card (`before.update` on `cardId`) or the card moves to another board
+  (`Cards.after.update` cascade), and backfilled for existing data by an
+  idempotent startup migration. New `{ boardId: 1 }` indexes were added on both
+  collections. Comments and attachments instead remain reactive as per-card
+  children of the cards cursor. Assigned-only board members still only receive
+  checklists for cards assigned to them (the board-level cursor falls back to the
+  assigned cards' ids for those roles).
+  Thanks to ahlgrimma and xet7.
+- [Fixed SyncedCron crash](https://github.com/wekan/wekan/commit/72767ad9a769fee2548f93bbd7174edd69995e97).
+  **Fixed deleting archived lists (or many cards) crashing the server with
+  `SyncedCron: Fatal error encountered (unhandledRejection): TypeError: Cannot
+  read properties of undefined (reading 'boardId')` at
+  `server/models/checklistItems.js`.** Deleting a list cascades into removing its
+  cards, and each card's checklists, checklist items, comments and attachments
+  (`cardRemover` in `models/cards.js`). `Cards.before.remove` called `cardRemover`
+  **without `await`** (and was not `async`), so the card document was deleted
+  first and the cascade then ran with the parent card already gone; the
+  `ChecklistItems.before.remove` / `Checklists.before.remove` hooks dereferenced
+  the now-undefined card (`card.boardId`) and threw, and because the promise was
+  unhandled, SyncedCron caught the rejection and tore down all running cron jobs.
+  Fixed by making `Cards.before.remove` `async` and awaiting `cardRemover` (so
+  sub-items are removed while the card still exists), and the REST card-delete
+  handler now runs `cardRemover` before removing the card. As defense in depth,
+  every card-activity hook and helper that looked up a card and used its
+  `boardId` / `listId` / `swimlaneId` now skips (with a warning) when the parent
+  card — or, for checklist-completion activities, the parent checklist — is
+  missing, instead of throwing: `before.remove` on checklist items and
+  checklists, `Checklists.after.insert`, the `Cards.before.update` timing
+  activity, and the shared `itemCreation` / `publishCheckActivity` /
+  `publishChekListCompleted` / `publishChekListUncompleted` / `commentCreation`
+  helpers (matching the guards already present in
+  `server/models/cardComments.js`).
+  Thanks to titver968 and xet7.
+- **[Fixed upgrade crash](https://github.com/wekan/wekan/commit/39f3c89b0a11c5671b77d3a0b95200ac7256a4f1)
+  `An error occurred when creating an index for collection
+  "users": Topology is closed` / `MongoServerSelectionError: Server selection
+  timed out after 30000 ms`.** When WeKan started before MongoDB was reachable
+  and had an elected replica-set primary (common right after an upgrade, while
+  MongoDB replays its WiredTiger journal, or when the app container starts at the
+  same instant as the database), the first index creation threw and Node exited.
+  Now:
+  - **WeKan waits until MongoDB is ready** (reachable, with an elected primary)
+    before it starts, in every launch path: `start-wekan.sh`, `start-wekan.bat`,
+    the Snap (`snap-src/bin/wekan-control`), and the app itself
+    (`server/00waitForMongo.js` / `server/lib/mongoStartup.js`, which blocks the
+    first `Meteor.startup` so it also protects the plain Docker image). The Docker
+    `docker-compose.yml` and `docker-compose-multitenancy.yml` now give `wekandb`
+    a `healthcheck` (primary elected) and the WeKan/tenant services
+    `depends_on: condition: service_healthy`.
+  - **If MongoDB stays unreachable for too long** (default 120s, configurable via
+    `WEKAN_DB_WAIT_TIMEOUT`), a clear English-only message is printed to the
+    Node.js console / `docker logs` / `snap logs` explaining that a database
+    upgrade with `mongodump` (old MongoDB) and `mongorestore --drop` (new
+    MongoDB) may be needed, and reminding that attachments and avatars live
+    on disk under `WRITABLE_PATH` (`files`, `attachments`, `avatars`; on Snap
+    `/var/snap/wekan/common/files`, on Docker the `wekan-files` volume at
+    `/data`) and must be copied too. WeKan keeps retrying after printing it.
+  - **Index creation is now idempotent and crash-safe.** A new `ensureIndex`
+    helper checks the existing indexes and only creates the ones that are
+    missing, and never throws — a single index problem is logged in English
+    instead of taking the whole server down. All startup index creation across
+    the model files was switched to it.
+  Thanks to xet7.
+- [Fixed OpenAPI REST API documentation generation](https://github.com/wekan/wekan/commit/c71a97cba20247ce227a288fa74ef23cb3c4c83e),
+  which had been broken
+  since after WeKan v7.93 and only generated docs for the `login`/`register`
+  endpoints (2 operations) instead of the full API. The Meteor 3 migration moved
+  the REST routes from `models/*.js` (`JsonRoutes.add(...)`) into
+  `server/models/*.js` (`WebApp.handlers.get/post/put/delete(...)`) and
+  introduced optional chaining (`?.`) that the `esprima` Python parser cannot
+  read, so `openapi/generate_openapi.py` silently skipped every route file.
+  The generator now understands both routing styles, scans both `models/` and
+  `server/models/`, downlevels modern JS syntax so files parse, handles the
+  `type: Array` SimpleSchema idiom, and `releases/rebuild-docs.sh` works directly
+  with Python 3.12.x (PEP 668). The generated `public/api/wekan.yml` /
+  `wekan.html` now cover the full API again (89 operations / 61 paths).
+  Thanks to xet7.
+- **The attachment copy API now honours the admin "Admin Panel / Attachments"
+  API transfer limits.** Copying an attachment creates a new attachment but
+  skipped the `apiUploadBlocked` / `apiUploadMaxBytes` checks that upload
+  enforces; copy now respects them in both API implementations. Thanks to xet7.
+- [Fixed Admin Panel / Attachments / Move Attachment doing nothing / crashing](https://github.com/wekan/wekan/commit/d30803276d6d06db44f65ee1fb583cc11aac8b7b).
+  Several issues in the bulk move:
+  - The GridFS source matcher required `meta.gridFsFileId` to be *absent*, but
+    Meteor-Files always sets it, so selecting "MongoDB Meteor-Files" matched zero
+    files and "nothing happened". The matcher now recognizes real GridFS files
+    (`versions.*.storage === 'gridfs'` or a `meta.gridFsFileId` reference), and a
+    "nothing to move" message is shown when a source is empty instead of silently
+    doing nothing.
+  - Moving files crashed the whole server with
+    `FilesCollection#findOne() not available in server` — `ReactiveCache.getAttachment`
+    used a synchronous `findOne()`; it now uses `findOneAsync()`. The background
+    job is also hardened so a single failing file is skipped instead of crashing
+    the server via an unhandled rejection.
+  - The attachment **copy** API now honours the admin API upload limits (it
+    previously skipped them).
+- **Fixed the "MongoDB Meteor-Files" file-count statistic** in Admin Panel /
+  Attachments, which counted *every* attachment metadata document (so files on
+  the Filesystem were wrongly reported as being in GridFS). It now counts only
+  attachments actually stored in GridFS, consistent with the move tool. Also
+  renamed the mislabeled "Mongo-Files" column to "Meteor-Files". Thanks to xet7.
+- **Read legacy CollectionFS attachments and avatars in place** (without
+  migrating). The backward-compatibility layer
+  (`models/lib/attachmentBackwardCompatibility.js`) was broken — it looked up the
+  GridFS binary by the filerecord `_id` and by filename instead of by
+  `ObjectId(copies.<coll>.key)`, so legacy files were never found. It is fixed and
+  generalized for attachments and avatars. Legacy attachments now appear in the
+  card attachment gallery (new `legacyBoardAttachments` publication) and stream
+  from the `cfs_gridfs.attachments` bucket, and legacy avatars
+  (`/cfs/files/avatars/<id>` URLs) are served from the `cfs_gridfs.avatars`
+  bucket instead of redirecting to a 404.
+  Thanks to xet7.
+- [Ask to install npm dependencies before running tests](https://github.com/wekan/wekan/commit/b77b62bfa2e7a63fdd2d2d071693d5aa485a34c5).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.34 2026-05-31 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix to not list all boards etc at Admin Panel / Attachments / Move Attachment](https://github.com/wekan/wekan/commit/fc10ce425910ce35fb6ea03a81b20ff870ac347e).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.33 2026-05-31 WeKan ® release
+
+This release adds [the following fixes](https://github.com/wekan/wekan/commit/6f021aa387d8c388821119b7f564565892ccc5ca), In Progress:
+
+Mobile / touch fixes (Fairphone 4 postmarketOS Firefox and Fairphone 4 Ubuntu Touch Morph browser; iPhone 12 Mini was already correct):
+
+- Fixed one-finger drag-to-scroll not working in the All Boards view and the
+  Calendar view on Fairphone 4 Firefox and Ubuntu Touch Morph. These browsers
+  do not emit the synthetic mouse events the `@wekanteam/dragscroll` library
+  relies on, so scrolling only worked in the Swimlanes/Lists views. Added a new
+  native touch-scrolling helper `client/lib/dragscrollTouch.js` that scrolls the
+  nearest `.dragscroll` container with a one-finger drag (iOS is skipped, since
+  native momentum scrolling already works there), and added the `dragscroll`
+  class to the All Boards list and the Calendar view.
+- Fixed all text, buttons, the All Boards tables and the top bars (header and
+  the second bar) rendering about 2x too large on Fairphone 4. `getMobileMode()`
+  defaulted to mobile mode only for iPhone, so every other phone fell back to
+  desktop mode, whose large desktop sizing looks oversized on a small phone
+  screen. The default is now mobile mode for any phone-sized touch device
+  (iPhone, Android/Mobile browsers, Ubuntu Touch, or a coarse-pointer touch
+  screen with viewport width ≤ 800px); desktop browsers stay in desktop mode and
+  the user's own Mobile/Desktop toggle still takes priority.
+- Fixed not being able to reorder swimlanes and lists by dragging their drag
+  handle on touch devices. The new touch-scroll helper was hijacking touches
+  that started on a drag handle; `.handle` / `.ui-sortable-handle` elements are
+  now excluded from touch-scrolling so dragging the handle reorders as expected.
+- Fixed a card duplicating into two cards when it was dragged by its title-row
+  drag handle while its Card Details panel was open. The card sortable in
+  `client/components/lists/list.js` was re-initialized on every list re-render
+  without first destroying the previous instance, so two `stop` handlers fired
+  per drag. It now destroys any existing sortable before re-initializing, the
+  same guard already used for swimlanes.
+
+Attachment storage:
+
+- Added configurable attachment storage backends in the admin panel: choose the
+  default save storage and store attachments on the local filesystem, GridFS, or
+  cloud object storage — S3-compatible (AWS S3, MinIO, Cloudflare R2, Backblaze
+  B2, Wasabi, DigitalOcean Spaces), Azure Blob Storage, or Google Cloud Storage
+  — via the `@tweedegolf/storage-abstraction` adapters (new
+  `models/lib/cloudStorage.js`). Includes a "Test connection" action and
+  English translations for the new settings.
+- Added a server-side bulk attachment move (new `server/attachmentBulkMove.js`
+  and `models/attachmentBulkMoveStatus.js`) that moves all attachments from one
+  storage backend to another as a background job whose progress survives the
+  admin navigating away from or closing the page.
+
+Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.32 2026-05-31 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES:
+
+- [Fix GHSA-hc3x-hq3m-663q: Server-Side Request Forgery (SSRF) via webhook integration URLs (CWE-918)](https://github.com/wekan/wekan/commit/0e5fef6f31164fd3de4db353d04173ee0490cd65).
+  Wekan's outgoing-webhook integrations let a board
+  admin store an arbitrary URL that is later fetched server-side, so a
+  caller-controlled URL pointing at an internal address (cloud metadata at
+  `http://169.254.169.254/latest/meta-data/`, loopback, RFC 1918 ranges, etc.)
+  could be used to reach internal services or exfiltrate data.
+  - **Originally fixed at the delivery layer in v8.35 and v8.36** (the
+    [IntegrationBleed](https://wekan.fi/hall-of-fame/integrationbleed/) fixes).
+    [Fix IntegrationBleed (v8.35)](https://github.com/wekan/wekan/commit/2cd702f48df2b8aef0e7381685f8e089986a18a4)
+    routed webhook delivery in `server/notifications/outgoing.js` through
+    `fetchSafe` (`server/lib/ssrfGuard.js`), which validates the URL and blocks
+    private/loopback IPs, and
+    [Fix RebindBleed of IntegrationBleed (v8.36)](https://github.com/wekan/wekan/commit/92beaa313706bc26fbea7e1cc8cfaf836609e038)
+    hardened it further to resolve DNS once, pin the connection to the validated
+    IP, and block redirects — closing the actual request-time SSRF including DNS
+    rebinding.
+  - **New in this release:** the missing input-side validation the advisory
+    requested, added at the REST write paths in `server/models/integrations.js`.
+    Those endpoints accepted webhook URLs without a robust check:
+    `POST /api/boards/:boardId/integrations` relied only on the schema's regex
+    `custom()` validator (no DNS resolution, blind to a hostname that resolves to
+    a private IP and to decimal/octal/IPv4-mapped-IPv6 encodings), and
+    `PUT /api/boards/:boardId/integrations/:intId` wrote the URL via
+    `Integrations.direct.updateAsync`, which bypasses schema validation entirely,
+    so updated URLs were never validated at the data layer. Both endpoints now run
+    the DNS-aware `validateAttachmentUrl()`
+    (`models/lib/attachmentUrlValidation.js`, the same validator already used for
+    attachment imports) before storing the URL, rejecting
+    private/loopback/link-local/reserved targets with HTTP 400. Together with the
+    v8.35/v8.36 `fetchSafe` delivery guard and the schema validator on
+    client-side inserts/updates, webhook URLs are now validated on every write
+    path and again at delivery.
+  Thanks to xet7.
+- [Fix GHSA-7w2h-g83c-jqrp: Authorization bypass in `copyBoard` DDP method allows any user to copy private boards (CWE-862)](https://github.com/wekan/wekan/commit/8940a103970c5da3f02b3615eef09fabfff421e3).
+  The `copyBoard` Meteor method in `server/publications/boards.js`
+  had no authorization check: any logged-in user
+  could copy any board by ID — including private boards they are not a member of —
+  cloning all cards, checklists, custom fields, labels and rules, while the
+  equivalent REST endpoint `POST /api/boards/:boardId/copy` correctly required
+  board admin. The method also looped over caller-supplied `properties`
+  (`for (const key in properties) board[key] = properties[key]`) and copied them
+  onto the new board, letting an attacker inject arbitrary fields such as
+  `members` (to add themselves as admin of the copy) or `permission: 'public'`
+  (to expose the copy to everyone). The member-level fix shipped in v9.09 as part
+  of the AuthBleed fixes (caller must be authenticated, board must exist, caller
+  must be a board member, and `members`/`permission` are stripped from
+  `properties` before the copy). This release tightens it further to full parity
+  with the REST endpoint: `copyBoard` now requires the caller to be a board admin
+  (`board.hasAdmin(this.userId)`, the same `{isActive:true, isAdmin:true}`
+  condition the REST API enforces via `checkAdminOrCondition`) rather than merely
+  a member.
+- [Fix GHSA-cv95-8h7c-2ffq: Missing authorization on OIDC Meteor methods allows privilege escalation to admin (CWE-269, CWE-862)](https://github.com/wekan/wekan/commit/305864f0c77456ad0f2c1e616266c8a06749c951).
+  Six Meteor methods used internally by the OIDC login flow were registered as globally DDP-callable
+  with no authorization, while their non-OIDC counterparts require admin. `setCreateOrgFromOidc` and
+  `setOrgAllFieldsFromOidc` (`server/models/org.js`), `setCreateTeamFromOidc` and
+  `setTeamAllFieldsFromOidc` (`server/models/team.js`) let any authenticated user create/rename/
+  deactivate/modify arbitrary organizations and teams — including `orgAutoAddUsersWithDomainName` —
+  bypassing the admin-only restriction. Most critically, `groupRoutineOnLogin`
+  (`packages/wekan-oidc/oidc_server.js`) sets `isAdmin` from caller-supplied group data, so with
+  `PROPAGATE_OIDC_DATA` enabled any authenticated user could call it over DDP with
+  `{groups:[{isAdmin:true,forceCreate:true}]}` and promote themselves to global admin;
+  `boardRoutineOnLogin` could likewise add the caller to the default board. These six methods are only
+  ever invoked server-side (via `Meteor.callAsync`) during the OIDC handshake, where a fix that checks
+  `isAdmin`/`this.userId` would break legitimate group/admin propagation (the user is not yet logged in
+  or admin at that point). Fixed by rejecting any direct client/DDP invocation: a server-to-server
+  `Meteor.callAsync` runs with `this.connection === null`, whereas a client call has a non-null
+  connection, so each of the six methods now throws `not-authorized` when `this.connection !== null`.
+  The legitimate OIDC login flow is unaffected.
+  Thanks to alexwaira for the coordinated disclosure, and xet7.
+- [Fix GHSA-mp7g-hj5q-gxhq: OIDC Account Takeover via Unconditional Email-Based Account Merge in `Accounts.onCreateUser` hook (CWE-287)](https://github.com/wekan/wekan/commit/73204d4e0a7d77a1b186b3d76e8eaf2f3e7c9fd9).
+  The `onCreateUser` hook in `server/models/users.js` unconditionally merged an incoming OIDC login
+  into any existing Wekan account whose email **or** username matched the (attacker-controlled) OIDC
+  claims — no ownership check, no email-verification check, no notification. An attacker who could
+  present a matching `email`/`username` claim (trivial on self-hosted Keycloak/Authentik, where the
+  `email`/`email_verified` claims are attacker-settable) inherited the victim's `_id`, boards, cards,
+  attachments, API tokens and admin status, all during the attacker's own first OIDC login with no
+  victim interaction. Fixed to fail closed, mirroring `LDAP_MERGE_EXISTING_USERS`: matching is now by
+  email only (never username); auto-linking is opt-in via the new `OAUTH2_MERGE_EXISTING_USERS`
+  setting (OFF by default, so the default deployment never merges); even when enabled the OIDC
+  provider must assert `email_verified=true`; otherwise the OIDC login is rejected with
+  `oidc-email-already-in-use` instead of merging. The provider's `email_verified` claim is now
+  captured into the OIDC service data in `packages/wekan-oidc/oidc_server.js`.
+  Thanks to alexwaira for the coordinated disclosure, and xet7.
+- [Fix GHSA-6733-4wgq-8xvr: Read-only board members could create/modify/delete Custom Fields](https://github.com/wekan/wekan/commit/70db04a93fedabe40331f21f86e6bdc91625914e).
+  (privilege escalation via read-level authz on write operations, CWE-862).
+  All six mutating REST handlers in `server/models/customFields.js` (POST/PUT custom-fields,
+  POST/PUT/DELETE dropdown-items, DELETE custom-fields) called the read-level
+  `Authentication.checkBoardAccess` instead of the write-level `checkBoardWriteAccess`, letting a
+  board member with the read-only role (`isReadOnly` / `isReadAssignedOnly`) write Custom Field
+  data via the REST API when `WITH_API=true`. Replaced the check with `checkBoardWriteAccess` in
+  all six mutating handlers (the two GET handlers correctly stay on `checkBoardAccess`), mirroring
+  `lists.js`/`swimlanes.js`/`cards.js`.
+  Thanks to Wernerina for the coordinated disclosure, and xet7.
+- [Fix regression from the avatar RCE fix GHSA-35j7-h385-2q9g: external antivirus scanner broken (`asyncExec` undefined)](https://github.com/wekan/wekan/commit/8ea5a6a097f1b598688a94832e94bd1ec1b34cd6).
+  The avatar RCE fix renamed `asyncExec` to `asyncExecFile` in `models/fileValidation.js`, but the
+  admin-configured external scanner command line still called the now-undefined `asyncExec`, throwing
+  `ReferenceError` (swallowed by the catch) and making every upload silently fail validation whenever
+  an external scanner was configured. Restored a shell-based `asyncExec` used only for that
+  admin-configured command line; MIME detection still uses the shell-free `asyncExecFile`.
+  Thanks to xet7.
+- [Fix CodeQL 68: Polynomial regex DoS in Jade parser](https://github.com/wekan/wekan/commit/ae671bc70a0b2e0bb0cdcf24130477a0dd72ea72).
+  Thanks to CodeQL and xet7.
+- [Fix CodeQL 69: Polynomial regex DoS in Jade parser, part 2](https://github.com/wekan/wekan/commit/105199991f2944ac431906e5b5cbeb10de003870).
+  Remove the redundant `$` anchor from the interpolation regex in `compiler.js` and bundled `jade.js`.
+  The greedy `[\s\S]*` already matches to end of string, so dropping `$` keeps the same match
+  while eliminating the backtracking that CodeQL alert `js/polynomial-redos` flagged.
+  Thanks to CodeQL and xet7.
+- [Fix CodeQL 63: Incomplete string escaping or encoding in bundled `jade.js`](https://github.com/wekan/wekan/commit/b4b81684e0d28406c6499b9ba6bf33b301a3faa9).
+  In uglify-js's `make_string` (bundled twice into jade's browser bundle), the chosen
+  quote was escaped in a trailing `str.replace(/'/g, "\\'")` that CodeQL alert
+  `js/incomplete-sanitization` flags for not escaping backslashes in that same call.
+  Backslashes were already escaped in the earlier single-pass `replace`, so this was a
+  local false positive, but the fix folds the quote escaping into that same pass
+  (escaping both quotes), making the escaping atomic and complete while keeping the
+  emitted string literals decode-equivalent.
+  Thanks to CodeQL and xet7.
+- [Fix CodeQL 67: Incomplete multi-character sanitization](https://github.com/wekan/wekan/commit/66d15f6ab0b3c42ae5de565490645d4c83f0a997).
+  Thanks to CodeQL and xet7.
+- [Fix CodeQL 60: Useless regular-expression character escape](https://github.com/wekan/wekan/commit/fc76d0e5767f021cae3d466147e5f7695594ac8c).
+  Thanks to CodeQL and xet7.
+- [Fix CodeQL 58: Incomplete multi-character sanitization](https://github.com/wekan/wekan/commit/13f78f620709f16e753a0831faa7f98cfcf5c58e).
+  Thanks to CodeQL and xet7.
+- [Fix CodeQL 57: Incomplete multi-character sanitization](https://github.com/wekan/wekan/commit/36274f35f4de10a9f271cb8fc1154499fe8a2415).
+  Thanks to CodeQL and xet7.
+- Fix CodeQL 56: Incomplete string escaping or encoding](https://github.com/wekan/wekan/commit/c5e42607af5a0a396c0c85dba3652b8be28a2ff3).
+  Thanks to CodeQL and xet7.
+- [Fix CodeQL 55: Incomplete string escaping or encoding](https://github.com/wekan/wekan/commit/50728616871b0db8e05d5391ea479ae8099236d1).
+  Thanks to CodeQL and xet7.
+- [Fix CodeQL 48: Clear-text logging of sensitive information](https://github.com/wekan/wekan/commit/b6564c81f1cbfc6bdf0b4bd72fc9a9ce36b36f6e).
+  Thanks to CodeQL and xet7.
+- [Fix CodeQL 418: Clear-text logging of sensitive information](https://github.com/wekan/wekan/commit/f882a14ee07e6fbef16594851a773275d6547dba).
+  Thanks to CodeQL and xet7.
+- [Fix CodeQL 419: Clear-text logging of sensitive information](https://github.com/wekan/wekan/commit/6b923eb4c21ef66c2d4ff859ffed4293365aaf9f).
+  Thanks to CodeQL and xet7.
+- [Delete calendar demos, so that CodeQL stops complaining](https://github.com/wekan/wekan/commit/d0b2b5201e8a43a067ca32b0cf6a542695213406).
+  Thanks to xet7.
+- [Fix CodeQL 35: Insecure randomness](https://github.com/wekan/wekan/commit/358d893c3382ca90a408055713d9b6ffda73f33a).
+  Thanks to CodeQL and xet7.
+- [Fix CodeQL 417: Workflow does not contain permissions](https://github.com/wekan/wekan/commit/7836ce27e7d20a3db585c56a565423e4fcc00f0b).
+  Thanks to CodeQL and xet7.
+
+and adds the following updates:
+
+- [Added test menu options](https://github.com/wekan/wekan/commit/b0918686a2e3e39511964be14321f30b5520c644).
+  "Test Playwright Chromium", "Test Playwright Firefox" and "Test
+  Playwright Webkit" to `rebuild-wekan.sh` for running the
+  Playwright end-to-end test suite per browser.
+  Thanks to xet7.
+- [Copy wepica style of hide/show password to WeKan login and register pages](https://github.com/wekan/wekan/commit/9d3587086377c6c677ee03d4cb6f43c34f468558).
+  Thanks to Chostakovitch and xet7.
+- Updated dependencies.
+  [Part 1](https://github.com/wekan/wekan/commit/29b0cc1f86d0feb8d7c963ab9f4de2e8d86aac1b),
+  [Part 2](https://github.com/wekan/wekan/commit/136931640186cd2969bb3e8690a2d9f01a6ef544),
+  [Part 3](https://github.com/wekan/wekan/commit/76945ee5b51b2e57eef008e1fa9e30b56a5dbd92),
+  [Part 4](https://github.com/wekan/wekan/commit/a2e76f2cf0b5f6fecf2d7305ddc97573425885b6),
+  [Part 5](https://github.com/wekan/wekan/commit/08084d96e8a67055fd2433f5c0d25828f23be9b7),
+  [Part 6: Fork and update meteor-node-stubs](https://github.com/wekan/wekan/commit/06c803388ba71e76194e5f201a296782d774fa07),
+  [Part 7](https://github.com/wekan/wekan/commit/ac0e11e54831206ab8e36498384c2ef5ea62489e),
+  [Part 8](https://github.com/wekan/wekan/commit/42d79b3dcf820b1a74d3930523557737a7389f37).
+  Thanks to developers of dependencies.
+
+and adds the following new features:
+
+- [Add User board access roles to Admin Panel / People / Roles](https://github.com/wekan/wekan/commit/c956ab5a4e2d675641f8c74df2dcde675474ab06).
+  A new global "Roles" tab in Admin Panel / People lets a site admin choose which
+  board roles are allowed to invite users to a board ("Allow Invite to Board").
+  Each board role has its own toggle — Board Admin, Normal, Worker, Comment only,
+  No comments, Only Assigned Normal, Only Assigned Comment, Read Only and Only
+  Assigned Read — plus an "All Board Members" master toggle that selects them all.
+  The policy is enforced server-side in the `inviteUserToBoard` and `searchUsers`
+  methods, and the add-member button in the board sidebar is shown only to roles
+  the policy allows. Global Admin Panel users (site admins) always have all rights
+  and cannot be restricted here; this is kept clearly distinct in code from the
+  per-board "Board Admin" role. Secure default: only Board Admin and Normal may invite.
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix typos](https://github.com/wekan/wekan/commit/64b43a42ddc55f4196845834234035a9da0a6bd1).
+  Thanks to xet7.
+- [Fix iOS Chrome jQuery event handler runtime error](https://github.com/wekan/wekan/commit/0fefdeec4cdca73c00524c49be80060b53dfa0e5).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.31 2026-05-27 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES:
+
+- [Fix GHSA-g6vm-7757-pr88. Moved Attachment Storage options from board to Admin Panel. Changed API to use Expose Meteor user context to Express endpoints](https://github.com/wekan/wekan/commit/8351bba818a04c9db11a0e3fa380a10f8d51482c).
+  Thanks to Jan Kahmen of turingpoint GmbH for reporting GHSA-g6vm-7757-pr88 and xet7 for fixes and attachment improvements.
+  Thanks to nachocodoner about https://forums.meteor.com/t/expose-meteor-user-context-to-express-endpoints/64384.
+
+and adds the following updates:
+
+- [Ubuntu 26.04 based core26 beta can be at devel like beta channel, not yet candidate](https://github.com/wekan/wekan/commit/8cda80752fd56c870cb139600fedc82643874c3b).
+  Thanks to xet7.
+- [Updated platforms](https://github.com/wekan/wekan/commit/c8430a8c1419cc68023ed918e26f7d4f279968ca).
+  Thanks to xet7.
+- [Update Windows docs](https://github.com/wekan/wekan/commit/dbab502be4e194f06dd09b97ee3247a37def7eab).
+  Thanks to xet7.
+- [Bump docker/login-action from 4.1.0 to 4.2.0](https://github.com/wekan/wekan/pull/6358).
+  Thanks to dependabot.
+- [Bump docker/metadata-action from 6.0.0 to 6.1.0](https://github.com/wekan/wekan/pull/6359).
+  Thanks to dependabot.
+- [Bump docker/build-push-action from 7.1.0 to 7.2.0](https://github.com/wekan/wekan/pull/6360).
+  Thanks to dependabot.
+- Update dependencies and maintenance scripts
+  [Part 1](https://github.com/wekan/wekan/commit/8e13f2bce92bdd62f0c42900410683a518aba721),
+  [Part 2](https://github.com/wekan/wekan/commit/769a139e70a4808b35c91fcd4f2b52a97890ff79).
+  Thanks to developers of dependencies.
+- [Add more tests. Fix tests](https://github.com/wekan/wekan/commit/7a615cea52f27e6d15660aaf18ccc8396a1f6f3d).
+  Thanks to xet7.
+- [Upgrade Meteor to 3.5-beta.12](https://github.com/wekan/wekan/pull/6362).
+  Thanks to harryadel.
+
+and adds the following new features:
+
+- Add Header Login.
+  [Part 1](https://github.com/wekan/wekan/commit/a3c32ff5616842ba306d8e52fd6c4bf350402c87),
+  [Part 2](https://github.com/wekan/wekan/commit/36d1c60bf45d5b66934ce3386c2a457008f415be).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix typo](https://github.com/wekan/wekan/commit/abc24cf38170ba3ace1aa2e8c80b9e34b67a9c77).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.30 2026-05-22 WeKan ® release
+
+This release adds the following updates:
+
+- [Try to fix Snap build LXD container network Internet access](https://github.com/wekan/wekan/commit/07e6f663db0fb077dad6d88c1bd9d53139375cae).
+  Thanks to xet7.
+- [Fix Snap LXD container to work when network already exists](https://github.com/wekan/wekan/commit/fb05b1a847be2e47d8c27c3959e063caf7cde886).
+  Thanks to xet7.
+- [Release scripts: Use locally cached files](https://github.com/wekan/wekan/commit/6463a1ef87b2741c3bafdd39391efcd9c6534b83).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.29 2026-05-22 WeKan ® release
+
+This release adds the following updates:
+
+- [Try to fix Snap](https://github.com/wekan/wekan/commit/83078736f527101e1b983037c33a9b26c9639542).
+  Thanks to xet7.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/3e33c766d6f63eb2369898bcab9233e9e49240be).
+  Thanks to developers of dependencies.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.28 2026-05-22 WeKan ® release
+
+This release adds the following updates:
+
+- [Build scripts: Update arm64 build script](https://github.com/wekan/wekan/commit/e7f2068105b36b8003be4e416594b213555141db).
+  Thanks to xet7.
+- [Try to fix Snap by using correct versions of dependencies](https://github.com/wekan/wekan/commit/ecbecc9d861743a1b7b4b48db65fa93cf5194257).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.27 2026-05-22 WeKan ® release
+
+This release tries to fix the following bugs:
+
+- Try to fix Snap local build. In Progress.
+  [Part 1](https://github.com/wekan/wekan/commit/30fd008310598e9767d50971f34453b7313e4e12),
+  [Part 2](https://github.com/wekan/wekan/commit/2a700f56901fae81be7b97abf38c9a74d74b447d).
+  Thanks to xet7.
+- [Docker: Do not include pebble to final Docker container, only use it when building, because pebble causes vulnerability warnings](https://github.com/wekan/wekan/commit/87a6354e4202fa779955026ee1eca8701398562a).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.26 2026-05-22 WeKan ® release
+
+This release adds the following update:
+
+- [Use Ubuntu 26.04 base for amd64 and arm64 at Docker and Snap](https://github.com/wekan/wekan/commit/d978d626aed308553955037e0e906f44566a295d).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Try to fix Snap: Use local npm package cache to prevent local build timeout](https://github.com/wekan/wekan/commit/741668a831d7775c34fca68d7b3a63421ae72f13).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.25 2026-05-22 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix Snap](https://github.com/wekan/wekan/commit/b5e79b37ed88676751394465d81249ad7bbf2841).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.24 2026-05-22 WeKan ® release
+
+This release adds the following updates:
+
+- [Build scripts: Updated local IP address](https://github.com/wekan/wekan/commit/87dcfdbff646e642f0bd760bc76aa3de6983961e).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix Snap pidFilePath](https://github.com/wekan/wekan/commit/56815925728f4e82fabff969e086c7f015c89c9c).
+  Thanks to csonkaoszimt and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.23 2026-05-21 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES: https://wekan.fi/hall-of-fame/bflableed/ :
+
+- [Fix BFLABleed](https://github.com/wekan/wekan/commit/8baa9124a607e0620ab72d6d16871ed1c08e721a)
+  Thanks to Fredrik Dietrichson and xet7.
+
+and adds the following new features:
+
+- [Build scripts: Add local build cache, for npm packages and http downloads](https://github.com/wekan/wekan/commit/2cc30a85f21742f0f087a9846a52ee28e32830a5).
+  Thanks to xet7.
+- [Build scripts: Added script to revert git add](https://github.com/wekan/wekan/commit/fad217db8a55d95bd62d7d9c431cb60714a54d13).
+  Thanks to xet7.
+
+and adds the following updates:
+
+- [Bump brace-expansion from 5.0.5 to 5.0.6](https://github.com/wekan/wekan/pull/6350).
+  Thanks to dependabot.
+
+and fixes the following bugs:
+
+- [Fix WeKan version update script](https://github.com/wekan/wekan/commit/28464685a70dcea783f90e24e70d668bbcb483a4).
+  Thanks to xet7.
+- Fix tests. Added Filter test at part 4.
+  [Part 3](https://github.com/wekan/wekan/commit/1b1b04d083efd44163549f7dc1f33aba6ae08c86),
+  [Part 4](https://github.com/wekan/wekan/commit/24577ad2a9647a3dc5143606d8ff9c23f6c49bd0).
+  Thanks to xet7.
+- [Fix No label and dates on any minicard](https://github.com/wekan/wekan/commit/4aeb3aa3d2e8daebd28aa50ae09eff5e7bde8c8b).
+  Thanks to hmeunier95 and xet7.
+- [Fix Filter](https://github.com/wekan/wekan/commit/06cdd459dbe7e11e971d91f75c4344386acb38ee).
+  Thanks to hmeunier95 and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.22 2026-05-18 WeKan ® release
+
+This release adds the following new features:
+
+- [Script for upgrading Docker WeKan from old version to new version](https://github.com/wekan/wekan/commit/0b9d33cac493ff8345f3e79333b44a345e5e0b61).
+  Thanks to xet7.
+- [Added backup-all.sh script](https://github.com/wekan/wekan/commit/d486eb2a8f8192fbd318510117afa8afbe00185c).
+  Thanks to xet7.
+- [Backup also attachments and avatars](https://github.com/wekan/wekan/commit/46e67512aceb7614998186f87f79af78d8f01527).
+  Thanks to xet7.
+
+and adds the following updates:
+
+- [Docs: Added link to Meteor Security](https://github.com/wekan/wekan/commit/2474ff15d6950615d54098aa6cd91f1005594d6a).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Use only oplog sockjs so that multitenancy works](https://github.com/wekan/wekan/commit/7b88f4c21a05810966e49833b393f4bd02d70d47).
+  Thanks to xet7.
+- [Script to executeable](https://github.com/wekan/wekan/commit/7496d994e159a6640d285c8e2e0bcd96f93635b4).
+  Thanks to xet7.
+- [Fixed path](https://github.com/wekan/wekan/commit/8f574799e2e4da956429a131c2667a483c28e7a6).
+  Thanks to xet7.
+- [Fix minicard drag handle to be below minicard menu. Not at top of minicard menu anymore](https://github.com/wekan/wekan/commit/95ad27e0df0c08c59aa3df486cbb5cdb0f87a7e7).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.21 2026-05-17 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated version scripts](https://github.com/wekan/wekan/commit/5748475e8d0ea6ce2b6a0a88e0d20491f97b1cda).
+  Thanks to xet7.
+- [Updated Kin 2.0 Meta OS to Friend page](https://github.com/wekan/wekan/commit/3390324c2ae10d5320de0d57d6d7b21e7c1bd42d).
+  Thanks to xet7.
+- [Added Docs for Meteor 3 Docker WeKan with ChangeStreams etc](https://github.com/wekan/wekan/commit/d5d04728fbe3d27f2ef65d2fdef0d3818ba02eaf).
+  Thanks to xet7.
+- [Set default to changeStreams and uws](https://github.com/wekan/wekan/commit/964caabaaf1a535556185d194d18e30bbbc1405b).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix sudden logouts](https://github.com/wekan/wekan/commit/c2f67001d6a861291cc1fab4670a7131088d1acd).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.20 2026-05-16 WeKan ® release
+
+This release adds the following updates:
+
+- [Update build scripts](https://github.com/wekan/wekan/commit/c37047d8eea120a9abb0c2159e6e6811499f999d).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Added fallback so attachments and avatars can be at WRITABLE_PATH or WRITABLE_PATH/files](https://github.com/wekan/wekan/commit/f26a2ac9ad4224aece4bc603c8f2f19eeddc97c7).
+  Thanks to xet7.
+- [Use oplog and sockjs as default. Not changeStreams and uws](https://github.com/wekan/wekan/commit/5309e4863d347dfe5c7b612e39f1750e7fcfa9d3).
+  Thanks to xet7.
+- [Added remaining MongoDB indexes and MongoDB settings](https://github.com/wekan/wekan/commit/f81fe11daecb2c3aec9c5037b274c45634b3f986).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.19 2026-05-16 WeKan ® release
+
+This release adds the following updates:
+
+- Updated dependencies.
+  [Part 1](https://github.com/wekan/wekan/commit/7efba64c393d904ad0095ec294863db1f148b47d),
+  [Part 2](https://github.com/wekan/wekan/commit/09a5737e21661e66950086950d9f8646600f37ca).
+  Thanks to developers of dependencies.
+- [Isolate Playwright from root node_modules to fix E2E Rspack bundling errors](https://github.com/wekan/wekan/pull/6344).
+  Thanks to xet7.
+- [rebuild-wekan.sh: At macOS, add paths to Node.js 24.x](https://github.com/wekan/wekan/commit/7f1dd16dfcb844051c763f1dd5670a7a41921e2f).
+  Thanks to xet7.
+- [Updated tests dependencies](https://github.com/wekan/wekan/commit/8e4404ab49037c6558e1789548d73138aab12412).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix Docker Compose missing dashes](https://github.com/wekan/wekan/commit/c1f0da121708a461045fce70f65a33eb2f83a6c0).
+  Thanks to C0rn3j, kichkasch and xet7.
+- [Fix Playwright tests](https://github.com/wekan/wekan/commit/9962f2bd9bde19114e497db30b3aba577e55a57f).
+  Thanks to snowsky and xet7.
+- Try to fix Playwright tests at GitHub Actions.
+  [Part 1](https://github.com/wekan/wekan/commit/0e287c9117a2e98e0314a68899dc2151f74b6426),
+  [Part 2](https://github.com/wekan/wekan/commit/6d56d69ae375d4898de7e50b0533ff82eabceb31),
+  [Part 3](https://github.com/wekan/wekan/commit/0c6acbfaa27656be2e98dba10d05d019241a2609),
+  [Part 4](https://github.com/wekan/wekan/commit/66506186822b77674767041db6e6b94db1191816),
+  [Part 5](https://github.com/wekan/wekan/commit/568ea35ed7bfa5328bc34f0ccb9b5347685af6e8),
+  [Part 6](https://github.com/wekan/wekan/commit/24f4bfd5add57d6fd4c0b3399b3a4e9074f6a582),
+  [Part 7](https://github.com/wekan/wekan/commit/b4742b84ab02408323c5421d003a641e7804b63b).
+  Thanks to xet7.
+- [Fix LDAP Admin Sync](https://github.com/wekan/wekan/commit/1950aff8650056b19eff3faf95d155ce8486cf7a).
+  Thanks to titver968 and xet7.
+- [Fix editing comments](https://github.com/wekan/wekan/commit/7fb2c3de7b7de114cbe58233b48694cee43a59ea).
+  Thanks to dehnamaki and xet7.
+- [Fix Board visibility ist only private and cannot change it. Fix Public Board, Archive, and menus visibility](https://github.com/wekan/wekan/commit/9f3c21657663df8c8af9c057639f9412084fcbe9).
+  Thanks to titver968 and xet7.
+- [Fix Clicking on a card does not open the card detail panel](https://github.com/wekan/wekan/commit/39effe9a0b4705ed05c7e63859e057d110913626).
+  Thanks to gaetanquentin.
+- [Fix no due date notification email](https://github.com/wekan/wekan/commit/49ee49d2b877cfc9e4425aa302f88828c43d9993).
+  Thanks to JaumeFigueras and xet7.
+- [Fix Template "Board not Found" after being archieved, by always showing Template boards](https://github.com/wekan/wekan/commit/c01743b53a62313f797fe6680f9100adac37102f).
+  Thanks to WassimDhib and xet7.
+- [Fix Add Board / Import is not visible](https://github.com/wekan/wekan/commit/52dc6e99269c12198a0807e3e6da513e76c97001).
+  Thanks to titver968 and xet7.
+- [Fix Sub-URL at ROOT_URL does not work](https://github.com/wekan/wekan/commit/af86ea8785fa912edd0bb062785aaaf21e08623f).
+  Thanks to Meridiana and xet7.
+- [Fix Search cards should return more results](https://github.com/wekan/wekan/commit/5105cf648954f3a0a03921a0f1ddbd2f5f02ea6b).
+  Thanks to snowsky and xet7.
+- [Fix Boards Place Sorting](https://github.com/wekan/wekan/commit/e837c0948a6127817a3450723b4b3bb728abb6a9).
+  Thanks to titver968 and xet7.
+- [Fix Show Checklist on Minicard and make it editable at Minicard. Fix spurious minicard cover element](https://github.com/wekan/wekan/commit/997931e462e736b87ee6b6866dcc3e997cefa39d).
+  Thanks to brlin-tw and xet7.
+- [Fix Broken card report](https://github.com/wekan/wekan/commit/acc49aeccb78b13737d1777eb01e9e84b44b9f2b).
+  Thanks to titver968 and xet7.
+- [Fix Email notifications show "undefined" instead of username](https://github.com/wekan/wekan/commit/ed5304cd306019c25f757aa296a5fb0aa6b8ef79).
+  Thanks to apiccolim, Raawen-dev and xet7.
+- [Fix Not possible to change the tracking mode](https://github.com/wekan/wekan/commit/fc37c08687b82aec0554bd968639c9a105650b33).
+  Thanks to hmeunier95 and xet7.
+- [Fix Cards disappear from lists that has been minimized](https://github.com/wekan/wekan/commit/93f90873e8ef95a62e61dbba456ee466c887f2af).
+  Thanks to robertjensen, harryadel and xet7.
+- [Fix Card pop-up menu content overflows viewport](https://github.com/wekan/wekan/commit/fbce6e5e9b4e27dac57deb3a80bd4ea382d1a7a5).
+  Thanks to aminsaidane and xet7.
+- [Fix Remaining view: Drag board starts drag preview but drop is no-op](https://github.com/wekan/wekan/commit/8183a645a1765c7decd51e160759e467049f719d).
+  Thanks to YosserDerbali and xet7.
+- [Fix Labels are disappearing when you are filtering cards by label](https://github.com/wekan/wekan/commit/64bc774b1e59091d4b24a7650957f31d812d2cdd).
+  Thanks to hmeunier95 and xet7.
+- [Fix Change list inside of card should show only lists of current swimlane](https://github.com/wekan/wekan/commit/3adf69bd4c625bb289371e4aeadf8108a967f227).
+  Thanks to mimZD and xet7.
+- [Updated @wekanteam/html-to-markdown with Fix Some HTML tags should not get newlines when converted to markdown](https://github.com/wekan/wekan/commit/597eb6b2bbd244b01bb7124dd019e0090caf2dd2).
+  Thanks to Chostakovitch and xet7.
+- [Fix Esc not work in an opened card when Keyboard Shortcuts enabled](https://github.com/wekan/wekan/commit/52ce4f612822d7eb72456de736733b03aed56287).
+  Thanks to mimZD and xet7.
+- [Removed empty line from star board description at top bar of board, and added some space between icons and text](https://github.com/wekan/wekan/commit/47794f799bc84cf88526ab78201221992d90c861).
+  Thanks to xet7.
+- [After register or login, redirect to All Boards page](https://github.com/wekan/wekan/commit/9f979054ded0d968bd01f2829139c56ee79a39fa).
+  Thanks to bcook-konza and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.18 2026-05-10 WeKan ® release
+
+This release adds the following updates:
+
+- [Build scripts: Not change firewall settings anymore](https://github.com/wekan/wekan/commit/22b99301680ad1db41435fa67419b569735479f1).
+  Thanks to xet7.
+- [Release Scripts: Include updating version at same script](https://github.com/wekan/wekan/commit/8d73d2f5751f24f7144ad09eb7205c57fcb85cd0).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Try to fix Parallel Snap paths](https://github.com/wekan/wekan/commit/1a998f9ecebf306c0c759091adfc240ec58aade0).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.17 2026-05-10 WeKan ® release
+
+This fixes the following bugs:
+
+- [Try to fix Parallel Snap MongoDB ports](https://github.com/wekan/wekan/commit/31bcf947cb58339784a104126940508359cebabe).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.16 2026-05-09 WeKan ® release
+
+This release adds the following updates:
+
+- [Bump fast-uri from 3.1.1 to 3.1.2](https://github.com/wekan/wekan/pull/6335).
+  Thanks to dependabot.
+
+and fixes the following bugs:
+
+- [Fix login and register to not require page reload by adding router fallback](https://github.com/wekan/wekan/commit/c52f2481d3d120a2f1c9ad58d7b5f47444510293).
+  Thanks to xet7.
+- [Temporary fix to https://github.com/jamauro/offline/issues/27, waiting for new jam:offline version](https://github.com/wekan/wekan/commit/cb32b1158616a707f04bc068ce1d5a9d4f616455).
+  Thanks to xet7.
+- [Fixed uploading attachment to card](https://github.com/wekan/wekan/commit/cea6aee0389638afec9906c4431bbb36c9c8f0c8).
+  Thanks to xet7.
+- [Fix Parallel Snap MongoDB port and paths, that worked at WeKan 9.07 but later broke](https://github.com/wekan/wekan/commit/c7f9c955966e3a165d76960625e422b220edaff7).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.15 2026-05-08 WeKan ® release
+
+This release adds the following updates:
+
+- [Update release script to force include required file](https://github.com/wekan/wekan/commit/87151338688759b32c72f0ab21fee62ddd6712ca).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix to run code only if there is userId and user](https://github.com/wekan/wekan/commit/f778707236bfdb962bab9d406bdfe7fba9b675ef).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.14 2026-05-07 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Snap Candidate: Reinitialize MongoDB ReplicaSet if it needs reconfig. When restoring, don't restore indexes](https://github.com/wekan/wekan/commit/8349167a32672f4c6e62ef6acbd2c9644b3e64fe).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.12 2026-05-07 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix Snap Candidate: Wait for MongoDB to start before starting Node.js](https://github.com/wekan/wekan/commit/57f1f9da5b34984d53edd570c5ae2d54aa988f94).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.11 2026-05-07 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix Snap common directory path for Parallel Snap](https://github.com/wekan/wekan/commit/5b1cd3dc2fdea24ef5c86ac06a31acc664037bb1).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.10 2026-05-07 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix attachment cursor handling and await board access check](https://github.com/wekan/wekan/pull/6330).
+  Thanks to KhaoulaMaleh.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.09 2026-05-07 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [AuthBleed](https://wekan.fi/hall-of-fame/authbleed/):
+
+- [Fixed AuthBleed](https://github.com/wekan/wekan/commit/62c01725f91f0c2673839e3b460b5348b5562e6b).
+  Thanks to Qiulin Deng and xet7.
+
+and adds the following updates:
+
+- Docs: Clarified SECURITY.md.
+  [Part 1](https://github.com/wekan/wekan/commit/f347dc7d4dcf876a063a9aa4f1ea148d2894ac4c),
+  [Part 2](https://github.com/wekan/wekan/commit/90cfc3f69692dd7c78cb1382565e3cbd62fbff49).
+  Thanks to xet7.
+- [Updated GitHub Actions to build release bundles](https://github.com/wekan/wekan/commit/4520a432c4bfa7e9e3ff002ef267a52e51588d78).
+  Thanks to xet7.
+
+and adds the following tests:
+
+- [Added Playwright Tests 2026-05-07: 16 specs. 306/306 passing](https://github.com/wekan/wekan/commit/f2d6695fdc0ea16d8e833adf29e7e95a2df00325).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.08 2026-05-04 WeKan ® release
+
+This release adds the following updates:
+
+- [Release scripts: Add Snap Store scripts to list and publish revisions to channels, because snapcraft.io website currently does not work](https://github.com/wekan/wekan/commit/f7db51b457a771267ce381f294c8163fc0cad406).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Upgrade to Meteor 3.5-beta.10, changeStreams, DDP_TRANSPORT=uws](https://github.com/wekan/wekan/commit/330e0e35707c70a088cd8c452192265ba3df6fbd).
+  Thanks to Meteor developers.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.07 2026-05-02 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [AvatarBleed](https://wekan.fi/hall-of-fame/avatarbleed/):
+
+- [Fix avatars rce](https://github.com/wekan/wekan/commit/a4c74a5980e9f778eb444fd346f32aa3d16786a9).
+  Thanks to Trung Nguyen from CyStack Security and xet7.
+
+and fixes the following bugs:
+
+- [Fix CleanDark theme](https://github.com/wekan/wekan/pull/6324).
+  Thanks to stegoh.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.06 2026-05-02 WeKan ® release
+
+This release adds the following updates:
+
+- [Docs: Update lxc commands](https://github.com/wekan/wekan/commit/3c8db21d2f56eefe3d8b7f3228b580407a4fe89b).
+  Thanks to xet7.
+- [Docs: Added firewall config for Internet access from LXD Ubuntu container at Fedora Asahi Linux Remix, because building Linux arm64 .zip bundle of WeKan](https://github.com/wekan/wekan/commit/82c78ebd1efb888940ccf64affd23400f5485755).
+  Thanks to xet7.
+- [Docs: Added Manual Parallel Snap](https://github.com/wekan/wekan/commit/eb824938cb750921bec721d80eab2670ba567869).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix Snap Candidate WRITABLE_PATH directory permissions at Parallel Snap file path /var/snap/wekan_SOMENAME/common/files/](https://github.com/wekan/wekan/commit/7556b3ed8e29b9edd074c1dd8c03a9b804787523).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.05 2026-05-02 WeKan ® release
+
+This release adds the following updates:
+
+- [Update version script and dependencies](https://github.com/wekan/wekan/commit/4e77df9ff52ef2aed44e95ad4ef58d0cde6593b7).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- Fix Snap Candidate attachments WRITABLE_PATH for Parallel Snap installs.
+  [Part 1](https://github.com/wekan/wekan/commit/cadd015d20e6b677fefb040ab8c5b1a3e972a394),
+  [Part 2](https://github.com/wekan/wekan/commit/cd2c69f5f05d932074ca80ae569cc8d836770f7b).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.04 2026-05-01 WeKan ® release
+
+This release adds the following updates:
+
+- [Upgrade to MongoDB 7.0.32. Update version script.](https://github.com/wekan/wekan/commit/653c61081a8d9306fb0b152f6a3a497c2607a1cf).
+  Thanks to MongoDB developers and xet7.
+- [Upgrade to MongoDB 7.0.32 at Helm Chart](https://github.com/wekan/charts/commit/c55e9d3a130a7d259681185561b2741a64a8353e).
+  Thanks to MongoDB developers.
+- [Upgrade to MongoDB 7.0.32 at Windows Bundle docs](https://github.com/wekan/wekan/commit/2a3aa981d2ba02ec87981e3af843811e31328fea).
+  Thanks to MongoDB developers.
+
+and fixes the following bugs:
+
+- [Fix can not edit checklist title](https://github.com/wekan/wekan/commit/309b488861c29b4d74262f099ee11329f6d151c7).
+  Thanks to xet7.
+- [Fix Cannot delete card checklist title, by removing "Delete" and "Convert to Card" that belong to Checklist Items only. Checklist Menu already has Delete Checklist](https://github.com/wekan/wekan/commit/9defe9681b8091eec3037872882d0894fbdeeb20).
+  Thanks to rileybroberts and xet7.
+- [Fix: Added space between Card Number and Card Title at Minicard and Opened Card](https://github.com/wekan/wekan/commit/d04beea6f8797856806ee63df6cd30a0c6446bd5).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.03 2026-04-29 WeKan ® release
+
+This release adds the following new features:
+
+- [Add missing board‑attachments API endpoint](https://github.com/wekan/wekan/pull/6321).
+  Thanks to KhaoulaMaleh.
+
+and adds the following updates:
+
+- Update version script.
+  [Part 1](https://github.com/wekan/wekan/commit/e547be9ab81f6a880954b3e34fc3b5e3edc8efc5),
+  [Part 2](https://github.com/wekan/wekan/commit/e22f4226151d54593d11ad8040cd46c39435ce5b).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.02 2026-04-28 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix mongodb in snap 9.01 on Ubuntu 24.04 crashes because of missing libcrypto.so.1.1](https://github.com/wekan/wekan/commit/a4b5ac6c4e2cfba6983b81ff0282e1c787576d06).
+  Thanks to sbaecker.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.01 2026-04-28 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated Docker platforms for what currently builds successfully](https://github.com/wekan/wekan/commit/fdb477f3517383eb17169b1dfff2ef94c12b6296).
+  Thanks to xet7.
+- [Docs: Updated s390x page](https://github.com/wekan/wekan/commit/855cb86088c7c54734eddb1ddc5a007b432a0d91).
+  Thanks to xet7.
+- [Removed charts, that are moved back to github.com/wekan/charts](https://github.com/wekan/wekan/commit/b49aa050e91b4bd560512af1beece791c6e39114).
+  Thanks to xet7.
+- [Moved website to separate repo. Moved docs2 back to docs](https://github.com/wekan/wekan/commit/f6d8befb56c88eb0867c70bac708f867fe731a5a).
+  Thanks to xet7.
+- [Disable not working GitHub workflows](https://github.com/wekan/wekan/commit/58de6bb73714e6c6d4010de5c72499f429bd9a41).
+  Thanks to xet7.
+- [Fix Snap mongodb port wrong](https://github.com/wekan/wekan/commit/11a2c95ea70a3dcf9243369f8feeaea301a93bb6).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v9.00 2026-04-27 WeKan ® release
+
+This release adds the following updates:
+
+- [Bump actions/upload-pages-artifact from 4 to 5](https://github.com/wekan/wekan/pull/6304).
+  Thanks to dependabot.
+- [Bump docker/setup-buildx-action from 3 to 4](https://github.com/wekan/wekan/pull/6305).
+  Thanks to dependabot.
+- [Bump actions/deploy-pages from 4 to 5](https://github.com/wekan/wekan/pull/6306).
+  Thanks to dependabot.
+- [Update release scripts](https://github.com/wekan/wekan/commit/db2701f1d731898c80b44606a985d5d132f7f6ed).
+  Thanks to xet7.
+- [Added back jam packages. Updated dependencies](https://github.com/wekan/wekan/commit/bf5ca3d3ebef7f00778eb1a518fcfaf5b5fc5d5c).
+  Thanks to xet7.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/16832124ce169c823ab1f95a43a85bec22d5556f).
+  Thanks to xet7.
+- [Update security.md etc](https://github.com/wekan/wekan/commit/7700efde1fba8483a78c67d03e3a0d214cedb67b).
+  Thanks to xet7.
+- [Updated HoF](https://github.com/wekan/wekan/commit/675c6611146a4a47eee1e513b83152007e3b9aee).
+  Thanks to xet7.
+- [Update releases scripts](https://github.com/wekan/wekan/commit/64f58455ff471b5a5567d7230850124cf0afacb0).
+  Thanks to xet7.
+- [Update release and version scripts](https://github.com/wekan/wekan/commit/699b9a9c712f01068324c051be4fb149dfc6f100).
+  Thanks to xet7.
+- Updated dependencies.
+  [Part 1](https://github.com/wekan/wekan/commit/b459151798d9808b4243d230ff6759a58d4016f5),
+  [Part 2](https://github.com/wekan/wekan/commit/74965f5f95ba4e4dfd7381becd55184731a60fca).
+  Thanks to developers of dependencies.
+- [Updated website](https://github.com/wekan/wekan/commit/ef4161889af58827f105749362196fd471e3e38c).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Update cards.js](https://github.com/wekan/wekan/pull/6299).
+  Thanks to snowsky.
+- [Fix MongoDB replicaset setup at docker-compose.yml](https://github.com/wekan/wekan/commit/c4e084ffbbc5870a13e79f80a2982d2eb7f2f04e).
+  Thanks to C0rn3j.
+- [Add permission checks to list width method](https://github.com/wekan/wekan/pull/6303).
+  Thanks to Raawen-dev.
+- [Fix UI hangs and data loss by disabling changeStreams, until there is new Meteor release that included bugfix to changeStreams](https://github.com/wekan/wekan/commit/c47eb013b4d8d0f2dea7b801adc60151f6e3aee1).
+  Thanks to bcook-konza and italojs.
+- [Fix list actions popup overflow](https://github.com/wekan/wekan/pull/6310).
+  Thanks to Raawen-dev.
+- [Fix mycards subscription](https://github.com/wekan/wekan/pull/6314).
+  Thanks to aminsaidane.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.99 2026-04-16 WeKan ® release
+
+This release adds the following updates:
+
+- [Release scripts: Update versions](https://github.com/wekan/wekan/commit/32e1ec9d2251840dc2d57ffa7976f2c60546ca9d).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.98 2026-04-16 WeKan ® release
+
+This release adds the following updates:
+
+- [Release scripts: Detect newest Node.js 24.x version](https://github.com/wekan/wekan/commit/fde59148dc8bd712e30cbf969d4007b2a7f01e6f).
+  Thanks to xet7.
+- [Release scripts: Update versions at website with release-website.sh script](https://github.com/wekan/wekan/commit/9174001862f1545626730b9a51754ab77b645338).
+  Thanks to xet7.
+- [Release scripts: Detect newest MongoDB 7.x stable version and update to use it](https://github.com/wekan/wekan/commit/72f6d96dbc3becc2767eb6f88b0f218679d1ac78).
+  Thanks to xet7.
+- [Moved website from repo wekan/wekan.fi to wekan/wekan/docs](https://github.com/wekan/wekan/commit/3c36db33e91e504722edc60faec5d6b4aa301850).
+  Thanks to xet7.
+- [Moved docs to docs2, and wekan.fi to docs, to be able publish with GitHub Pages](https://github.com/wekan/wekan/commit/1c0d8e9964af40be91eda9668dfeebd01b3a5720).
+  Thanks to xet7.
+- [Update markdown docs links from docs to docs2](https://github.com/wekan/wekan/commit/c1639ea58973efcae0758385cc5d8d7ffbf1e8d9).
+  Thanks to xet7.
+- [Commented out requirement to update website manually](https://github.com/wekan/wekan/commit/64d351d835628dad80062e3c362701b35ae5bb33).
+  Thanks to xet7.
+- [Moved Helm Charts from helm directory to docs/wekan and docs/charts to be at wekan.fi/wekan and wekan.fi/charts](https://github.com/wekan/wekan/commit/38e488ee4a63d61159d8efcddb6e454347bce91a).
+  Thanks to xet7.
+- [Release scripts: Fix indentation at release-all.yml](https://github.com/wekan/wekan/commit/10f009f5b15fd077577a71504b0e0c89c4e6fd95).
+  Thanks to xet7.
+- [Release scripts: Use latest available Node.js slim docker images when building](https://github.com/wekan/wekan/commit/d998e8cb4a5280c93448d144ab01335ce29b43dc).
+  Thanks to xet7.
+- [Release scripts: Fix updating version numbers](https://github.com/wekan/wekan/commit/7b0e2213cfbf0e2a17a143aa7ad9f979fb0fbf07).
+  Thanks to xet7.
+- [Release scripts: Require only newest version number when releasing](https://github.com/wekan/wekan/commit/052d8c15844dfc709dc3ac281795629c175869e0).
+  Thanks to xet7.
+- [Release scripts: Use 24-slim fallback](https://github.com/wekan/wekan/commit/a0c190137dfe9fd8da71380f6c67344812561f9f).
+  Thanks to xet7.
+- [Release scripts: use node:24-slim directly](https://github.com/wekan/wekan/commit/51ad6ed99df7ecdc925d314a6c5fab345f75d549).
+  Thanks to xet7.
+- [Fix Helm Chart parts to docs/wekan and docs/charts](https://github.com/wekan/wekan/commit/1820804b9f46e510c4bf05324755a5eeec5a3b13).
+  Thanks to xet7.
+- [Release scripts: Updated creating Helm Charts to docs/wekan and docs/charts](https://github.com/wekan/wekan/commit/f6198dee30ed6514974d2e821997d340e67fc954).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.97 2026-04-16 WeKan ® release
+
+This release adds the following updates:
+
+- Release Scripts: Clean GitHub Cache.
+  [Part 1](https://github.com/wekan/wekan/commit/e59bc9cd86cc16333e24b2e7e8e5d5cf72f81e3e),
+  [Part 2](https://github.com/wekan/wekan/commit/13cdf08e223e83ef9a2f36417c11ad002e884f29),
+  [Part 3](https://github.com/wekan/wekan/commit/6d0978d0ede8316a1d9ac6afc0ecf7f02d9193d6).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix GitHub Actions builds](https://github.com/wekan/wekan/commit/6478d27d1ca2f6e27c025e0cc97b618bc255083f).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.96 2026-04-16 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix GitHub Actions builds](https://github.com/wekan/wekan/commit/03ba747bc073f3993d933b814d35c7380fea745d).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.95 2026-04-16 WeKan ® release
+
+This release adds the following new features:
+
+- [Helm Chart: Add single-node ReplicaSet support with auto MONGO_OPLOG_URL](https://github.com/wekan/wekan/pull/6292).
+  Thanks to titver968.
+- [Helm Chart: Use current Finland time for created field at index.yaml for newest built Helm Chart release](https://github.com/wekan/wekan/commit/135af977af4a1c598d2e067de0facb6eae8f8de1).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix Cannot find module /build/main.js error in latest Docker image](https://github.com/wekan/wekan/commit/6dfe81cbcb0c6e2003b1984586d56042a6408e70).
+  Thanks to s8321414 and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.94 2026-04-16 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated dompurify](https://github.com/wekan/wekan/commit/c27d5d04124f3eec659bbe5187a625c43176fc4f).
+  Thanks to developers of dompurify.
+
+and fixes the following bugs:
+
+- [Fix Can't start latest docker image because of MongoDB Index errors](https://github.com/wekan/wekan/commit/d537b7c9f3505fd4c1653f87d5f86d7e7729a514).
+  Thanks to s8321414 and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.93 2026-04-16 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix SSO Login broken. Part 2](https://github.com/wekan/wekan/commit/4aa7b6aa2034f27efeb67d5dfa8f6acbe0005786).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.92 2026-04-16 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated Helm Charts versions](https://github.com/wekan/wekan/commit/24ebb4ba45344ad152747c31e7df76217e5b8909).
+  Thanks to xet7.
+- [GitHub Actions: Added missing sudo to snap build](https://github.com/wekan/wekan/commit/2c8a6c8ec6e24b6b6bb153da3edd089e0f0087cc).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.91 2026-04-16 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix building Snap at GitHub Actions](https://github.com/wekan/wekan/commit/89de05ee91612cef4f13fa8ad32d112dca5bdb43).
+  Thanks to xet7.
+- [Updated Helm Chart URL at readme](https://github.com/wekan/wekan/commit/529e0d25ef2ea84953d1c1e6a23b5798d34583fb).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.90 2026-04-16 WeKan ® release
+
+This release adds the following updates:
+
+- [Added GitHub Actions builds for Docker and Snap. Moved Helm Charts from charts repo to wekan repo](https://github.com/wekan/wekan/commit/f57ce521984f6f358410863c71fcaee342bb8107).
+  Thanks to xet7.
+- [Changed ArtifactHub from wekan/charts repo to wekan/wekan repo](https://github.com/wekan/wekan/commit/99519af83adc45eca7beb40a4e82f5b73764b7fc).
+  Thanks to xet7.
+- [Release scripts: Moved more steps to GitHub Actions](https://github.com/wekan/wekan/commit/357f63d01fc013ea412501dabbdd977e5f1efa61).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Removed jam:offline jam:method jam:pub-sub, because they are not used, and they cause too much database usage](https://github.com/wekan/wekan/commit/0dd924f14889100e74fbd5e8d17bb3a7209025ca).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.89 2026-04-15 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Disable jam:offline keepAll BEFORE any collections are created. Part 2](https://github.com/wekan/wekan/commit/f6a851a3d887ce9fa2fa5f62aad2a2ecf326c863).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.88 2026-04-15 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Disable jam:offline keepAll to prevent full-collection COLLSCAN queries and Ensure standard GridFS index on attachments.chunks for efficient chunk lookups](https://github.com/wekan/wekan/commit/ec0c1bc9afd6e3fd8b60f9f17f96dc5df52dbfc2).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.87 2026-04-15 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix Snap](https://github.com/wekan/wekan/commit/fc02a15753badc8d06d020aa97daae28ac05a310).
+  Thanks to xet7.
+- [Improve handling of ROOT_URL as an environement variable](https://github.com/wekan/wekan/pull/6286).
+  Thanks to FlorentDotMe.
+- [UI: Enable the horizontal scroll in the quick access menu boards list](https://github.com/wekan/wekan/pull/6287).
+  Thanks to FlorentDotMe.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.86 2026-04-15 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix Snap](https://github.com/wekan/wekan/commit/10f801d31b7e2b1a8c562bf24f65c4cc6efe6013).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.85 2026-04-15 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix Snap](https://github.com/wekan/wekan/commit/0e13bfc50eadc72adccfe785a1b47c30d0ba5429).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.84 2026-04-15 WeKan ® release
+
+This release adds the following new features:
+
+- [Helm Chart: Make readiness, liveness and startup probes configurable](https://github.com/wekan/charts/pull/51).
+  Thanks to snowsky.
+
+and fixes the following bugs:
+
+- [Fix SSO Login OIDC and OpenID Connect](https://github.com/wekan/wekan/pull/6284).
+  Thanks to sbaecker and nebulade.
+- [Try to fix Snap Candidate](https://github.com/wekan/wekan/commit/bc92978fa9c9373947de40fe9ca584e133825610).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.83 2026-04-14 WeKan ® release
+
+This release adds the following updates:
+
+- [Release scripts: Removed armhf, there is no official Node.js binary for it](https://github.com/wekan/wekan/commit/d0a9fa9a71029a5586cf5bc87488619c7db9d0e3).
+  Thanks to xet7.
+- [Release scripts: Docker not for armhf, no official Node.js binary for it](https://github.com/wekan/wekan/commit/41db7b4ad18359283602b8bfdb42b15acf51782d).
+  Thanks to xet7.
+- [Release scripts: Fix Node.js 24.x download URL for Snap builds](https://github.com/wekan/wekan/commit/2c43aa463a0baadcae3db9f34066a9ddf6e77594).
+  Thanks to xet7.
+- [Changed start-wekan.sh and start-wekan.bat to not use Change Streams](https://github.com/wekan/wekan/commit/da4459304fe7d068b1db91938f7fd4ffd04c5bcb).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.82 2026-04-14 WeKan ® release
+
+This release adds the following updates:
+
+- [Release scripts: Added script for deleting repo git tag](https://github.com/wekan/wekan/commit/11672a13f7b102b764978600a8fce2f757c9401a).
+  Thanks to xet7.
+- [Bump softprops/action-gh-release from 2 to 3](https://github.com/wekan/wekan/pull/6281).
+  Thanks to dependabot.
+- [Bump docker/build-push-action from 7.0.0 to 7.1.0](https://github.com/wekan/wekan/pull/6282).
+  Thanks to dependabot.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.81 2026-04-14 WeKan ® release
+
+This release adds the following updates:
+
+- Updated dependencies
+  [Part 1](https://github.com/wekan/wekan/commit/7b91439b0f9ec0e409c14ecebab389d41b40a990),
+  [Part 2](https://github.com/wekan/wekan/commit/1637a9c938134ef26846ba3c0cd53c065f434e3e).
+  Thanks to developers of dependencies.
+- [Docs: Added History of Schema Migration Systems](https://github.com/wekan/wekan/commit/2e7565f9eb744bc59e454745e06fd43a85a02f97).
+  Thanks to xet7.
+- [Release scripts: Comment out build for armhf because no official Node.js 24.x binaries exist for armhf (arm/v7)](https://github.com/wekan/wekan/commit/5462fb06477bc3a83f1d5c754ecd60ebe7643ee6).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix activities are not showing](https://github.com/wekan/wekan/pull/6272).
+  Thanks to snowsky.
+- [Fix Link Card modal overflow in Docker environment](https://github.com/wekan/wekan/pull/6273).
+  Thanks to AymenHassini19.
+- [Fix/readme node version and changes made](https://github.com/wekan/wekan/pull/6271).
+  Thanks to YosserDerbali.
+- [Clarify board drag tooltip text in Remaining and Workspaces](https://github.com/wekan/wekan/pull/6268).
+  Thanks to YosserDerbali.
+- [Add migration for v7.95 due dates](https://github.com/wekan/wekan/pull/6262).
+  Thanks to Raawen-dev.
+- [Fix: include historical comments and activities in board exports](https://github.com/wekan/wekan/pull/6275).
+  Thanks to KhaoulaMaleh.
+- [Fix Exporter: Attachments always empty in board JSON export](https://github.com/wekan/wekan/pull/6279).
+  Thanks to kolaente.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.80 2026-04-10 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix GitHub Actions builds with custom newer bcrypt](https://github.com/wekan/wekan/commit/2ebefdd0bf1cf482548319e130baf2b633ba259b).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.79 2026-04-09 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix 8.78: WeKan build Error: Could not find rspack config. Using MongoDB Change Streams
+  at start-wekan.sh start-wekan.bat bundle, docker-compose.yml and Snap Candidate](https://github.com/wekan/wekan/commit/2d4170a9bfc58b8e6504abf122aea505e55802ef).
+  Thanks to nachocodoner and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.78 2026-04-09 WeKan ® release
+
+This release adds the the following updates:
+
+- Upgraded to Meteor 3.5-beta.7 and Node.js 24.14.1. Now prefers MongoDB Change Streams at Snap Candidate and docker-compose.yml.
+  [Part 1](https://github.com/wekan/wekan/commit/14f9ac39ad93db4f7c06721f1efd4c18e53cc5f8),
+  [Part 2](https://github.com/wekan/wekan/commit/b1707b8691d0ba5f355e78e250765c8a7657c3d7).
+  Thanks to Meteor developers.
+- [Enhance translations with new key:value pairs](https://github.com/wekan/wekan/pull/6259).
+  Thanks to KhaoulaMaleh.
+- [Refine translations](https://github.com/wekan/wekan/pull/6261).
+  Thanks to KhaoulaMaleh.
+- [Updated to Node.js 24.x at release scripts](https://github.com/wekan/wekan/commit/bdb92744854cc211866631746c63d748d4a93cfa).
+  Thanks to xet7.
+- [Fix GitHub Actions builds](https://github.com/wekan/wekan/commit/bc88c0dfc2742154e94861201d239bc4b3c51cef).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fixed Card settings checkboxes](https://github.com/wekan/wekan/pull/6260).
+  Thanks to KhaoulaMaleh.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.74 2026-04-08 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix can not save Card Data. Part 2](https://github.com/wekan/wekan/commit/0328e70d5f4a277722635e3fd9ea78312d1359cf).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.73 2026-04-07 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix Link to Windows release doesn't work](https://github.com/wekan/wekan/commit/9c695302565073b971a3521c0a94a380641cc436).
+  Thanks to hmeunier95 and xet7.
+- [Fix 8.72 Bug: Can not save Card Date](https://github.com/wekan/wekan/commit/8da0f34ee6ca66884ab8a2dcdf1a724a0c9fcc81).
+  Thanks to xet7.
+- [Removed exclude-archs from rebuild-wekan.sh, it is not necessary anymore](https://github.com/wekan/wekan/commit/028b404377651d34e334b048ecc960d3ff5b2eab).
+  Thanks to xet7.
+- [Fix 8.72 Bug: LDAP login does not work. ReactiveCache is not defined](https://github.com/wekan/wekan/commit/bcbf4771ea88fb617ddc44650c8ac139b0cfc998).
+  Thanks to poc-sm and xet7.
+- [Fix Error in choosing member or assignee in a card](https://github.com/wekan/wekan/commit/7f0c42cca555dd2dca04d3b6413c0080ea75e96e).
+  Thanks to hmeunier95 and xet7.
+- [Fix Search All Boards result opened card missing Copy Card Link etc that can be used to open correct card](https://github.com/wekan/wekan/commit/304a007d078c04dac7de5074a856c4f0cc2c0aa7).
+  Thanks bcook-konza and xet7.
+- [Fix Checklists add and Subtasks reorder. Fix Board Activity part 1](https://github.com/wekan/wekan/commit/08ebad0fe4a2b8a7b93d75a9a9c2317ce9374fea).
+  Thanks bcook-konza and xet7.
+- [Fix Change list inside or card](https://github.com/wekan/wekan/commit/aea8c285c246b490ac259ceafe7d9f733681c20f).
+  Thanks to mimZD and xet7.
+- [Fix board and card activities. Part 2](https://github.com/wekan/wekan/commit/c7408ad8d147f36cfdbb71089af688bef91c3ecf).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.72 2026-04-07 WeKan ® release
+
+This release adds the following new features and fixes:
+
+- [Fix Impersonate User. Show/Edit Avatar at Admin Panel/People/People](https://github.com/wekan/wekan/commit/3ac7c9057e1e53da9f285149ce832ad430b3bc30).
+  Thanks to ahlgrimma, DnT1mmer, robbagithub, norrig and xet7.
+
+and adds the following updates:
+
+- [Bump actions/download-artifact from 4 to 8](https://github.com/wekan/wekan/pull/6247).
+  Thanks to dependabot.
+- [Bump actions/upload-artifact from 4 to 7](https://github.com/wekan/wekan/pull/6248).
+  Thanks to dependabot.
+- [Bump actions/cache from 4 to 5](https://github.com/wekan/wekan/pull/6249).
+  Thanks to dependabot.
+- [Bump docker/login-action from 4.0.0 to 4.1.0](https://github.com/wekan/wekan/pull/6250).
+  Thanks to dependabot.
+- [Updated release scripts](https://github.com/wekan/wekan/commit/87f592c67ffb1962ec8acb0d1676b8df6ac42a5d).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix Admin Panel / Version not showing name of MongoDB storage engine and status of MongoDB Oplog enabled](https://github.com/wekan/wekan/commit/3b98f862bcda3e8a9b0d0131b91cdfa59986c2d8).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.71 2026-04-06 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix: Added missing null check to notification](https://github.com/wekan/wekan/commit/5df924f416083a50795443687e1c28f402dc8132).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.70 2026-04-06 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Convert upsert calls to async in authentication.js](https://github.com/wekan/wekan/commit/dfcaaf0ae719e8d8b918ac632100293a6e401371).
+  Thanks to snowsky and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.69 2026-04-06 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix Snap to start MongoDB OpLog correctly](https://github.com/wekan/wekan/commit/fbdfcead50fb599d4fafecc2f5847c46c73adf72).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.68 2026-04-06 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix Snap to start MongoDB OpLog correctly](https://github.com/wekan/wekan/commit/9e316662800fc3b5e38b1176e70a50b18d73d2a6).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.67 2026-04-05 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix GitHub Actions release bundle builds](https://github.com/wekan/wekan/commit/7707a5b7fc21f981f26c512cd3fea6171a57bd46).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.65 2026-04-05 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix Docker Actions Test suite](https://github.com/wekan/wekan/commit/c0661506c42ac412ae9e8fc5392d160efbc446ea).
+  Thanks to xet7.
+- [Try to fix GitHub Actions release bundle builds](https://github.com/wekan/wekan/commit/d3155d24c64fe1104afe454b756d2a6324fab5c2).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.64 2026-04-05 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix GitHub Actions release bundle builds](https://github.com/wekan/wekan/commit/7a7909b49feaaa938b5dbfc2083b0c719187859d).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.63 2026-04-05 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix GitHub Actions release bundle builds](https://github.com/wekan/wekan/commit/6a78a178e2fcff9ff280ba44c123403e2792bb7b).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.62 2026-04-05 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix GitHub Actions release bundle builds](https://github.com/wekan/wekan/commit/cd55c0e12ed80ddcb07895f2d787be95c440f991).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.61 2026-04-05 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated Docker build script to check directories and repos exist](https://github.com/wekan/wekan/commit/81319fc48bbd2a91553090428455bc11aff24fbc).
+  Thanks to xet7.
+- [Updated release scripts: Delete all GitHub Actions Caches, so that old stuff does not break builds](https://github.com/wekan/wekan/commit/f3a97b993842425e4f13bb78e5939a069d64887e).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix: Server crash during comment deletion](https://github.com/wekan/wekan/pull/6246).
+  Thanks to KhaoulaMaleh.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.60 2026-04-05 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated Docker build script](https://github.com/wekan/wekan/commit/0b59f87887c215dc34093409ccd12da9acd3ef02).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.59 2026-04-05 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix docker-compose.yml to use OpLog](https://github.com/wekan/wekan/commit/30a1792c92de9d485c0b9ed3970a1187ca974576).
+  Thanks to xet7.
+- [Fix Snap to use OpLog](https://github.com/wekan/wekan/commit/1fa72fd34ab4547e97e7e0c201bc3d50d478ef5e).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.58 2026-04-05 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated build docs](https://github.com/wekan/wekan/commit/b3d14fb5e87545635006958686f0340028711820).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Try to fix .zip Bundle, Docker and Snap](https://github.com/wekan/wekan/commit/59956ca720d2103baaa9ecf2befff2ec76430feb).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.57 2026-04-05 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix Snap](https://github.com/wekan/wekan/commit/9f549dfcd2efa241a2ad3bdf5b0d2d942064d4e3).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.56 2026-04-05 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix Snap](https://github.com/wekan/wekan/commit/56f26418ea9d1321fc5109c4b39104ff98d65429).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.55 2026-04-05 WeKan ® release
+
+This release adds the following updates:
+
+- Docs: IMPORTANT: Do NOT `npm audit fix --force`, it breaks builds.
+  [Part 1](https://github.com/wekan/wekan/commit/2bad17010cd445c004a228b732b17c68e18eb316),
+  [Part 2](https://github.com/wekan/wekan/commit/9fa6574c80589218569dc3c49782a1a8036aa542).
+  Thanks to xet7.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/73d69f4631216dfe504d9f05230adadc2850c4f3).
+  Thanks to developers of dependencies.
+
+and fixes the following bugs:
+
+- [Fix Cards Reports is not working](https://github.com/wekan/wekan/commit/2b02e7712ee6a8ae8af5d416ce2d288a25386fdf).
+  Thanks to titver968 and xet7.
+- [Fix Search All Boards](https://github.com/wekan/wekan/commit/faf8453c6d10613edf32a734e549961860fcdd32).
+  Thanks to YosserDerbali and xet7.
+- [Try to fix Snap](https://github.com/wekan/wekan/commit/8443e3511d61d8c1bb419ed5bca2e28483c5d133).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.54 2026-04-04 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Revert v8.53 Refactor upsert calls to use async method](https://github.com/wekan/wekan/commit/811b79b641c765461f3d696ed00b5459a4747867).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.53 2026-04-04 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Refactor upsert calls to use async method](https://github.com/wekan/wekan/pull/6243).
+  Thanks to snowsky.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.52 2026-04-03 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Try to fix Docker and Snap](https://github.com/wekan/wekan/commit/03e0cfdc15c56ac0219f5e435034a1c0ad5006ae).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.51 2026-04-03 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated release scripts](https://github.com/wekan/wekan/commit/4594711be41d1e9cf15b1f8bb070fcb36bf736ca).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix Bug: WeKan v8.50 WRITABLE_PATH](https://github.com/wekan/wekan/commit/edc6b18b5f77320e966e56c888575bcb764096dc).
+  Thanks to snowsky and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.50 2026-04-03 WeKan ® release
+
+This release adds the following updates:
+
+- [Uncommented build steps. Not yet tested are required dependencies included](https://github.com/wekan/wekan/commit/145a17fee5dc9430de7a60100657566a4a69bc7b).
+  Thanks to xet7.
+- [Updated npm package @wekanteam/exceljs](https://github.com/wekan/wekan/commit/6e8589b1f96b5f0c2ddec0831b238096ce610b1e).
+  Thanks to xet7.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/bf02c9a453e27edba1c08830eb4783b9dfc7bbc2).
+  Thanks to developers of dependencies.
+  NOTE: Do not `npm audit fix --force`, it downgrades @meteorjs/rspack and breaks builds.
+  `npm audit` shows false info, it does not recognize that elliptic is
+  already updated to 6.6.1 with override at package.json like you can see with
+  `npm list elliptic`.
+
+and fixes the following bugs:
+
+- [Fix indentation for release-all.yml workflow](https://github.com/wekan/wekan/pull/6240).
+  Thanks to snowsky.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.49 2026-03-31 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix: Missing module @meteorjs/reify/lib/runtime](https://github.com/wekan/wekan/pull/6237).
+  Thanks to mzch and kovacs-andras.
+- [Fix docker-compose.yml](https://github.com/wekan/wekan/commit/d07fcceb6a884cf1ff0c9a2d36691af0304f36e7).
+  Thanks to xet7.
+- [Try to fix Snap](https://github.com/wekan/wekan/commit/8b4676175caa4af36bf11567676f3c3f522f9512).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.48 2026-03-31 WeKan ® release
+
+This release adds the following updates:
+
+- Updated release scripts.
+  [Part 1](https://github.com/wekan/wekan/commit/43601c5e3e95d6026f2e558f261c02a9578dcecd),
+  [Part 2](https://github.com/wekan/wekan/commit/56377aaf4c5e92c1a03dc996b6c649ce17553280).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.47 2026-03-31 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated attachments and avatar path to be at WRITABLE_PATH/files/attachments etc](https://github.com/wekan/wekan/commit/e58e99c2852dd81a040dcffc0f1f2798c4b8cf15).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.46 2026-03-31 WeKan ® release
+
+This release adds the following updates:
+
+- Updated release scripts.
+  [Part 1](https://github.com/wekan/wekan/commit/6bc68ba57bf15339b80011d131a7da65124e071d),
+  [Part 2](https://github.com/wekan/wekan/commit/ce52b8a0ab29805c562a2af0b79e30d970594e17).
+  Thanks to xet7.
+- [Updated docker-compose.yml to change from FerretDB/PostgreSQL to MongoDB](https://github.com/wekan/wekan/commit/02b75824e5dc24c968959d5a64f846efe33dee4f).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.45 2026-03-31 WeKan ® release
+
+This release adds the following updates:
+
+- Updated release scripts.
+  [Part 1](https://github.com/wekan/wekan/commit/4223c2a79f4c276ab1c9734a94314f1d1d1ce033),
+  [Part 2](https://github.com/wekan/wekan/commit/6125822cf7244242832d1fe02f99150abb7350d0),
+  [Part 3](https://github.com/wekan/wekan/commit/e90b2e384c168fbb4cee389d8af9b54a5bc57734),
+  [Part 4](https://github.com/wekan/wekan/commit/29550cbd9335fc95e4f4ac399fe754ece8573450),
+  [Part 5](https://github.com/wekan/wekan/commit/8349fb6b63097970d06af73af388b030761967bd),
+  [Part 6](https://github.com/wekan/wekan/commit/f43b76c323c1f09cf1885251792b29229ef77d2b),
+  [Part 7](https://github.com/wekan/wekan/commit/e90b2e384c168fbb4cee389d8af9b54a5bc57734).
+  Thanks to xet7.
+- Updated GitHub Actions.
+  [Part 1](https://github.com/wekan/wekan/commit/4b8cc0683e9dfdffb7ff7896f622afe8f908a7f5),
+  [Part 2](https://github.com/wekan/wekan/commit/df067f01e894f43305ad36cebdf48a1bf55ff33a),
+  [Part 3](https://github.com/wekan/wekan/commit/ec1e3835586bdc09d93d5049794e8657b460acef),
+  [Part 4](https://github.com/wekan/wekan/commit/79853a2fb7efb738f2f10b6c2e9fef69def88c48),
+  [Part 5](https://github.com/wekan/wekan/commit/9ae2842fa4bedbd4c132943703ef462cc353ab1a),
+  [Part 6](https://github.com/wekan/wekan/commit/1a5e23617de98e6b65f78dfb25c233440f818d11),
+  [Part 7](https://github.com/wekan/wekan/commit/c38fa1c272c32323d8a164dfcf34b898127e6b1d),
+  [Part 8](https://github.com/wekan/wekan/commit/d8a2e06a95713e33e5676df38951dfd3f991ecb3),
+  [Part 9](https://github.com/wekan/wekan/commit/e6ccbfd3b88299c52fbaad9f85fc3b438e3cdc89),
+  [Part 10](https://github.com/wekan/wekan/commit/7666c6c0e1660b5aba300f4e465877bcf73d8066).
+  Thanks to dependabot.
+
+and fixes the following bugs:
+
+- Try to fix Snap.
+  [Part 1](https://github.com/wekan/wekan/commit/e5c551f0092ccb71fafa3433bfd99911f9a2e9c0),
+  [Part 2](https://github.com/wekan/wekan/commit/55ec0b5ff5594c10ebbc8cba74339de2ad0557a6),
+  [Part 3](https://github.com/wekan/wekan/commit/fd58bb9e4dd0f825237a50043a171fc223d44101),
+  [Part 4](https://github.com/wekan/wekan/commit/cdf1d3305bd738fe5357a5f3a9df2f7e6858d1d0),
+  [Part 5](https://github.com/wekan/wekan/commit/2aa8ecfc39a6f971134784817b46ba9867bb402d),
+  [Part 6](https://github.com/wekan/wekan/commit/ed718f083aa0c9f82e368a5badfe73393753a617),
+  [Part 7](https://github.com/wekan/wekan/commit/5c4130311a063340bd89dff571fbf685cda7a3ba),
+  [Part 8](https://github.com/wekan/wekan/commit/33267fa2e462fcc6cd2243ae1b5b39d59b03988f),
+  [Part 9](https://github.com/wekan/wekan/commit/87916c20bf579e16e21fa3bd9ac7687019b277eb),
+  [Part 10](https://github.com/wekan/wekan/commit/12c223d2260c9bd9547ae35a394869ef90e8bc83).
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.44 2026-03-30 WeKan ® release
+
+This release adds the following updates:
+
+- [From WeKan v8.43 FerretDB/PostgreSQL back to MongoDB 7.x](https://github.com/wekan/wekan/commit/cf2b3e4fc95ce4619c1ba13b63c3ad9d90bf59f6).
+  Thanks to xet7.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/82f1de078f16e87028ffd101e3f80550a4b18afa).
+  Thanks to developers of dependencies.
+- Updated release scripts.
+  [Part 1](https://github.com/wekan/wekan/commit/a702596bee6aa812cb69a6673ad34f9b2875c729),
+  [Part 2](https://github.com/wekan/wekan/commit/29550cbd9335fc95e4f4ac399fe754ece8573450).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Always show all data without migrations, like Shared Lists that were before Per-Swimlanes lists, Orphaned Swimlanes/Lists/Cards etc](https://github.com/wekan/wekan/commit/ef75b9ecac8210ff000439aca92765b53a1551a4).
+  Thanks to xet7.
+- [Fix globalSearch](https://github.com/wekan/wekan/commit/b788d398b9b2cb0caad9c28f79acdceb5b577f25).
+  Thanks to snowsky.
+- [Fix myCards crash](https://github.com/wekan/wekan/commit/d5c9e402ce4ebe0318bc29d5b83784771cbe8ac3).
+  Thanks to cristomoya.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.43 2026-03-27 WeKan ® release
+
+This release adds the following updates:
+
+- Updated to Meteor 3.4, Node.js 22.22, MongoDB 7.x.
+  [Part 1](https://github.com/wekan/wekan/pull/6205),
+  [Part 2](https://github.com/wekan/wekan/commit/7584afda6d28b75ae7bfa5388f71e8bcb5ab50a7).
+  Thanks to harryadel and xet7.
+- [Updated dependencies of npm package @wekanteam/exceljs](https://github.com/wekan/wekan/commit/95ff8ef1f2f119c713ffba72122d51b6569b9d42).
+  Thanks to xet7.
+- [Updated @meteorjs/rspack](https://github.com/wekan/wekan/commit/21ab640686d868ee46e16e812b36a1c3820952a5).
+  Thanks to Meteor developers.
+- [Updated rebuild-wekan.sh for macOS 26.4](https://github.com/wekan/wekan/commit/f1e71247c70043634e040bd12f7d065b30ed6fc2).
+  Thanks to xet7.
+- [Moved Meteor 3 migration docs to docs/Upgrade/](https://github.com/wekan/wekan/commit/517d1483876926cdbf6ce4774c8c52540eaec593).
+  Thanks to xet7.
+- Updated dependencies.
+  [Part 1](https://github.com/wekan/wekan/commit/acfb081b907703c6846b8ccf71a9e2912b41713f),
+  [Part 2](https://github.com/wekan/wekan/commit/55660e0e69b7a283ab04ad408674d33eb71bb279).
+  Thanks to developers of dependencies.
+- Updated release scripts.
+  [Part 1](https://github.com/wekan/wekan/commit/0fdf45e8476c0a619cd36891568c67d9092bd65b),
+  [Part 2](https://github.com/wekan/wekan/commit/07eb062474a5593683c1ed32f2637339fab72d48),
+  [Part 3](https://github.com/wekan/wekan/commit/5cf3bba68fdfc57a7a9358bd914c11af7bdd37d4),
+  [Part 4](https://github.com/wekan/wekan/commit/0e59033ea60f504d09d7eddb22a33ed113ea1326).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fixed rebuild-wekan.sh to build WeKan correctly](https://github.com/wekan/wekan/commit/4a8293f8812276f08d8a77a2c8be56441d7e87c1).
+  Thanks to xet7.
+- [Export Card to Excel. Part 3. Also, fixed uploading attachments](https://github.com/wekan/wekan/commit/5c5ed102cabd07e1be00d3fdb01ea599da0a5517).
+  Thanks to xet7.
+- [Removed temporary debug logs](https://github.com/wekan/wekan/commit/c1e3ce64a796fc8b921d1a30705b4aaf66c9c259).
+  Thanks to xet7.
+- [Fixed typo](https://github.com/wekan/wekan/commit/23697d2a33ca527b29bcdadfe432fd9d1a180f9c).
+  Thanks to YosserDerbali and xet7.
+- [Fix Set Color of Swimlane, List and Card](https://github.com/wekan/wekan/commit/0630d62ad0a02d80ab77436ce9797e4390c5cae2).
+  Thanks to SVANNER, brlin-tw and xet7.
+- [Fix workspace settings modal overflow](https://github.com/wekan/wekan/pull/6218).
+  Thanks to AymenHassini19 and aminsaidane.
+- [Fix attachment rename fails for clipboard uploads and keep extension metadata in sync](https://github.com/wekan/wekan/commit/38c670e08700f7b0ff185aadda40985bc71b1ac4).
+  Thanks to snowsky, YosserDerbali and xet7.
+- [Fix card actions popup overflow](https://github.com/wekan/wekan/pull/6220).
+  Thanks to aminsaidane.
+- [Fix Search: Guard Async methods in ReactiveCache and search publications](https://github.com/wekan/wekan/pull/6222).
+  Thanks to KhaoulaMaleh.
+- [Fix/list actions popup overflow scroll](https://github.com/wekan/wekan/pull/6223).
+  Thanks to YosserDerbali.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.42 2026-03-23 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix SSO login is broken](https://github.com/wekan/wekan/commit/2dce7a84cd0ce011972d377a05f5b26ff12daba7).
+  Thanks to sbaecker, vladimirdulov and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.41 2026-03-23 WeKan ® release
+
+This release adds the following new features:
+
+- [Export Card to Excel. Part 2](https://github.com/wekan/wekan/commit/7de1b04ebc51269e37840e74ba8fa72eed59950e).
+  Thanks to xet7.
+
+and adds the following updates:
+
+- [Replace useraccounts packages with communitypackages alternatives](https://github.com/wekan/wekan/pull/6195).
+  Thanks to harryadel.
+- [Remove unused meteorhacks:aggregate for Meteor 3.0 migration](https://github.com/wekan/wekan/pull/6196).
+  Thanks to harryadel.
+- [Replace Email.send with Email.sendAsync](https://github.com/wekan/wekan/pull/6197).
+  Thanks to harryadel.
+
+and fixes the following bugs:
+
+- [Fixed 2nd new card should not have text of 1st card, it should be empty](https://github.com/wekan/wekan/commit/7b2128b3565ecf793a780980c71e5ab9cde0a3b2).
+  Thanks to xet7.
+- [Fix: prevent cards from disappearing after dragging in List view](https://github.com/wekan/wekan/pull/6199).
+  Thanks to KhaoulaMaleh.
+- [Fixed Board lost its member list or permissions](https://github.com/wekan/wekan/commit/3d6797a3058875eb531aa006935ab69825975afd).
+  Thanks to marylinereumont, AymenHassini19, muabila and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.40 2026-03-21 WeKan ® release
+
+This release adds the following new features:
+
+- [Export Card to Excel and related fixes. Part 1](https://github.com/wekan/wekan/commit/be5bdbe3142f54f571fcef79cac064cec6da17d2).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.39 2026-03-21 WeKan ® release
+
+This release adds the following new features:
+
+- Delete workspace. Workspace Settings.
+  [Part 1](https://github.com/wekan/wekan/commit/8513b2e456ce27c54b9316a8fb52a87a94ab0e7f),
+  [Part 2](https://github.com/wekan/wekan/commit/ac33d8012b79ce8c4e92a472f8f2ff5aef488022).
+  Thanks to mimZD and xet7.
+
+and fixes the following bugs:
+
+- [Fix open lock from all button position at Admin Panel/People/People](https://github.com/wekan/wekan/commit/26d393f8ee6d836d830b05e2ef64bc0d6b84c1fa).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.38 2026-03-21 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated CONTRIBUTING.md and SECURITY.md](https://github.com/wekan/wekan/commit/6acc7c95ff53d90918eb98259e1e93fbd616212c).
+  Thanks to xet7.
+- Updated CONTRIBUTING.md
+  [Part 1](https://github.com/wekan/wekan/commit/a4a4fc1cf218089e4a2aab8b4941f0d90e8771b1),
+  [Part 2](https://github.com/wekan/wekan/commit/6249af041c77091d7aa83d6f11f35ccccb8c3b24),
+  [Part 3](https://github.com/wekan/wekan/commit/e669a9fe64a2c2c709c118cdb9128125c039193b),
+  [Part 4](https://github.com/wekan/wekan/commit/e705df663487b7d394d327168628402ad9b93ba2),
+  [Part 5](https://github.com/wekan/wekan/commit/e50b9f211de7d6b7b9c7ec1e5027015e136093a6),
+  [Part 6](https://github.com/wekan/wekan/commit/7ed26f437d07ff520eb4a8d0fd8f205ea2d1e49e).
+
+and fixes the following bugs:
+
+- [Fix List of users is empty, some translations not visible, count of orgs/teams/people, theme of some buttons, New org/team to be leftmost column](https://github.com/wekan/wekan/commit/803eb452e96945383f480a8cd532233e17263d38).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.37 2026-03-20 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix card save does not work](https://github.com/wekan/wekan/commit/37142f3bb9f4f10a3049a9837456c0753e6e329a).
+  Thanks to comunidadplayasdetijuana, Janfy and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.36 2026-03-20 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [IntegrationBleed](https://wekan.fi/hall-of-fame/integrationbleed/):
+
+- [Fix RebindBleed of IntegrationBleed](https://github.com/wekan/wekan/commit/92beaa313706bc26fbea7e1cc8cfaf836609e038).
+  Thanks to Rodolphe GHIO and xet7.
+
+and adds the following new features:
+
+- [Add remaining features of Copy and Move of Swimlanes, Lists and Cards](https://github.com/wekan/wekan/commit/610849ab0bcfb72c92cf9cf512c51b8cede55dad).
+  Thanks to xet7.
+
+and adds the following updates:
+
+- [Bump docker/build-push-action from 6.19.2 to 7.0.0](https://github.com/wekan/wekan/pull/6181).
+  Thanks to dependabot.
+- [Bump docker/metadata-action from 5.10.0 to 6.0.0](https://github.com/wekan/wekan/pull/6182).
+  Thanks to dependabot.
+- [Bump docker/login-action from 3.7.0 to 4.0.0](https://github.com/wekan/wekan/pull/6183).
+  Thanks to dependabot.
+- [Remove peerlibrary:blaze-components](https://github.com/wekan/wekan/pull/6178).
+  Thanks to harryadel.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/63df6cb197ff497cf8c97dad46c080105f00b2d1).
+  Thanks to developers of dependencies.
+- [Updated flatted](https://github.com/wekan/wekan/commit/a159856628ae9b6454cbdb0a7beca190a785e8af).
+  Thanks to developers of flatted.
+- [Updated to MongoDB 7.0.31 at Snap Candidate](https://github.com/wekan/wekan/commit/fccefcaa6ce0b3408f3917e442229b6c92f877ac).
+  Thanks to MongoDB developers.
+- [Helm Chart: Updated to MongoDB 7.0.31](https://github.com/wekan/charts/commit/6818b7fa5e7371b3777f49a7460102a1e1685746).
+  Thanks to MongoDB developers.
+- [Replace underscore with native JavaScript utilities](https://github.com/wekan/wekan/pull/6190).
+  Thanks to harryadel.
+- [Removed not needed input fields from GitHub Bug report issue template](https://github.com/wekan/wekan/commit/7d0a42271467cbf203adc6ca15fd5b02a1cd0053).
+  Thanks to xet7.
+- [Remove raix:handlebar-helpers, replace with native Blaze helpers](https://github.com/wekan/wekan/pull/6191).
+  Thanks to harryadel.
+- [Updated flatted](https://github.com/wekan/wekan/commit/c3f66cce55dec0d4154f41aa869eed75f9278f43).
+  Thanks to developers of flatted.
+
+and fixes the following bugs:
+
+- [Fixed linked card swimlane routing](https://github.com/wekan/wekan/pull/6179).
+  Thanks to KhaoulaMaleh.
+- [Replaced incompatible file-type with mime-type](https://github.com/wekan/wekan/commit/89f86caf69db0600a207aee075361f8a6801253b).
+  Thanks to xet7.
+- [Fix Add List popup to not open after adding new board or there being no lists at all](https://github.com/wekan/wekan/commit/7e378be1d87280b8fb3f63eea3c0374e12054984).
+  Thanks to xet7.
+- [Improve global search relevance and add exact-field operators](https://github.com/wekan/wekan/pull/6187).
+  Thanks to KhaoulaMaleh.
+- [Fix list add-card actions and sort persistence](https://github.com/wekan/wekan/pull/6188).
+  Thanks to harryadel.
+- [Fix version not visible](https://github.com/wekan/wekan/commit/1f6b5ed0e387dee0b5a90bcf10dd425e098bba6a).
+  Thanks to FK-PATZ3 and xet7.
+- [Fix List drag handle missing](https://github.com/wekan/wekan/commit/6fc1cb91279d322cfb4a7dfe3deec18c91509184).
+  Thanks to FK-PATZ3 and xet7.
+- [Fix Error reading default file .well-known/assetlinks.json.default](https://github.com/wekan/wekan/commit/36741d7ae5018693f51215b01924a8f7cc709477).
+  Thanks to gre3x and xet7.
+- [Fix can not close opened card](https://github.com/wekan/wekan/commit/b6a6180dc31c82115418e363057a4cd5ba7b7e4e).
+  Thanks to xet7.
+- [Removed empty space at top of list header](https://github.com/wekan/wekan/commit/d2168aca3d09caf698128efa2eb9aebad35d4929).
+  Thanks to xet7.
+- [Changed colors of Add Rule and Back buttons from black to theme color](https://github.com/wekan/wekan/commit/a3ac2195037c182367fb744ba6d3ef9ed1863792).
+  Thanks to xet7.
+- [Fix more Rules buttons styling](https://github.com/wekan/wekan/commit/e6fbfa87f036d81ca63c71216a9804bf93979657).
+  Thanks to xet7.
+- [Fixed crash when IFTTT Rules archived card, but cards etc are not visible at archive yet. Fixed "Add After List" to show lists only from current Swimlane](https://github.com/wekan/wekan/commit/0c29fa3cbee49f054591ce421d790d364f4f28af).
+  Thanks to xet7.
+- [Fixed crash at sign-up page, when registering new user, happened after some PR](https://github.com/wekan/wekan/commit/ccd23f6cdea8b012e492674491969271cbbad842).
+  Thanks to xet7.
+- [Fixed Add after list to add after selected list. Added Confirm to Archive List and Archive Swimlane](https://github.com/wekan/wekan/commit/872dd578c84d629e804566802524100983095b4a).
+  Thanks to xet7.
+- [Fixed view, restore and delete of Archived Cards, Lists and Swimlanes. If delete list, it does not delete card of that list that was archived before archive list](https://github.com/wekan/wekan/commit/c989c21d4fcee6f095134176410e5811343d6923).
+  Thanks to xet7.
+- [Fixed add remove checklist and checklist item, and checklist item translation not used](https://github.com/wekan/wekan/commit/2f07eb70974b40a463ae9f1daddc829e1b5ae468).
+  Thanks to xet7.
+- [Fixed adding label and select color causes color not checkmarked and wrong color choosed](https://github.com/wekan/wekan/commit/4dea702ff28ef4a1fe94abc26b96f666eeaa4aad).
+  Thanks to xet7.
+- [Fix Copy Card and Move Card](https://github.com/wekan/wekan/commit/d0c44bded81d07e5bc9a90c89efca797e331d5eb).
+  Thanks to BlobbyBob and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.35 2026-03-05 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [IntegrationBleed](https://wekan.fi/hall-of-fame/integrationBleed/):
+
+- [Fix IntegrationBleed](https://github.com/wekan/wekan/commit/2cd702f48df2b8aef0e7381685f8e089986a18a4).
+  Thanks to Rodolphe GHIO and xet7.
+
+and adds the following updates:
+
+- [Bump minimatch from 3.1.3 to 3.1.5](https://github.com/wekan/wekan/pull/6167).
+  Thanks to dependabot.
+- [Bump actions/download-artifact from 7 to 8](https://github.com/wekan/wekan/pull/6170).
+  Thanks to dependabot.
+- [Bump meteorengineer/setup-meteor from 2 to 3](https://github.com/wekan/wekan/pull/6171).
+  Thanks to dependabot.
+- [Bump actions/upload-artifact from 6 to 7](https://github.com/wekan/wekan/pull/6172).
+  Thanks to dependabot.
+- [Replace konecty:mongo-counter with inline implementation](https://github.com/wekan/wekan/pull/6174).
+  Thanks to harryadel.
+- [Replace templates:tabs package with inline Blaze implementation](https://github.com/wekan/wekan/pull/6175).
+  Thanks to harryadel.
+- [Updated dompurify](https://github.com/wekan/wekan/commit/9f79a8b6edc161f95c7362f45597b8c6ec777088).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Commented out Admin Panel/Settings/Migrations related menu option and code to speed up WeKan](https://github.com/wekan/wekan/commit/9b3ecd795fffaf012911d0d36cea0ee362e2fc27).
+  Thanks to xet7.
+- [Optimized board loading](https://github.com/wekan/wekan/commit/7127862bea34ab84ebf8ef00727e3f7633ca8b69).
+  Thanks to xet7.
+- [Fix FilesCollection findOneAsync errors for Avatars and Attachments](https://github.com/wekan/wekan/pull/6173).
+  Thanks to harryadel.
+- [Fixed unable to delete Avatar, with Meteor 3 compatible avatar and attachments fixes](https://github.com/wekan/wekan/commit/274f1309c389221915b40508faffdfc361d48bbf).
+  Thanks to inDane and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.34 2026-02-20 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [AnchorBleed](https://wekan.fi/hall-of-fame/anchorBleed/):
+
+- [Fix GHSL-2026-035_Wekan CursorBleed of AnchorBleed](https://github.com/wekan/wekan/commit/1c8667eae8b28739e43569b612ffdb2693c6b1ce).
+  Thanks to GHSL and xet7.
+- [Fix GHSL-2026-036_Wekan WatchBleed of AnchorBleed](https://github.com/wekan/wekan/commit/8c00adc6b865653bd717a946dd646eb54ac78c9c).
+  Thanks to GHSL and xet7.
+- [Fix GHSL-2026-037_Wekan GlobalBleed of AnchorBleed](https://github.com/wekan/wekan/commit/1ee9b2e917104f54c035f6426169a28fedecbdb6).
+  Thanks to GHSL and xet7.
+- [Fix GHSL-2026-044_Wekan CustomFieldBleed of AnchorBleed](https://github.com/wekan/wekan/commit/73eb98c57afd3d72377a1f7160a52450ab0eeb8b).
+  Thanks to GHSL and xet7.
+- [Fix GHSL-2026-045_Wekan ImportBleed of AnchorBleed](https://github.com/wekan/wekan/commit/62216e36c15f55d4ef6cb97313db3aa54fc77fe0).
+  Thanks to GHSL and xet7.
+
+and adds the following new features:
+
+- [Helm Chart: Feat(ingress): add ingressClassName support](https://github.com/wekan/charts/pull/50).
+  Thanks to Rohmilchkaese.
+
+and adds the following updates:
+
+- [Migrate @wekanteam/meteor-reactive-cache](https://github.com/wekan/wekan/pull/6139).
+  Thanks to harryadel.
+- [Fix unhandled Promise rejection in cron migration job callback](https://github.com/wekan/wekan/pull/6153).
+  Thanks to harryadel.
+- [Bump docker/build-push-action from 6.18.0 to 6.19.2](https://github.com/wekan/wekan/pull/6149).
+  Thanks to dependabot.
+- [Bump ajv from 6.12.6 to 8.18.0](https://github.com/wekan/wekan/pull/6151).
+  Thanks to dependabot.
+- [Bump tar from 7.5.7 to 7.5.9](https://github.com/wekan/wekan/pull/6156).
+  Thanks to dependabot.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/f463198e40f9802c0a30f2d713d831e905678162).
+  Thanks to developers of dependencies.
+- [Moved meteor-reactive-cache to npmjs.com @wekanteam/meteor-reactive-cache https://github.com/wekan/meteor-reactive-cache](https://github.com/wekan/wekan/commit/8816c886cf740ec43c4c00c946730e6c2f3a8237).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix calendar](https://github.com/wekan/wekan/pull/6155).
+  Thanks to KhaoulaMaleh.
+- [Removed duplicate code](https://github.com/wekan/wekan/commit/ed907f8c61f59763a87cc738f94bff418de77701).
+  Thanks to xet7.
+- [Fix createWorkspace Meteor method fails with "Expected string, got undefined"](https://github.com/wekan/wekan/commit/06d418b12b5de6392dab12c2d3b262813b92e730).
+  Thanks to TheBoysenBuilds and xet7.
+- [Fix Notifications from not allowed Boards](https://github.com/wekan/wekan/commit/a34c2f35a6c4ae64b97af0a930fb768b2d781938).
+  Thanks to FK-PATZ3 and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.33 2026-02-15 WeKan ® release
+
+This release adds the following new features:
+
+- [Admin Panel/Settings/Layout, for PWA: Custom head meta, link, icons, assetlinks.json, site.webmanifest](https://github.com/wekan/wekan/commit/b5a13f0206ff9b44329a1cf8d4f2b84ca1c7bd91).
+  Thanks to xet7.
+
+and adds the following updates:
+
+- [Migrate wekan-ldap to async API for Meteor 3.0](https://github.com/wekan/wekan/pull/6115).
+  Thanks to harryadel.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/bebea9efeab098f7f5faca3f75019fd9efbcb5ac).
+  Thanks to developers of dependencies.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.32 2026-02-13 WeKan ® release
+
+This release adds the following updates:
+
+- [Migrate wekan-oidc to async API for Meteor 3.0](https://github.com/wekan/wekan/pull/6111).
+  Thanks to harryadel.
+- [Migrate wekan-accounts-sandstorm to async API for Meteor 3.0](https://github.com/wekan/wekan/pull/6112).
+  Thanks to harryadel.
+- [Migrate wekan-accounts-cas to async API for Meteor 3.0](https://github.com/wekan/wekan/pull/6114).
+  Thanks to harryadel.
+- [Updated to MongoDB 7.0.30 at Snap Candidate](https://github.com/wekan/wekan/commit/fed2e9dd4e3c571795af24f60c6643a33bb5ecf9).
+  Thanks to MongoDB developers.
+- [Updated MongoDB to 7.0.30 at Helm Chart](https://github.com/wekan/wekan/commit/commit/98f66a2b92f7a2c199135e8239133ef431c332b9).
+  Thanks to MongoDB developers.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.31 2026-02-08 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix Copy Card and Move Card](https://github.com/wekan/wekan/commit/f8aa487e9118264f4d96c4d0cde384bcaf05e0a0).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.30 2026-02-08 WeKan ® release
+
+This release reverts the following new features and adds the following fixes:
+
+- [Reverted New UI Design of WeKan v8.29 and added more fixes and performance improvements](https://github.com/wekan/wekan/commit/1b8b8d2eef5b56654026597ae445f3f20ad886b2).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.29 2026-02-07 WeKan ® release
+
+This release adds the following new features:
+
+- New UI Design.
+  [Part 1](https://github.com/wekan/wekan/pull/6131),
+  [Part 2](https://github.com/wekan/wekan/pull/6133).
+  Thanks to Chostakovitch.
+
+and fixes the following bugs:
+
+- [Fix List widths](https://github.com/wekan/wekan/pull/6129).
+  Thanks to KhaoulaMaleh.
+- [Fix extra space at RTL need margin](https://github.com/wekan/wekan/commit/4456bc13609b2d0e944ee71a82df200060a601b2).
+  Thanks to mimZD and xet7.
+- [Fix No Add Card + etc](https://github.com/wekan/wekan/commit/55710835fe8879775b73c8bc921bac5febf552a2).
+  Thanks to mimZD and xet7.
+- [Removed extra file](https://github.com/wekan/wekan/commit/0987154a7fea89b0416f48d9bffd5fa7fba9908a).
+  Thanks to xet7.
+- [Added missing linefeeds](https://github.com/wekan/wekan/commit/0ae9865fcbad42966988225393fa66bca49cf14e).
+  Thanks to xet7.
+- [Fix Notifications from not allowed Boards](https://github.com/wekan/wekan/commit/0a92e896f8d2cf0677891857d163ada336a45c61).
+  Thanks to FK-PATZ3 and xet7.
+- [Fix move and copy popup duplicate view](https://github.com/wekan/wekan/commit/631c250f403172937b76ddd37bab54bc9b6dbb78).
+  Thanks to mimZD and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.28 2026-02-05 WeKan ® release
+
+This release adds the following updates:
+
+- [Bump docker/login-action from 3.6.0 to 3.7.0](https://github.com/wekan/wekan/pull/6122).
+  Thanks to dependabot.
+- [Updated meteor-node-stubs](https://github.com/wekan/wekan/commit/6c2e2f271d6343b347224430a4eedfe54db2d838).
+  Thanks to Meteor developers.
+
+and fixes the following bugs:
+
+- [Fixed text truncation at quick-access board link bar](https://github.com/wekan/wekan/pull/6121).
+  Thanks to KhaoulaMaleh.
+- [Improved cardDetails.css for better UI](https://github.com/wekan/wekan/pull/6124).
+  Thanks to AymenHassini19.
+- [Fixed Jade syntax at header](https://github.com/wekan/wekan/commit/c31758960f5372e88f47e8d081404294751284c8).
+  Thanks to xet7.
+- [Await async setDone before closing popup in copy/move dialogs](https://github.com/wekan/wekan/pull/6126).
+  Thanks to harryadel.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.27 2026-01-31 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated MongoDB to 7.0.29 at Windows install docs](https://github.com/wekan/wekan/commit/b55e1bbd409f76bd0388d19d4d0a8420cee8df96).
+  Thanks to MongoDB developers.
+
+and fixes the following bugs:
+
+- [Fix async/await in copy/move card operations](https://github.com/wekan/wekan/pull/6120).
+  Thanks to harryadel.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.26 2026-01-31 WeKan ® release
+
+This release adds the following updates:
+
+- [Migrate wekan-accounts-lockout to async API for Meteor 3.0](https://github.com/wekan/wekan/pull/6113).
+  Thanks to harryadel.
+- Added Docs: Spreadsheet vs Kanban.
+  [Part 1](https://github.com/wekan/wekan/commit/a0a8d0186cbc7fefe38f72244723bcff292ae2f4),
+  [Part 2](https://github.com/wekan/wekan/commit/37d0daee590ab48cbfa1672e4bc5efd95d341211).
+  Thanks to xet7.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/03439d1bccf82511870eed7301b621b1d495941b).
+  Thanks to developers of dependencies.
+
+and fixes the following bugs:
+
+- [Reduce visual overflow in Member Settings menu by extending container height](https://github.com/wekan/wekan/pull/6104).
+  Thanks to AymenHassini19.
+- [Fix Card copy menu is not displayed](https://github.com/wekan/wekan/commit/0b891464b907b272e075d8aafd3ce29e704739cf).
+  Thanks to xet7.
+- [Fix Bug: Rules view translation not is not shown correctly](https://github.com/wekan/wekan/commit/f73eab23f997efe5347aa1f06515bf355cfe7ed5).
+  Thanks to cactus7as and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.25 2026-01-28 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [FloppyBleed](https://wekan.fi/hall-of-fame/floppyBleed/):
+
+- [Fix FileBleed of FloppyBleed](https://github.com/wekan/wekan/commit/a419d831a408f251c798f5410375b20afd98c04b).
+  Thanks to Luke Hebenstreit Twitter lheben_ and xet7.
+
+and adds the following updates:
+
+- [Updated code counts](https://github.com/wekan/wekan/commit/2f25f47d0ba4c7f543264cd7fe2ed117ab0ec9ee).
+  Thanks to xet7.
+- Updated FerretDB 2 / PostgreSQL docs location.
+  [Part 1](https://github.com/wekan/wekan/commit/710d522e069b7521b6c2ec4f93f1491a897cf2b4),
+  [Part 2](https://github.com/wekan/wekan/commit/0ede9d6d93a688f24fc36c0c456e184a0aa6af8c),
+  [Part 3](https://github.com/wekan/wekan/commit/bf5d50e8a9fce327a16b069932fa3e13c6d81978).
+  Thanks to xet7.
+- [Updated Dockerfile](https://github.com/wekan/wekan/commit/d298ab7486d489d353fc410232a9dcdd68501c72).
+  Thanks to xet7.
+- Docker for Linux amd64/arm64/s390x.
+  [Part 1](https://github.com/wekan/wekan/commit/38711f0a29bf37d1e0a3fd9c8a9bcfb2442934b3),
+  [Part 2](https://github.com/wekan/wekan/commit/e72019fa55ef6142767fd83e928bf2a0a966f9e6),
+  [Part 3](https://github.com/wekan/wekan/commit/b2c7c7f55b5136bc91251cd57125316ec622d4a3),
+  [Part 4](https://github.com/wekan/wekan/commit/98e5adfba80ee935b2a1293851d88812ad707b78),
+  [Part 5](https://github.com/wekan/wekan/commit/60846a44959d46262672c6a3048bd76d829c03bf),
+  [Part 6](https://github.com/wekan/wekan/commit/7ff174cf660f43dfbb471b29d75820f527771bbd).
+  Thanks to xet7.
+- [Most Unicode Icons back to Font Awesome 4.7 for better accessibility. Less always visible buttons, More at ☰ Menu](https://github.com/wekan/wekan/commit/7ad04f45353e1628881fec310caedf7625a34d4d).
+  Thanks to xet7.
+- [Updated to MongoDB 7.0.29 at Snap Candidate](https://github.com/wekan/wekan/commit/ac70fe28488c09364133a65fbc80f5a819a1e4bf).
+  Thanks to developers of MongoDB.
+- [Updated to MongoDB 7.0.29 at Helm Charts](https://github.com/wekan/charts/commit/8169739260b6f104c4d011dac5a4bf5485db8b45).
+  Thanks to developers of MongoDB.
+
+and fixes the following bugs:
+
+- [Fix autofocus](https://github.com/wekan/wekan/commit/440f553de0baf460acc891ee5864f84bb982104a).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.24 2026-01-24 WeKan ® release
+
+This release adds the following updates:
+
+- Secure Sandbox for VSCode at Debian 13 amd64.
+  [Part 1](https://github.com/wekan/wekan/commit/639ac9549f88069d8569de777c533ab4c9438088),
+  [Part 2](https://github.com/wekan/wekan/commit/cc8b771eb448199fa23a87955cf9fa1a504ba8d2).
+  Thanks to xet7.
+- [Updated build scripts and docs to Meteor 2.16](https://github.com/wekan/wekan/commit/1d374db0f3ed35a0463b5f89ca2d01078e245d11).
+  Thanks to xet7.
+- [Replace mquandalle:collection-mutations with collection helpers](https://github.com/wekan/wekan/pull/6086).
+  Thanks to harryadel.
+- [Replace ongoworks:speakingurl with limax](https://github.com/wekan/wekan/pull/6087).
+  Thanks to harryadel.
+- [Migrate createIndex to createIndexAsync](https://github.com/wekan/wekan/pull/6093).
+  Thanks to harryadel.
+- [Remove idmontie:migrations](https://github.com/wekan/wekan/pull/6095).
+  Thanks to harryadel.
+- Remove mquandalle:autofocus.
+  [Part 1](https://github.com/wekan/wekan/pull/6088),
+  [Part 2](https://github.com/wekan/wekan/pull/6096).
+  Thanks to harryadel.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.23 2026-01-21 WeKan ® release
+
+This release adds the following updates:
+
+- [Migrate from percolate:synced-cron to quave:synced-cron](https://github.com/wekan/wekan/pull/6080).
+  Thanks to harryadel.
+- [Replace mousetrap](https://github.com/wekan/wekan/pull/6082).
+  Thanks to harryadel.
+- [Remove kadira:dochead](https://github.com/wekan/wekan/pull/6083).
+  Thanks to harryadel.
+- [Replace cottz:publish-relations with reywood:publish-composite](https://github.com/wekan/wekan/pull/6084).
+  Thanks to harryadel.
+- [Bump tar from 7.5.3 to 7.5.6](https://github.com/wekan/wekan/pull/6085).
+  Thanks to dependabot.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/04bfa0e6ba278a9d6544a678d1fba3ea71841062).
+  Thanks to developers of dependencies.
+
+and fixes the following bugs:
+
+- [Fixed newly created "Default" swimlane are displayed as "key 'default (LOCALE)' returned an object instead of string"](https://github.com/wekan/wekan/commit/ce55f0d8f432922ca4c0e3d28b1fb0e826d8008f).
+  Thanks to brlin-tw and xet7.
+- [Fix DB migration from 8.19 to 8.21 stuck forever](https://github.com/wekan/wekan/commit/a31a615da6911a2db22d4db86875b31fc951ae96).
+  Thanks to MaccabeeY and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.22 2026-01-20 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fixed Add member and @mentions](https://github.com/wekan/wekan/commit/ad511bd1378afdca7264597900a11ab6b5e09b77).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.21 2026-01-18 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [SnowBleed](https://wekan.fi/hall-of-fame/snowBleed/):
+
+- [Security Fix 2: OrgsTeamsBleed](https://github.com/wekan/wekan/commit/cabfeed9a68e21c469bf206d8655941444b9912c).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 3: ChecklistRESTBleed](https://github.com/wekan/wekan/commit/251d49eea94834cf351bb395808f4a56fb4dbb44).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 4: MigrationsBleed2](https://github.com/wekan/wekan/commit/cc35dafef57ef6e44a514a523f9a8d891e74ad8f).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 5: PositionHistoryBleed](https://github.com/wekan/wekan/commit/55576ec17722db094835470b386162c9a662fb60).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 6: SyncLDAPBleed](https://github.com/wekan/wekan/commit/146905a459106b5d00b4f09453a6554255e6965a).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 7: AttachmentMigrationBleed](https://github.com/wekan/wekan/commit/053bf1dfb76ef230db162c64a6ed50ebedf67eee).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 8: MoveStorageBleed](https://github.com/wekan/wekan/commit/c413a7e860bc4d93fe2adcf82516228570bf382d).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 9: ListWIPBleed](https://github.com/wekan/wekan/commit/8c0b4f79d8582932528ec2fdf2a4487c86770fb9).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 10: BoardTitleRESTBleed](https://github.com/wekan/wekan/commit/545566f5663545d16174e0f2399f231aa693ab6e).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 11: CardPubSubBleed](https://github.com/wekan/wekan/commit/0f5a9c38778ca550cbab6c5093470e1e90cb837f).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 12: FixDuplicateBleed](https://github.com/wekan/wekan/commit/4ce181d17249778094f73d21515f7f863f554743).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 13: LinkedBoardActivitiesBleed](https://github.com/wekan/wekan/commit/91a936e07d2976d4246dfe834281c3aaa87f9503).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 14: RulesBleed](https://github.com/wekan/wekan/commit/a787bcddf33ca28afb13ff5ea9a4cb92dceac005).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+
+and adds the following new features:
+
+- [Show password at Login and Register pages](https://github.com/wekan/wekan/commit/d30192f7f925a055e6f31723c47ad32b628ff2c0).
+  Thanks to xet7.
+
+and adds the following updates:
+
+- [Updated Docker build command](https://github.com/wekan/wekan/commit/b88b27689af8c5abf23dd7891780581a2d92001d).
+  Thanks to xet7.
+- [Updated Windows Bundle build .bat script](https://github.com/wekan/wekan/commit/f0118d52e984628b0e06e36d7b7f90166d18fbf7).
+  Thanks to xet7.
+- [Updated Linux arm64 bundle build script](https://github.com/wekan/wekan/commit/e2ec50730ff7fd4eb805071bb17fe0c105514f83).
+  Thanks to xet7.
+- [Updated Linux s390x bundle build script](https://github.com/wekan/wekan/commit/980510d71ad428325645dd53297f4ce20bd12983).
+  Thanks to xet7.
+- [Bump tar and @mapbox/node-pre-gyp](https://github.com/wekan/wekan/pull/6071).
+  Thanks to dependabot.
+- [Upgrade to Meteor 2.16](https://github.com/wekan/wekan/pull/6072).
+  Thanks to harryadel.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/95da8966fe3bebc7c5ef2c1fc555de5fa239f8ca).
+  Thanks to developers of dependencies.
+
+and fixes the following bugs:
+
+- [Fixed "Copy card link to clipboard" icon often not working](https://github.com/wekan/wekan/commit/d337afd5d3e8ca719adcde13d2b24d983e0f9926).
+  Thanks to brlin-tw and xet7.
+- [Fix DB migration from 8.19 to 8.20 is in a loop](https://github.com/wekan/wekan/commit/2fa490d83da858b193ca6a363e1599c5bbe55640).
+  Thanks to MaccabeeY and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.20 2026-01-16 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [SnowBleed](https://wekan.fi/hall-of-fame/snowBleed/):
+
+- [Security Fix 1: MigrationsBleed](https://github.com/wekan/wekan/commit/cbb1cd78de3e40264a5e047ace0ce27f8635b4e6).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+
+and adds the following features:
+
+- [Added back feature: Toggle Drag Handles. Improved positions of Add List etc buttons](https://github.com/wekan/wekan/commit/5cb712bee4cf46c6fe13d7dacf4b62298152b894).
+  Thanks to xet7.
+
+and adds the following updates:
+
+- [Updated dependencies](https://github.com/wekan/wekan/pull/6059).
+  Thanks to dependabot.
+- [Updated dependencies and published as @wekanteam npm packages to npmjs.com](https://github.com/wekan/wekan/commit/a9a89b501a91ffcdbdd611a05029d9483c59e4db).
+  Thanks to xet7.
+- Added FerretDB2/PostgreSQL Docs.
+  [Part 1](https://github.com/wekan/wekan/commit/9fb1aeb8272b011c3d0b6b2c26ff7cb498c7b37f),
+  [Part 2](https://github.com/wekan/wekan/commit/f198421f10dd3be9d58f64a242d12ea1ef45fee3),
+  [Part 3](https://github.com/wekan/wekan/commit/9431b2d53014289bebb06567f5662fdcb6dd409c),
+  [Part 4](https://github.com/wekan/wekan/commit/ffd37b9fd9171ca22973d6d0a62baef4a18494f5).
+  Thanks to juri_ at WeKan Libera.Chat IRC and xet7.
+- [Added s390x firewall Docs](https://github.com/wekan/wekan/commit/ec7c0e6dc3641f43b1a110d285f6ef15c146584a).
+  Thanks to xet7.
+- Updated GitHub issue templates.
+  [Part 1](https://github.com/wekan/wekan/commit/bd37b88e4d508c1f2712184a27dbbfd9df0e4c4e),
+  [Part 2](https://github.com/wekan/wekan/commit/cf6e6914989a7bf1d79f8b753a0a576c54ad7580),
+  [Part 3](https://github.com/wekan/wekan/commit/4a658dc02a770f8219669dc10bfe1077c760744f).
+  Thanks to xet7.
+- [Migrate kadira:flow-router to ostrio:flow-router-extra](https://github.com/wekan/wekan/pull/6067), related to Meteor 3 upgrades.
+  Thanks to harryadel.
+- [Some fixes to make WeKan working after Meteor 3 related router upgrades](https://github.com/wekan/wekan/commit/984a2dcec18fd20ebd1a5add8380d4c13d8303ba).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix attachment download error with non-ASCII filenames](https://github.com/wekan/wekan/pull/6056).
+  Thanks to brlin-tw.
+- [Swimlane drag button position improvements](https://github.com/wekan/wekan/commit/376a30f8a9c5cc6b5341fda7336244ee1b9983fd).
+  Thanks to TDSCDMA and xet7.
+- [Removed extra list borders](https://github.com/wekan/wekan/commit/a4f8faa48e3fb6c617cf9c5a398bc7f85b8bae92).
+  Thanks to TDSCDMA and xet7.
+- [Add back button texts to Filter, Search, Board View and MultiSelection](https://github.com/wekan/wekan/commit/dac7e17500de97febc7ad8f84cd1bf5edab27c52).
+  Thanks to audiocrush and xet7.
+- [Removed extra pipe character from UI](https://github.com/wekan/wekan/commit/66e79d2df7ecf5526dbae360cf93352657db7fcf).
+  Thanks to xet7.
+- [Changed find.sh to not search from translations, because I'm trying to find code, not translations](https://github.com/wekan/wekan/commit/58ae2b6c6848235132308611fe3083533e120f72).
+  Thanks to xet7.
+- [Fixed Change Avatar. Improved Admin Panel: People columns order, selected tab background color. Fixed can not edit existing user at Admin Panel/People/People](https://github.com/wekan/wekan/commit/07186e12a93c56555feb3b7332d43a918abe7f20).
+  Thanks to xet7.
+- [Fix mentions and notifications drawer](https://github.com/wekan/wekan/commit/20b5e2ab8fd37303cda8305d87d757c1cb9bdd12).
+  Thanks to xet7.
+- Fix New Board Permissions: NormalAssignedOnly, CommentAssignedOnly, ReadOnly, ReadAssignedOnly.
+  [Part 1](https://github.com/wekan/wekan/commit/eabb6a239d20530f538d22f94d9cfbebeb847493).
+  Thanks to nazim-oss and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.19 2025-12-29 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [MegaBleed](https://wekan.fi/hall-of-fame/megaBleed/):
+
+- [Security Fix 1: IDOR in setCreateTranslation. Non-admin could change Custom Translation](https://github.com/wekan/wekan/commit/f244a43771f6ebf40218b83b9f46dba6b940d7de).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 2: Private-only board setting can be bypassed](https://github.com/wekan/wekan/commit/7ed76c180ede46ab1dac6b8ad27e9128a272c2c8).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 3: Card comment author spoofing (IDOR) via API](https://github.com/wekan/wekan/commit/67cb47173c1a152d9eaf5469740992b2dacdf62d).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 4: Cross-board card move without destination authorization](https://github.com/wekan/wekan/commit/198509e7600981400353aec6259247b3c04e043e).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 5: Read-only roles can still update cards](https://github.com/wekan/wekan/commit/181f837d8cbae96bdf9dcbd31beaa3653c2c0285).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 6: Checklist delete IDOR: checklist not verified against board/card](https://github.com/wekan/wekan/commit/08a6f084eba09487743a7c807fb4a9000fcfa9ac).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 7: Checklist create IDOR: cardId not verified against boardId](https://github.com/wekan/wekan/commit/5cd875813fdec5a3c40a0358b30a347967c85c14).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 8: Attachments publication leaks metadata without auth](https://github.com/wekan/wekan/commit/6dfa3beb2b6ab23438d0f4395b84bf0749eb4820).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 9: Attachment upload not scoped to card/board relationship](https://github.com/wekan/wekan/commit/1d16955b6d4f0a0282e89c2c1b0415c7597019b8).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+- [Security Fix 10: LDAP filter injection in LDAP auth](https://github.com/wekan/wekan/commit/0b0e16c3eae28bbf453d33a81a9c58ce7db6d5bb).
+  Thanks to [Joshua Rogers](https://joshua.hu) of [Aisle Research](https://aisle.com) and xet7.
+
+and adds the following new features:
+
+- [Opened card Checklist menu: Hide finished tasks. Show Checklist at Minicard](https://github.com/wekan/wekan/commit/fbfde81bc8208b718c070a6eeba4b2e2d2ce83ba).
+  Thanks to C0rn3j and xet7.
+
+and adds the following updates:
+
+- [Helm Chart: Updated MongoDB to 7.0.28 at artifacthub.io](https://github.com/wekan/charts/commit/5e6d344e0b976ce683116b66a1fb8417590115aa).
+  Thanks to xet7 and titver968.
+
+and fixes the following bugs:
+
+- [Re-add JS closing class to unicode close announcement symbol](https://github.com/wekan/wekan/pull/6050).
+  Thanks to Chostakovitch.
+- [Cannot re-arrange lists within swimlanes](https://github.com/wekan/wekan/pull/6052).
+  Thanks to Chostakovitch.
+- Converted Gantt from js to Jade, and made card title to render markdown at Gantt view.
+  [Part 1](https://github.com/wekan/wekan/commit/2d3bef9033134c3b62cf22179bbee4b6fea81444),
+  [Part 2](https://github.com/wekan/wekan/commit/3af3c9a89d8a4020b6f1ccada7da2ccbec1a8562).
+  Thanks to xet7.
+- [Fix find.sh work with spaces, for example: ./find.sh "Some text"](https://github.com/wekan/wekan/commit/db4b04d8377523440fd2c36c1633ee74d7b05146).
+  Thanks to xet7.
+- [Fix copy move card at board and MultiSelect to have numbered target of board, card above or below. Added MultiSelect change color](https://github.com/wekan/wekan/commit/74f1dfde72b9448645552ae28ba8d989d3e823d8).
+  Thanks to mimZD and xet7.
+- [Fix move card last selection is gone](https://github.com/wekan/wekan/commit/2d87ba18b31ab5d8dc91dce01199cf7b313bd560).
+  Thanks to mimZD and xet7.
+- [Fix Unable to delete Checklist. Added confirm delete to Checklist and Chekclist Item](https://github.com/wekan/wekan/commit/cf62807ad5d056ce9b8045c55f7cf6c29044967b).
+  Thanks to C0rn3j and xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.18 2025-12-28 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES:
+
+- [Upgraded MongoDB to 7.0.28 to fix MongoBleed at Snap Candidate](https://github.com/wekan/wekan/commit/e210c9973be55a4fa4e7dd15aefc24e06dbc3e7f).
+  Thanks to developers of MongoDB.
+
+and adds the following new features:
+
+- [Gantt chart view to one board view menu Swimlanes/Lists/Calendar/Gantt](https://github.com/wekan/wekan/commit/f34e4c0e363e386dbcce8e6ee8933b2d50491c58).
+  Thanks to xet7.
+- [Number of cards per list and sum of custom number field in list head](https://github.com/wekan/wekan/commit/e569c2957ecc2b5fbf65ddcf0793b97c3ed5da81).
+  Thanks to xet7.
+- [New Board Permissions: NormalAssignedOnly, CommentAssignedOnly, ReadOnly, ReadAssignedOnly](https://github.com/wekan/wekan/commit/c1168d181b3ff34f5ee7794a5740281c4ab5e253).
+  Thanks to xet7.
+- [More translations. Added support page to Admin Panel / Settings / Layout](https://github.com/wekan/wekan/commit/a7400dca4503961267cc5fd6a1c8efaa78668f77).
+  Thanks to xet7.
+- [Right top User Settings / Grey Icons. Also fixed Change Language popup](https://github.com/wekan/wekan/commit/300b653ea3416892faf2d08f5e0be3752e2041d6).
+  Thanks to xet7.
+- [Collapse Swimlane, List, Opened Card. Opened Card window X and Y position can be moved freely from drag handle. Fix some dragging not possible. Fix iPhone Safari](https://github.com/wekan/wekan/commit/58f4884ad603e4f8c68a8819dfb1440234da70b6).
+  Thanks to xet7.
+- Per-User and Board-level data save fixes. Per-User is collapse, width, height. Per-Board is Swimlanes, Lists, Cards etc.
+  [Part 1](https://github.com/wekan/wekan/commit/414b8dbf41ecf368d54aeceb6a78ccd0aa58f6a6),
+  [Part 2](https://github.com/wekan/wekan/commit/58e970d68508a76a1b9333941eb1696fb8fb7727).
+  Thanks to xet7.
+
+and adds the following updates:
+
+- [Update GitHub docker/metadata-action from 5.8.0 to 5.9.0](https://github.com/wekan/wekan/pull/6012).
+  Thanks to dependabot.
+- [Updated security.md](https://github.com/wekan/wekan/commit/7ff1649d8909917cae590c68def6eecac0442f91).
+  Thanks to xet7.
+- [Updated build script for Linux arm64 bundle](https://github.com/wekan/wekan/commit/3db1305e58168f7417023ccd8d54995026844b18).
+  Thanks to xet7.
+- Update Backup docs about migrating to newest WeKan.
+  [Part 1](https://github.com/wekan/wekan/commit/e669b1b9c72278c8debbc9de74d3fa02224a66d8),
+  [Part 2](https://github.com/wekan/wekan/commit/19fa12bb26a0444acffd49f24123ed993c425f6a),
+  [Part 3](https://github.com/wekan/wekan/commit/4e346c0ab7fbfb39544063cbd0e095307b26648f),
+  [Part 4](https://github.com/wekan/wekan/commit/59fc756a0bda8e11b9d86961daa35bb755110a68),
+  [Part 5](https://github.com/wekan/wekan/commit/30541260f0f979662889bc40b4db461af1583a07),
+  [Part 6](https://github.com/wekan/wekan/commit/784c5c6b0c83397ab4344d1a0fa231f33ff26564),
+  [Part 7](https://github.com/wekan/wekan/commit/5686c92e05452a5d91c10ed436fae71103ecfb1f),
+  [Part 8](https://github.com/wekan/wekan/commit/b7ff370561153bbfbb07426f9bd8b4d2977b1d0c),
+  [Part 9](https://github.com/wekan/wekan/commit/fe4b36b85d4ac8efddb2c7148bc5d2413cd643e1),
+  [Part 10](https://github.com/wekan/wekan/commit/9ebdc82d46d86029df12adaafba95c0ecfc9d2c2),
+  [Part 11](https://github.com/wekan/wekan/commit/3ef0a3e685657eba1cc07314ac8d195f89dbef74),
+  [Part 12](https://github.com/wekan/wekan/commit/2cbf64da33aff2d0b77ee91e7e9ac360cd1edb99),
+  [Part 13](https://github.com/wekan/wekan/commit/3c578403404084ae10e4349b5570b0d50ecd8eb4),
+  [Part 14](https://github.com/wekan/wekan/commit/451e9f78705dbbac2ed6ce123fd5440a871b6dcc),
+  [Part 15](https://github.com/wekan/wekan/commit/e07e461e482f54c8ddaebc63373c93dc4aa0d956).
+
+and fixes the following bugs:
+
+- [Fix Broken Strikethroughs in Markdown to HTML conversion](https://github.com/wekan/wekan/pull/6009).
+  Thanks to brlin-tw.
+- [Updated Mac docs for Applite](https://github.com/wekan/wekan/commit/400eb81206f346a973d871a8aaa55d4ac5d48753).
+  Thanks to xet7.
+- [Fix checklist delete action (issue #6020), link-card popup defaults, and stabilize due-cards ordering](https://github.com/wekan/wekan/pull/5967).
+  Thanks to seve12.
+- [Improve rules UI board dropdowns/loading, rule header titles, and ensure card move updates attachment metadata](https://github.com/wekan/wekan/pull/5967).
+  Thanks to seve12.
+- [Improve imports: normalize id → _id, add default swimlane fallback, and add regression test](https://github.com/wekan/wekan/pull/5967).
+  Thanks to seve12.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.17 2025-11-06 WeKan ® release
+
+This release adds the following new feature:
+
+- [Feature: Workspaces, at All Boards page](https://github.com/wekan/wekan/commit/0afbdc95b49537e06b4f9cf98f51a669ef249384).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix 8.16: Switching Board View fails with 403 error](https://github.com/wekan/wekan/commit/550d87ac6cb3ec946600616485afdbd242983ab4).
+  Thanks to xet7.
+- [Moved migrations from opening board to right sidebar / Migrations](https://github.com/wekan/wekan/commit/1b25d1d5720d4f486a10d2acce37e315cf9b6057).
+  Thanks to xet7.
+- [Fix 8.16 Lists with no items are deleted every time when board is opened. Moved migrations to right sidebar](https://github.com/wekan/wekan/commit/7713e613b431e44dc13cee72e7a1e5f031473fa6).
+  Thanks to xet7.
+- [Remove old translations and code not in use anymore](https://github.com/wekan/wekan/commit/ba49d4d140bc0d4cfb5a96db9ab077bc85db58f1).
+  Thanks to xet7.
+- [Fixed sidebar migrations to be per-board, not global. Clarified translations](https://github.com/wekan/wekan/commit/e4638d5fbcbe004ac393462331805cac3ba25097).
+  Thanks to xet7.
+- [Fix star board](https://github.com/wekan/wekan/commit/8711b476be30496b96b845529b5717bb6e685c27).
+  Thanks to xet7.
+- [Fix Card emoji issues](https://github.com/wekan/wekan/commit/e5e711c938edcca23c974c3eec97296898bcf24e).
+  Thanks to xet7.
+- [Try to fix Edit Custom Fields button not working. Removed duplicate option from Boards Settings](https://github.com/wekan/wekan/commit/20af0a2ef55b11e7205845859ee92a929616ce91).
+  Thanks to xet7.
+- [Fix Regression - calendar popup to set due date has gone](https://github.com/wekan/wekan/commit/581733d605b7e0494e72229c45947cff134f6dd6).
+  Thanks to xet7.
+- [Remove not working Bookmark menu option](https://github.com/wekan/wekan/commit/c829c073cf822e48b7cd84bbfb79d42867412517).
+  Thanks to xet7.
+- [Fix Workspaces at All Boards to have correct count of remaining etc, while starred also at Starred/Favorites](https://github.com/wekan/wekan/commit/6244657ca53a54646ec01e702851a51d89bd0d55).
+  Thanks to xet7.
+- [Fix Worker Permissions does not allow for cards to be moved. - v8.15. Removed buttons Worker should not use](https://github.com/wekan/wekan/commit/18003900c2d497c129793d1653d4d9872a2f19da).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.16 2025-11-02 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES of [SpaceBleed](https://wekan.fi/hall-of-fame/spaceBleed/):
+
+- [Fix SECURITY ISSUE 1: File Attachments enables stored XSS (High)](https://github.com/wekan/wekan/commit/e9a727301d7b4f1689a703503df668c0f4f4cab8).
+  Thanks to Siam Thanat Hack (STH) and xet7.
+- [Fix SECURITY ISSUE 2: Access to boards of any Orgs/Teams, and avatar permissions](https://github.com/wekan/wekan/commit/f26d58201855e861bab1cd1fda4d62c664efdb81).
+  Thanks to Siam Thanat Hack (STH) and xet7.
+- [Fix SECURITY ISSUE 3: Unauthenticated (or any) user can update board sort](https://github.com/wekan/wekan/commit/ea310d7508b344512e5de0dfbc9bdfd38145c5c5).
+  Thanks to Siam Thanat Hack (STH) and xet7.
+- [Fix SECURITY ISSUE 4: Members can forge others’ votes (Low). Bonus: Similar fixes to planning poker too done by xet7](https://github.com/wekan/wekan/commit/0a1a075f3153e71d9a858576f1c68d2925230d9c).
+  Thanks to Siam Thanat Hack (STH) and xet7.
+- [Fix SECURITY ISSUE 5: Attachment API uses bearer value as userId and DoS (Low)](https://github.com/wekan/wekan/commit/ccd90343394f433b287733ad0a33c08e0a71f53c).
+  Thanks to Siam Thanat Hack (STH) and xet7.
+
+and adds the following new features:
+
+- [List menu / More / Delete duplicate lists that do not have any cards](https://github.com/wekan/wekan/commit/91b846e2cdee9154b045d11b4b4c1a7ae1d79016).
+  Thanks to xet7.
+- [Disabled migrations that happen when opening board. Defaulting to per-swimlane lists and drag drop list to same or different swimlane](https://github.com/wekan/wekan/commit/034dc08269520ca31c780cce64e0150969e9228e).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix changing swimlane color to not reload webpage](https://github.com/wekan/wekan/commit/ecf2418347cae4329deb292b534f68eb099d3f90).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.15 2025-10-23 WeKan ® release
+
+This release fixes the following bugs:
+
+- Fix drag lists did not work
+  [Part 1](https://github.com/wekan/wekan/commit/8662c96d1c8d4fa76ce7b31eb06678ad59c3ebe1),
+  [Part 2](https://github.com/wekan/wekan/commit/0cebd8aa4dbe0bf2418b814716744ab806b671c2).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.14 2025-10-23 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix board reloading page every second](https://github.com/wekan/wekan/commit/b4b598f542d0cefc5f2d5d6c7286f0a312cf6a55).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.12 2025-10-23 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix Regression - unable to view cards by due date v8.11](https://github.com/wekan/wekan/commit/ae11e80bde79d9ad412d185f20e5a7f802685260).
+  Thanks to xet7.
+- [Fix Regression - unable to rearrange tasks within a checklist - v8.11](https://github.com/wekan/wekan/commit/544b24ceb1687e5b568d8c7b74403a5a2e3f6bc6).
+  Thanks to xet7.
+- [Fix unable to add members to board](https://github.com/wekan/wekan/commit/c6d46006837a29fb311e444f94fa65f236e23bc7).
+  Thanks to xet7.
+- [Removed not needed | at left side of minicard badges](https://github.com/wekan/wekan/commit/a0c30c35ed57113df041ef1020d3e9e5449f35e4).
+  Thanks to xet7.
+- [Fix opened card Date Format to be used at dates popups](https://github.com/wekan/wekan/commit/7ca81285b14d1ec60d6e7e9c191d1194950f18c8).
+  Thanks to xet7.
+- [Fix UI issues of Right Sidebar / Subtasks Settings and Card Settings](https://github.com/wekan/wekan/commit/45537ede870eca59ad72cd7ad013a12f60032df4).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.11 2025-10-21 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix due dates to use colors: red = overdue, amber = due soon, no shade = not due yet](https://github.com/wekan/wekan/commit/1aa0d849775fbd0dfc83fa8e4cdca84d22a15042).
+  Thanks to xet7.
+- [Fix My Due Cards to be sorted by due date, oldest first](https://github.com/wekan/wekan/commit/a540b12895520f398bce10bd244f733d221975d4).
+  Thanks to xet7.
+- [Verify that due background colors are correct also at My Due Cards](https://github.com/wekan/wekan/commit/665c9b5e522e73115a1515ced066037110db84e1).
+  Thanks to xet7.
+- [Fix Regression - due date taking a while to load all cards v8.06](https://github.com/wekan/wekan/commit/347fa9e5cd89d064ebb8ab544e20a41f52206db6).
+  Thanks to xet7.
+- Fix duplicated lists.
+  [Part 1](https://github.com/wekan/wekan/commit/b6e7b258e0e8caecafc553dceb5771985992a0f9),
+  [Part 2](https://github.com/wekan/wekan/commit/b7ca2310b2cdec7db204229b2d5b9f95b6da8c7d),
+  [Part 3](https://github.com/wekan/wekan/commit/58df525b4915a99d0f603cc2536fd1fad1d20b29).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.10 2025-10-21 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Prevent opened board re-migrating and reloading every 5 seconds](https://github.com/wekan/wekan/commit/4987a95d8e35fc4cd30010fd17722ee94037d7f2).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.09 2025-10-21 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix Admin Panel / People editing and layout](https://github.com/wekan/wekan/commit/7a585a3dfb080af51f88669ea5928f715779cee4).
+  Thanks to xet7.
+- [Fix upgrade to 8.08 duplicates lists](https://github.com/wekan/wekan/commit/c3a405222782a4a91eb8725faaa8309f0926dcc4).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.08 2025-10-21 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix opening board migration of Shared Lists to Per-Swimlane lists to use ReactiveCache correctly without errors](https://github.com/wekan/wekan/commit/9536e60bd1c77c8a22e89d2eb2968e11da3a28cd).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.07 2025-10-20 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix Snap Candidate WeKan 8.00-8.06 commit ae01ea5 database directory from /var/snap/wekan/common/wekan back to 8.07 /var/snap/wekan/common](https://github.com/wekan/wekan/commit/98f141d62f3b6d4371d024c72eae6688d0f4e516).
+  Thanks to xet7.
+- [When opening board, add missing lists](https://github.com/wekan/wekan/commit/80777b46638ed15b8194105751499ada4b066d19).
+  Thanks to xet7.
+- [If Snap Candidate MongoDB raw database files were at SNAP_COMMON/wekan, migrate them back to SNAP_COMMON](https://github.com/wekan/wekan/commit/f2019b1059c8d6f4cd9a46c3db7e004c4928cebb).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.06 2025-10-20 WeKan ® release
+
+This release adds the following new features:
+
+- [At Public Board, drag resize list width and swimlane height. For logged in users, fix adding labels](https://github.com/wekan/wekan/commit/351433524708e9a7ccb4795d9ca31a78904943ea).
+  Thanks to xet7.
+- [When opening board, migrate from Shared Lists to Per-Swimlane Lists](https://github.com/wekan/wekan/commit/1e6252de7f26f3af14a99fb63b5dac27ba0576f3).
+  Thanks to xet7.
+- [Added Date Format setting to Opened Card](https://github.com/wekan/wekan/commit/2dd3916f7ee3df10bd88643cf2c796cb166b3044).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fix add and drag drop attachments to minicards and card](https://github.com/wekan/wekan/commit/b06daff4c7e63453643459f7d8798fde97e3200c).
+  Thanks to xet7.
+- [Fix starred, archive and clone icons](https://github.com/wekan/wekan/pull/5953).
+  Thanks to helioguardabaxo.
+- Fix Due dates to be color coded and have unicode icons.
+  [Part 1](https://github.com/wekan/wekan/commit/d965faa3174dc81636106e6f81435b2750b0625f),
+  [Part 2](https://github.com/wekan/wekan/commit/101048339bdd1e45f876aeb1aa5ec32ceda28139).
+  Thanks to xet7.
+- [Fix unable to see My Due Cards](https://github.com/wekan/wekan/commit/66b444e2b0c9b2ed5f98cd1ff0cd9222b2d0c624).
+  Thanks to xet7.
+- Fix drag drop lists.
+  [Part 1](https://github.com/wekan/wekan/commit/324f3f7794aace800022a24deb5fd5fb36ebd384),
+  [Part 2](https://github.com/wekan/wekan/commit/ff516ec696ef499f11b04b30053eeb9d3f96d8d1).
+  Thanks to xet7.
+- [Removed extra pipe characters](https://github.com/wekan/wekan/commit/caa6e615ff3c3681bf2b470a625eb39c6009b825).
+  Thanks to xet7.
+- [Fix syntax error at migrations](https://github.com/wekan/wekan/commit/eb6b42c4c9f99894fd93e62c9b3fceda3429c96c).
+  Thanks to xet7.
+- [Fix opened card attachments button text to be at tooltip, not at opened card](https://github.com/wekan/wekan/commit/1e53125499ef563ca3c65f786ac3525e5f50274c).
+  Thanks to xet7.
+- [Fix Broken Hyperlinks in Markdown to HTML conversion](https://github.com/wekan/wekan/commit/973a49526fdf22c143468d3d9db64269b1defa7d).
+  Thanks to xet7.
+- [Fix migrations](https://github.com/wekan/wekan/commit/0acbf30b0346f49c0ee8f5161fb00b4eca8e1a0c).
+  Thanks to xet7.
+- [Fix card popup to use HTML date, not anymore JQuery date](https://github.com/wekan/wekan/commit/2d44881619d78e8ef4c5060d17e9035f5babd778).
+  Thanks to xet7.
+- [Fix Bug: Scale of Minicard icons is linked to horizontal screensize](https://github.com/wekan/wekan/commit/b6b0c5fe6d7dbd37926c662f96f2e3653cabd867).
+  Thanks to xet7.
+- [Fix Bug Member settings drops to the second line and overlaps when many boards are starred as favourites](https://github.com/wekan/wekan/commit/46d46e313cbb8d9c3e4a976ec27b5141c266050f).
+  Thanks to xet7.
+- [Some mobile view fixes](https://github.com/wekan/wekan/commit/c4af4d03acc02f3e54e91f2a65bce2f88742b1a6).
+  Thanks to xet7.
+- [Have all iPhone use mobile view by default, while still having possibility to use mobile/desktop switch button for desktop mode](https://github.com/wekan/wekan/commit/5df4efd7ba06e618e454f068df05885306283bb1).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.05 2025-10-17 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Show original positions of swimlanes, lists and cards](https://github.com/wekan/wekan/commit/2543df94252c2789fb484ae52b9a6ff298252ceb).
+  Thanks to xet7.
+- Fix popups issues at Edit Avatar, Archive card confirm, etc.
+  [Part 1](https://github.com/wekan/wekan/commit/87ae085e6d0a56a2083eec819cf7d795d3e51e1a),
+  [Part 2](https://github.com/wekan/wekan/commit/386aea7c788d6eaf9d486ead4d81453401adf390).
+  Thanks to xet7.
+- [Changed wekan-boostrap-datepicker to HTML datepicker](https://github.com/wekan/wekan/commit/79b94824efedaa9e256de931fd26398eb2838d6a).
+  Thanks to xet7.
+- [Replaced moment.js with Javascript date](https://github.com/wekan/wekan/commit/cb6afe67a7363af89663ba17392dc5f90a15f703).
+  Thanks to xet7.
+- [Convert Font Awesome to Unicode Icons. Part 1. In Progress](https://github.com/wekan/wekan/commit/2947238a021b6952b56e828d49a8c0094520d89a).
+  Thanks to xet7.
+- [Resize height of swimlane by dragging. Font Awesome to Unicode icons](https://github.com/wekan/wekan/commit/09631d6b0c1b8e3bbc3bf45d4bb65449b46f1288).
+  Thanks to xet7.
+- [Removed not needed visible text from mobile desktop switch button](https://github.com/wekan/wekan/commit/62ede481966107405460f6d5b90f292c98bae254).
+  Thanks to xet7.
+- Font Awesome to Unicode icons.
+  [Part 3](https://github.com/wekan/wekan/commit/3af94c2a9059a399b9f9946c387caff892ace2f9).
+  [Part 4](https://github.com/wekan/wekan/commit/088bc16072ea0dd02aa2dec6a2e3e9aed00a3cc9).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.04 2025-10-16 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Make sure that all cards are visible](https://github.com/wekan/wekan/commit/6b848b318d62afe9772218febdb09c7426774f60).
+  Thanks to xet7.
+- [Fix wide screen](https://github.com/wekan/wekan/commit/f08c7702eecf23588f7bc023beefb453edd704c6).
+  Thanks to xet7.
+- Fix popups positioning.
+  [Part 1](https://github.com/wekan/wekan/commit/77eea4d494e5db8e2c0e59732bcea73aa163bc13),
+  [Part 1](https://github.com/wekan/wekan/commit/00ddec75754bbbccc6fb9b3096495b9609246480).
+  Thanks to xet7.
+- [Remove using fork with MongoDB at Snap](https://github.com/wekan/wekan/commit/690481c138f9629054180310dd172295c7f6d34e).
+  Thanks to xet7.
+- [Use only MongoDB 7 at Snap](https://github.com/wekan/wekan/commit/79e83e33ec1dcec4eea81d5fb4a9f7381c176a12).
+  Thanks to xet7.
+- [Removed extra npm packages](https://github.com/wekan/wekan/commit/dd88483ec7526eee4a97bac5f09e03985be5d923).
+  Thanks to xet7.
+- [Try to fix Broken Hyperlinks in Markdown to HTML conversion](https://github.com/wekan/wekan/commit/bbbd3abf06e45a3fa57c4aa987d87f1873eb11d6).
+  Thanks to xet7.
+- [Disable not working minio and s3 support temporarily](https://github.com/wekan/wekan/commit/4283b5b0e330930fff1fa2bb73c355a4ffb4cda0).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.03 2025-10-14 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fix Snap MongoDB to not fork at systemd, so it stays running](https://github.com/wekan/wekan/commit/5792a869594b4c79a93db414b95a13d60013193b).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.02 2025-10-14 WeKan ® release
+
+This release adds the following new features:
+
+- [Run database migrations when opening board. Not when upgrading WeKan](https://github.com/wekan/wekan/commit/2b5c56484a4dd559f062ef892fd5248a903b2a10).
+  Thanks to xet7.
+- [Added Cron Manager to Admin Panel for long running jobs, like running migrations when opening board, copying or moving boards swimlanes lists cards etc](https://github.com/wekan/wekan/commit/da68b01502afc9d5d9ea1267bee9fc98bb08b611).
+  Thanks to xet7.
+- [If there is no cron jobs running, run migrations for boards that have not been opened yet](https://github.com/wekan/wekan/commit/317138ab7209a41715336ea8251df45f11a6d173).
+  Thanks to xet7.
+- [Accessibility improvements](https://github.com/wekan/wekan/commit/67b078b8056ec9851caaf6ef855719de1e6d966d).
+  Thanks to xet7.
+- [Change list width by dragging between lists](https://github.com/wekan/wekan/commit/abad8cc4d5dded0f5e1a80892a3b29aa71404a5c).
+  Thanks to xet7.
+
+and adds the following updates:
+
+- [Updated dependencies](https://github.com/wekan/wekan/commit/5bc03b23ea34816d8e1135cbe9ed5f18a2573854).
+  Thanks to developers of dependencies.
+
+and fixes the following bugs:
+
+- [Fixes to make board showing correctly](https://github.com/wekan/wekan/commit/bd8c565415998c9aaded821988d591105258b378).
+  Thanks to xet7.
+- [Fix opening sidebar](https://github.com/wekan/wekan/commit/0fd781e80aaf841c26ce59caffc579b9c391330f).
+  Thanks to xet7.
+- [Fix Admin Panel menus "Attachment Settings" and "Cron Settings" and make them translateable](https://github.com/wekan/wekan/commit/033919a2702fa6959b8f8c87f076d3f255ace6ba).
+  Thanks to xet7.
+- Change Admin Panel "Attachment Settings" and "Cron Settings" options to be tabs, not submenu.
+  [Part 1](https://github.com/wekan/wekan/commit/ae2aa1f5cd2511e80e12a91426eb91bb968dff98),
+  [Part 2](https://github.com/wekan/wekan/commit/5a6faafa30fefcd5dd0af7cc52b847a54d538065),
+  [Part 3](https://github.com/wekan/wekan/commit/2148aeea42f69fa367bf8c451d7f1c3a63b52880).
+  Thanks to xet7.
+- [Fixed Error in migrate-lists-to-per-swimlane migration](https://github.com/wekan/wekan/commit/cc99da5357fb1fc00e3b5aece20c57917f88301b).
+  Thanks to xet7.
+- Fix Admin Panel Settings menu to show Attachments and Cron options correctly.
+  [Part 1](https://github.com/wekan/wekan/e0013b9b631eb16861b1cfdb25386bf8e9099b4e),
+  [Part 2](https://github.com/wekan/wekan/7bb1e24bda2ed9db0bad0fafcf256680c2c05e8a).
+- [Fixed migrations](https://github.com/wekan/wekan/commit/63c314ca185aeda650c01b4a67fcde1067320d22).
+  Thanks to xet7.
+- [Removed not needed console log message](https://github.com/wekan/wekan/commit/0a34ee1b6437dcfd65e31d9bbc9f3ccfa5718ba9).
+  Thanks to xet7.
+- [Updated mobile Bookmarks/Starred boards. Part 1. In Progress](https://github.com/wekan/wekan/commit/da98942cce37363d6062695d3c4cf7e2df796cac).
+  Thanks to xet7.
+- [Fix drag drop reorder swimlanes](https://github.com/wekan/wekan/commit/a4518bbefc99be74f7ccfdbb9fdf902007ca90f3).
+  Thanks to xet7.
+- [Try to fix swimlane hamburger menu popup positioning. In progress](https://github.com/wekan/wekan/commit/d4f13de1d978b271d05e1d67d40e3c1c14761578).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.01 2025-10-11 WeKan ® release
+
+This release adds the following new features:
+
+- [Made possible to start WeKan immediately without running any database migrations](https://github.com/wekan/wekan/commit/3ccdc2e3070978a79bc68941375122504318677d).
+  Thanks to xet7.
+- [Add support for MongoDB 3-8 client, detecting which one is in use](https://github.com/wekan/wekan/commit/74ccfea5703b08b2166593d1bb8e1d981970cec0).
+  Thanks to xet7.
+- [Add support for Snap MongoDB Server 3-8 support. Part 1](https://github.com/wekan/wekan/commit/b949357e665d97604cbecb04a9211319ac4e13c2).
+  Thanks to xet7.
+- [Added attachments API and admin panel attachment management for file storage backends settings. Fixed drag drop upload attachments from file manager to minicard or opened card](https://github.com/wekan/wekan/commit/ae1f80a52cde09689dddb1209708630b4949b7ee).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- [Fixed attachments migrations at Admin Panel to not use too much CPU while migrating attachments](https://github.com/wekan/wekan/commit/d59683eff1267ff87a6aef9ae36c7aebbe10eaa1).
+  Thanks to xet7.
+- [Fixed per-card and per-board settings of showing checkist at minicard](https://github.com/wekan/wekan/commit/fc32a89292e4d314bd3868739f6e01bc2bc17018).
+  Thanks to xet7.
+- [Fix count of Orgs Teams People at Admin Panel](https://github.com/wekan/wekan/commit/b77eed221f9e5fc657234a6de3e11c27f4de3d38).
+  Thanks to xet7.
+- [Fixed attachments and minicard related bugs that prevented WeKan starting](https://github.com/wekan/wekan/commit/a86ff1e8d03d330a7ea0702cf3677859ed552509).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v8.00 2025-10-11 WeKan ® release
+
+This release adds the following new features:
+
+- [Snap: Migrate MongoDB from 3 to 7 only when "snap set wekan migrate-mongodb='true'". Not automatically](https://github.com/wekan/wekan/commit/ae01ea576c3073acbc181a5b19008ddaea4700e1).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v7.99 2025-10-11 WeKan ® release
+
+This release fixed the following bugs:
+
+- [Improve automatic Snap upgrades](https://github.com/wekan/wekan/commit/aab671398c7ee3d7ea4934c6c9c977ad630fa74f).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v7.98 2025-10-11 WeKan ® release
+
+This release fixes the following CRITICAL SECURITY ISSUES:
+
+- [Security Fix: IDOR CWE-639 that affected WeKan 7.80-7.93](https://github.com/wekan/wekan/commit/b87cff1289d2c98ef84d69e171f112ecedb4d843).
+  Thanks to Romain Korpas at apitech.fr and xet7.
+- [Security Fix: Computational Resource Abuse in Export endpoints](https://github.com/wekan/wekan/commit/d0f118e7af0b2ede517d6d051226c38fa8e557b6).
+  Thanks to Anynymous Security Researcher and xet7.
+- [Security Fix FG-VD-22-078: Prevent SVG Billion Laughs Attack](https://github.com/wekan/wekan/commit/30c1597b658b0ef50fd2efc56786e8b0f08ac72c).
+  Thanks to Nguyen Thanh Nguyen of Fortinet's FortiGuard Labs and xet7.
+- [Security Fix usd-2022-0041: CWE-284 Improper Access Control](https://github.com/wekan/wekan/commit/f6591d7820e01075cba93612a5fdbf692fbe49dc).
+  Thanks to Christian Pöschl of usd AG and xet7.
+- [Security Fix JVN#14269684: Broken access control](https://github.com/wekan/wekan/commit/9720e703fd9432bf0e1bfea2358f8c7ea078f1b1).
+  Thanks to Ryoya Koyama of Mitsui Bussan Secure Directions, Inc and xet7.
+- [Security Fix JVN#74210258: Stored XSS](https://github.com/wekan/wekan/commit/e1fa607f87d821accb846f2deef1f388003848d1).
+  Thanks to Ryoya Koyama of Mitsui Bussan Secure Directions, Inc and xet7.
+- [Security Fix JVN#86586539: Stored XSS](https://github.com/wekan/wekan/commit/ee79cab7b27f73fab62a00ec49add73fd6f7bcaa).
+  Thanks to Ryoya Koyama of Mitsui Bussan Secure Directions, Inc and xet7.
+- [Security Fix JVN#15385465: CWE-79 XSS, that affected WeKan 7.94](https://github.com/wekan/wekan/commit/81c3dc1d956cd7040655940f6569653d7b98fa9a).
+  Thanks to Sho Sugiyama and xet7.
+- Security Fix JVN#80785288: CWE-79 XSS, that affected WeKan 3.94 and v3.95. This was already previously fixed.
+  Thanks to xet7.
+
+and adds the following new features:
+
+- [Mobile one board per row. Board zoom size percent. Board toggle mobile/desktop mode. In Progress](https://github.com/wekan/wekan/commit/752699d1c2fb8ea9ff0f3ec9ae0b2b776443d826).
+  Thanks to xet7.
+- Drag any files from file manager to minicard or opened card.
+  [Part 1](https://github.com/wekan/wekan/commit/3e9481c5bd2c02ba501bd0a6ef1d1e6ce82bb1d9),
+  [Part 2](https://github.com/wekan/wekan/commit/cdd7d69c660d0b6ac06b7b75d4f59985b8a9322a).
+  Thanks to xet7.
+- [Use attachments from old CollectionFS database structure, when not yet migrated to Meteor-Files/ostrio-files, without needing to migrate database structure](https://github.com/wekan/wekan/commit/a8de2f224f61d0e5c7061fefb1cdd4f45f3bb020).
+  Thanks to xet7.
+- [Show console.log 'Legacy attachments route loaded' only when environment variable DEBUG=true](https://github.com/wekan/wekan/commit/1c84b19f246ebe6d3cad4f56726013147756d9c3).
+  Thanks to xet7.
+- [Make possible for lists to have different names at different swimlanes. Make possible to drag list from one swimlane to another swimlane](https://github.com/wekan/wekan/commit/719ef87efceacfe91461a8eeca7cf74d11f4cc0a).
+  Thanks to xet7.
+- [Add support for Docker/Compose Secrets for passwords to Docker/Snap/Bundle platforms](https://github.com/wekan/wekan/commit/107e2ac90043138ea8aa09aadd92f4af355289c0).
+  Thanks to Roemer and xet7.
+- Add Snap automatic upgrades.
+  [Part 1](https://github.com/wekan/wekan/commit/0549bc0b0c7dd4a5db53d645662dd4362ef4d1f3),
+  [Part 2](https://github.com/wekan/wekan/commit/f1e1fd359364dbe6366501ac4f6a150d73509f17).
+  Thanks to xet7.
+
+and fixes the following bugs:
+
+- Fix DOMPurify paths.
+  [Part 1](https://github.com/wekan/wekan/commit/90899f0928274cbc30ed3d6df0227664efcd2584),
+  [Part 2](https://github.com/wekan/wekan/commit/77691244018f3a1e44c28973b40a363bf77f99b2),
+  [Part 3](https://github.com/wekan/wekan/commit/21ba0a96066a495e885fcf186f026cf1c7ddf45d),
+  [Part 4](https://github.com/wekan/wekan/commit/2119c6ab0c2d76c8a9b22fa712b35b38345fc040).
+  Thanks to xet7.
+- [Fix sizes of drag handles at desktop mode](https://github.com/wekan/wekan/commit/734165f3c78e9ba9643826da62f78844273f18f6).
+  Thanks to xet7.
+- [Fixed showing translations always, regardsless of is ROOT_URL set correctly or not](https://github.com/wekan/wekan/commit/1a7bd65e596a4a1030e2686a787186b6d1c61abe).
+  Thanks to xet7.
+- [Snap: Removed double mongo3 that's already at migratemongo](https://github.com/wekan/wekan/commit/2a24918a9c31e541f4d6424b77cfd76a8d9f2b06).
+  Thanks to xet7.
+- [Updated release scripts of snapcraft pack command syntax](https://github.com/wekan/wekan/commit/d88d197de964fd71e61ea6c932521f1e5abe7630).
+  Thanks to xet7.
+- [Try to fix Snap automatic upgrade](https://github.com/wekan/wekan/commit/4ec4e19e637b86b05b11afd076fae09d3698b8de).
+  Thanks to xet7.
+- [Added missing metadata fields to snapcraft.yaml](https://github.com/wekan/wekan/commit/cd948fb5765efdf5a7d792180a25ffa26bab2730).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v7.97 2025-10-08 WeKan ® release
+
+This release fixes the following bugs:
+
+- [Fixed Collapse button not there when using clearlight board theme](https://github.com/wekan/wekan/pull/5900).
+  Thanks to seve12.
+- [Fixed translation of "Change Language" at login page](https://github.com/wekan/wekan/commit/9a31371de0e155d3144769f45a1fa216872935eb).
+  Thanks to xet7.
+- [Some mobile and tablet fixes. Show drag handles at touch screens only. No toggle of drag handles anymore](https://github.com/wekan/wekan/commit/3fda90612d88fc5a8f1e17ae5c399745de06aada).
+  Thanks to xet7.
+- [Removed white box that appeared when clicking something](https://github.com/wekan/wekan/commit/3814a218c2dab3ed9e8908c3a2de996ffebf6d9d).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v7.96 2025-10-07 WeKan ® release
+
+This release adds the following updates:
+
+- [Updated release script for new command of uploading snap package to Snap Store](https://github.com/wekan/wekan/commit/dec9b82da0d700aafd7e2b2063b5d5b07dd383c3).
+  Thanks to xet7.
+- [Updated to MongoDB 7.0.25 at Snap Candidate](https://github.com/wekan/wekan/commit/dec038e7edce11e2ce59de974aa870d7266af33b).
+  Thanks to MongoDB developers.
+
+and fixes the following bugs:
+
+- [Added missing mobile drag drop image to docs from wekan.github.io git history](https://github.com/wekan/wekan/commit/5151814e98599c22fff98dc7c42fbf634004ab20).
+  Thanks to xet7.
+- [Fix links in docker-compose.yml to point to doc in repo](https://github.com/wekan/wekan/pull/5882).
+  Thanks to Skylark13.
+- [Fixed find.sh script errors about unmatched single quotes and binary files that are now ignored](https://github.com/wekan/wekan/commit/730bb6d166baa5530cc75b4c94ae46c8077884b0).
+  Thanks to xet7.
+- [Fixed links at docs](https://github.com/wekan/wekan/commit/6f2b89121402df8ecba88295ad09f5c4179ab0ed).
+  Thanks to xet7.
+- [Added missing screenshots from wekan.github.io history to wekan/docs/Features/](https://github.com/wekan/wekan/commit/9a7fa25ca33d4267e193f0f9bb97b09c490e44fe).
+  Thanks to xet7.
+- [Some accessibility, saving, downloading and editor fixes](https://github.com/wekan/wekan/pull/5895).
+  Thanks to seve12.
+- [Hide extra keyboard shortcuts toggle](https://github.com/wekan/wekan/commit/62ad588aa982cd4305a8817cf21f0818234f4354).
+  Thanks to xet7.
+
+Thanks to above GitHub users for their contributions and translators for their translations.
+
+# v7.95 2025-09-18 WeKan ® release
 
 This release adds the following updates:
 
@@ -35,6 +10135,12 @@ This release adds the following updates:
   Thanks to xet7.
 - [Added more info to Windows Offline docs about WRITABLE_PATH and ATTACHMENTS_STORE_PATH](https://github.com/wekan/wekan/pull/5872).
   Thanks to sowwos.
+- [Added PGP public key for sending encrypted email](https://github.com/wekan/wekan/commit/dd80b7308bb6c66113c8e6009c442a44a29e477a).
+  Thanks to xet7.
+- [Updated dependencies](https://github.com/wekan/wekan/commit/c4161c5ce69a35c76364b13bcc456905f6335162).
+  Thanks to developers of dependencies.
+- [Replace bitnami mongodb Helm chart by groundhog2k one](https://github.com/wekan/charts/pull/44).
+  Thanks to ariep.
 
 Thanks to above GitHub users for their contributions and translators for their translations.
 
@@ -2574,7 +12680,7 @@ Thanks to above GitHub users for their contributions and translators for their t
 
 # v6.86 2023-04-26 WeKan ® release
 
-This release fixes the following CRITICAL SECURITY FIXES:
+This release fixes the following CRITICAL SECURITY ISSUES:
 
 - [Security fix to InvisibleBleed in WeKan. Escape HTML comment tags so that HTML comments are visible](https://github.com/wekan/wekan/commit/167863d95711249e69bb3511175d73b34acbbdb3).
   Thanks to xet7 for fixing.
@@ -2610,7 +12716,7 @@ Thanks to above GitHub users for their contributions and translators for their t
 
 # v6.85 2023-04-18 WeKan ® release
 
-This release adds the following CRITICAL SECURITY FIXES:
+This release fixes the following CRITICAL SECURITY ISSUES:
 
 - [Security fix to ReactionBleed in WeKan. It is XSS in feature "Reaction to comment"](https://github.com/wekan/wekan/commit/47ac33d6c234359c31d9b5eae49ed3e793907279).
   Thanks to Alexander Starikov at Jet Infosystems (https://jetinfosystems.com/) for reporting and fixing.
@@ -2790,7 +12896,7 @@ Thanks to above GitHub users for their contributions and translators for their t
 
 This release fixes the following CRITICAL SECURITY ISSUES:
 
-- Security Fix of Filebleed in WeKan. That is XSS in filename.
+- Security Fix of FileBleed in WeKan. That is XSS in filename.
   [Part 1](https://github.com/wekan/wekan/commit/ff993e7c917b5650a790238e95c78001e4f0e039),
   [Part 2](https://github.com/wekan/wekan/commit/382168a5b428a7124d368c4fcb37e7e140e7ec8b).
   Thanks to responsible security disclosure contributors and xet7.
@@ -4472,7 +14578,7 @@ Thanks to above GitHub users for their contributions and translators for their t
 
 # v5.88 2021-12-22 WeKan ® release
 
-This release adds to following CRITICAL SECURITY FIXES:
+This release fixes to following CRITICAL SECURITY ISSUES:
 
 - [User now should only see archived cards belonging to boards to which he has permission](https://github.com/wekan/wekan/pull/4252).
   Thanks to jrsupplee.
@@ -6160,7 +16266,7 @@ Thanks to above GitHub users for their contributions and translators for their t
 
 # v4.98 2021-02-24 Wekan release
 
-This release adds the following CRITICAL SECURITY FIXES:
+This release fixes the following CRITICAL SECURITY ISSUES:
 
 - [Updated Node.js to v12.21.0](https://github.com/wekan/wekan/commit/fde6a6593379277d601408ec83f6f5a4347afef0).
   Thanks to Node.js developers.
@@ -6698,7 +16804,7 @@ Thanks to above GitHub users for their contributions and translators for their t
 
 # v4.75 2021-01-11 Wekan release
 
-This release adds the following CRITICAL SECURITY FIXES:
+This release fixes the following CRITICAL SECURITY ISSUES:
 
 - [Due Cards and Broken Cards: In All Users view, fixed to show cards only from other users Public Boards. Not anymore from private
   boards](https://github.com/wekan/wekan/commit/801d0aacf00eace05ec70d6f0229f2a752f119cd).
@@ -6780,7 +16886,7 @@ Thanks to above GitHub users for their contributions and translators for their t
 
 # v4.70 2021-01-04 Wekan release
 
-This release adds the following CRITICAL SECURITY FIXES:
+This release fixes the following CRITICAL SECURITY ISSUES:
 
 - [Upgrade to Node.js 12.20.1](https://github.com/wekan/wekan/commit/4bfe017b08f573991fd1f9229ae53573798f475e).
   Thanks to Node developers.

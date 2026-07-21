@@ -5,7 +5,7 @@
 
 ----
 
-[Caddy 2 .well-known/assetlinks.json config for WeKan Android Play Store app](../PWA#fullscreen-android-app-with-caddy-and-wekan-server)
+[Caddy 2 .well-known/assetlinks.json config for WeKan Android Play Store app](../Browsers/PWA.md#fullscreen-android-app-with-caddy-and-wekan-server)
 
 # CloudFlare DNS
 
@@ -22,17 +22,17 @@ Wildcard:
 
 Wildcard DNS for Sandstorm only works with CloudFlare DNS.
 It does not work with FreeDNS of Namecheap. More info at
-https://github.com/wekan/wekan/wiki/Sandstorm
+[Sandstorm](../Platforms/FOSS/Sandstorm/Sandstorm.md)
 
 ## Caddy 2
 
-WeKan Snap Candidate for any Snap distros: https://github.com/wekan/wekan/wiki/OpenSuse , disable internal old Caddy 1, when using Caddy 2:
+WeKan Snap Candidate for any Snap distros: [OpenSuse](../Platforms/FOSS/OpenSuse.md) , disable internal old Caddy 1, when using Caddy 2:
 ```
 sudo snap set wekan caddy-enabled='false'
 sudo snap set wekan port='3001'
 sudo snap set wekan root-url='https://boards.example.com'
 ```
-More info about root-url at https://github.com/wekan/wekan/wiki/Settings
+More info about root-url at [Settings](Settings.md)
 
 Browser needs to have only one language https://github.com/wekan/wekan/issues/4803#issuecomment-1374354425
 
@@ -543,7 +543,7 @@ boards.wekan.team {
 
 ***
 
-[Caddy OAuth2 with Let's Encrypt SSL example](OAuth2)
+[Caddy OAuth2 with Let's Encrypt SSL example](../Login/OAuth2.md)
 
 ***
 

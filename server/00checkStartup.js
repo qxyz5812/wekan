@@ -1,3 +1,4 @@
+import '../models/users';
 const fs = require('fs');
 const os = require('os');
 
@@ -24,3 +25,26 @@ if (errors.length > 0) {
   console.error("\n\n");
   process.exit(1);
 }
+
+// Import cron job storage for persistent job tracking
+// import './cronJobStorage';
+
+// Import migrations - COMMENTED OUT
+// import './migrations/fixMissingListsMigration';
+// import './migrations/fixAvatarUrls';
+// import './migrations/fixAllFileUrls';
+// import './migrations/comprehensiveBoardMigration';
+
+// Import file serving routes
+import './routes/universalFileServer';
+import './routes/customHeadAssets';
+
+// Import server-side custom head rendering
+import './lib/customHeadRender';
+
+// Import users for methods
+import './import-users-for-methods';
+
+// Note: Automatic migrations are disabled - migrations only run when opening boards
+// import './boardMigrationDetector';
+// import './cronMigrationManager';

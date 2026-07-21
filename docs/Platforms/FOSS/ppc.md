@@ -4,7 +4,7 @@
 - [University of Campinas - Unicamp Minicloud](https://openpower.ic.unicamp.br), that was before available, but now is closed
 
 [xet7](https://github.com/xet7), as maintainer of [Wekan](https://wekan.fi), got access to ppc64le at
-at University of Campinas - Unicamp Minicloud. Unicamp is member of [OpenPOWER Foundation](https://openpowerfoundation.org). At Minicloud OpenStack, xet7 created Ubuntu 20.10 VM, and at 2020-12-22 ported Wekan to ppc64le very similarly like previously for [s390x](s390x).
+at University of Campinas - Unicamp Minicloud. Unicamp is member of [OpenPOWER Foundation](https://openpowerfoundation.org). At Minicloud OpenStack, xet7 created Ubuntu 20.10 VM, and at 2020-12-22 ported Wekan to ppc64le very similarly like previously for [s390x](s390x.md).
 
 ## Installing MongoDB on OpenPower Ubuntu 20.04 ppc64le
 
@@ -46,15 +46,15 @@ mongo
 
 ## Install
 
-Installing is similar like at https://github.com/wekan/wekan/wiki/Raspberry-Pi
+Installing is similar like at [Raspberry Pi](RaspberryPi/Raspberry-Pi.md)
 
 You can start it with start-wekan.sh from https://github.com/wekan/wekan or add SystemD service.
 
-Setup ROOT_URL like described at https://github.com/wekan/wekan/wiki/Settings
+Setup ROOT_URL like described at [Settings](../../Webserver/Settings.md)
 
-At https://github.com/wekan/wekan/wiki is also info about Caddy/Nginx/Apache etc.
+At [Wekan documentation](../../README.md) is also info about Caddy/Nginx/Apache etc.
 
-Some related links also at https://github.com/wekan/wekan/wiki/Platforms
+Some related links also at [Platforms](Platforms.md)
 
 ## How this ppc64le bundle package was created
 

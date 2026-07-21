@@ -1,6 +1,8 @@
+import { Mongo } from 'meteor/mongo';
 import { ReactiveCache } from '/imports/reactiveCache';
+const { SimpleSchema } = require('/imports/simpleSchema');
 
-Org = new Mongo.Collection('org');
+const Org = new Mongo.Collection('org');
 
 /**
  * A Organization in Wekan. A Enterprise in Trello.
@@ -53,12 +55,34 @@ Org.attachSchema(
       type: Boolean,
       optional: true,
     },
+    orgSharedTemplates: {
+      /**
+       * #5850: members may drag personal Template Boards onto this org to share
+       * (per-org form of "Shared Templates for Organizations"). Off by default.
+       */
+      type: Boolean,
+      optional: true,
+    },
+    orgPropagateMembersToBoards: {
+      /**
+       * #4737: add this org's members to the boards that list this org. Off by default.
+       */
+      type: Boolean,
+      optional: true,
+    },
+    orgSyncMembersFromAuth: {
+      /**
+       * #4737: this org's membership is maintained by the authentication
+       * provider's group/membership sync (LDAP, OAuth2/OIDC, SAML, etc.). Off by default.
+       */
+      type: Boolean,
+      optional: true,
+    },
     createdAt: {
       /**
        * creation date of the organization
        */
       type: Date,
-      denyUpdate: false,
       // eslint-disable-next-line consistent-return
       autoValue() {
         if (this.isInsert) {
@@ -72,7 +96,6 @@ Org.attachSchema(
     },
     modifiedAt: {
       type: Date,
-      denyUpdate: false,
       // eslint-disable-next-line consistent-return
       autoValue() {
         if (this.isInsert || this.isUpsert || this.isUpdate) {
@@ -84,218 +107,5 @@ Org.attachSchema(
     },
   }),
 );
-
-if (Meteor.isServer) {
-  Org.allow({
-    insert(userId, doc) {
-      const user = ReactiveCache.getUser(userId) || ReactiveCache.getCurrentUser();
-      if (user?.isAdmin)
-        return true;
-      if (!user) {
-        return false;
-      }
-      return doc._id === userId;
-    },
-    update(userId, doc) {
-      const user = ReactiveCache.getUser(userId) || ReactiveCache.getCurrentUser();
-      if (user?.isAdmin)
-        return true;
-      if (!user) {
-        return false;
-      }
-      return doc._id === userId;
-    },
-    remove(userId, doc) {
-      const user = ReactiveCache.getUser(userId) || ReactiveCache.getCurrentUser();
-      if (user?.isAdmin)
-        return true;
-      if (!user) {
-        return false;
-      }
-      return doc._id === userId;
-    },
-    fetch: [],
-  });
-
-
-  Meteor.methods({
-    setCreateOrg(
-      orgDisplayName,
-      orgDesc,
-      orgShortName,
-      orgAutoAddUsersWithDomainName,
-      orgWebsite,
-      orgIsActive,
-    ) {
-      if (ReactiveCache.getCurrentUser()?.isAdmin) {
-        check(orgDisplayName, String);
-        check(orgDesc, String);
-        check(orgShortName, String);
-        check(orgAutoAddUsersWithDomainName, String);
-        check(orgWebsite, String);
-        check(orgIsActive, Boolean);
-
-        const nOrgNames = ReactiveCache.getOrgs({ orgShortName }).length;
-        if (nOrgNames > 0) {
-          throw new Meteor.Error('orgname-already-taken');
-        } else {
-          Org.insert({
-            orgDisplayName,
-            orgDesc,
-            orgShortName,
-            orgAutoAddUsersWithDomainName,
-            orgWebsite,
-            orgIsActive,
-          });
-        }
-      }
-    },
-    setCreateOrgFromOidc(
-      orgDisplayName,
-      orgDesc,
-      orgShortName,
-      orgAutoAddUsersWithDomainName,
-      orgWebsite,
-      orgIsActive,
-    ) {
-      check(orgDisplayName, String);
-      check(orgDesc, String);
-      check(orgShortName, String);
-      check(orgAutoAddUsersWithDomainName, String);
-      check(orgWebsite, String);
-      check(orgIsActive, Boolean);
-
-      const nOrgNames = ReactiveCache.getOrgs({ orgShortName }).length;
-      if (nOrgNames > 0) {
-        throw new Meteor.Error('orgname-already-taken');
-      } else {
-        Org.insert({
-          orgDisplayName,
-          orgDesc,
-          orgShortName,
-          orgAutoAddUsersWithDomainName,
-          orgWebsite,
-          orgIsActive,
-        });
-      }
-    },
-    setOrgDisplayName(org, orgDisplayName) {
-      if (ReactiveCache.getCurrentUser()?.isAdmin) {
-        check(org, Object);
-        check(orgDisplayName, String);
-        Org.update(org, {
-          $set: { orgDisplayName: orgDisplayName },
-        });
-        Meteor.call('setUsersOrgsOrgDisplayName', org._id, orgDisplayName);
-      }
-    },
-
-    setOrgDesc(org, orgDesc) {
-      if (ReactiveCache.getCurrentUser()?.isAdmin) {
-        check(org, Object);
-        check(orgDesc, String);
-        Org.update(org, {
-          $set: { orgDesc: orgDesc },
-        });
-      }
-    },
-
-    setOrgShortName(org, orgShortName) {
-      if (ReactiveCache.getCurrentUser()?.isAdmin) {
-        check(org, Object);
-        check(orgShortName, String);
-        Org.update(org, {
-          $set: { orgShortName: orgShortName },
-        });
-      }
-    },
-
-    setAutoAddUsersWithDomainName(org, orgAutoAddUsersWithDomainName) {
-      if (ReactiveCache.getCurrentUser()?.isAdmin) {
-        check(org, Object);
-        check(orgAutoAddUsersWithDomainName, String);
-        Org.update(org, {
-          $set: { orgAutoAddUsersWithDomainName: orgAutoAddUsersWithDomainName },
-        });
-      }
-    },
-
-    setOrgIsActive(org, orgIsActive) {
-      if (ReactiveCache.getCurrentUser()?.isAdmin) {
-        check(org, Object);
-        check(orgIsActive, Boolean);
-        Org.update(org, {
-          $set: { orgIsActive: orgIsActive },
-        });
-      }
-    },
-    setOrgAllFieldsFromOidc(
-      org,
-      orgDisplayName,
-      orgDesc,
-      orgShortName,
-      orgAutoAddUsersWithDomainName,
-      orgWebsite,
-      orgIsActive,
-    ) {
-      check(org, Object);
-      check(orgDisplayName, String);
-      check(orgDesc, String);
-      check(orgShortName, String);
-      check(orgAutoAddUsersWithDomainName, String);
-      check(orgWebsite, String);
-      check(orgIsActive, Boolean);
-      Org.update(org, {
-        $set: {
-          orgDisplayName: orgDisplayName,
-          orgDesc: orgDesc,
-          orgShortName: orgShortName,
-          orgAutoAddUsersWithDomainName: orgAutoAddUsersWithDomainName,
-          orgWebsite: orgWebsite,
-          orgIsActive: orgIsActive,
-        },
-      });
-      Meteor.call('setUsersOrgsOrgDisplayName', org._id, orgDisplayName);
-    },
-    setOrgAllFields(
-      org,
-      orgDisplayName,
-      orgDesc,
-      orgShortName,
-      orgAutoAddUsersWithDomainName,
-      orgWebsite,
-      orgIsActive,
-    ) {
-      if (ReactiveCache.getCurrentUser()?.isAdmin) {
-        check(org, Object);
-        check(orgDisplayName, String);
-        check(orgDesc, String);
-        check(orgShortName, String);
-        check(orgAutoAddUsersWithDomainName, String);
-        check(orgWebsite, String);
-        check(orgIsActive, Boolean);
-        Org.update(org, {
-          $set: {
-            orgDisplayName: orgDisplayName,
-            orgDesc: orgDesc,
-            orgShortName: orgShortName,
-            orgAutoAddUsersWithDomainName: orgAutoAddUsersWithDomainName,
-            orgWebsite: orgWebsite,
-            orgIsActive: orgIsActive,
-          },
-        });
-        Meteor.call('setUsersOrgsOrgDisplayName', org._id, orgDisplayName);
-      }
-    },
-  });
-}
-
-if (Meteor.isServer) {
-  // Index for Organization name.
-  Meteor.startup(() => {
-    // Org._collection.createIndex({ name: -1 });
-    Org._collection.createIndex({ orgDisplayName: 1 });
-  });
-}
 
 export default Org;

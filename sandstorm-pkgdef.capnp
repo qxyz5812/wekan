@@ -22,10 +22,10 @@ const pkgdef :Spk.PackageDefinition = (
     appTitle = (defaultText = "Wekan"),
     # The name of the app as it is displayed to the user.
 
-    appVersion = 794,
+    appVersion = 1010,
     # Increment this for every release.
 
-    appMarketingVersion = (defaultText = "7.94.0~2025-08-18"),
+    appMarketingVersion = (defaultText = "10.10~2026-07-21"),
     # Human-readable presentation of the app version.
 
     minUpgradableAppVersion = 0,
@@ -241,7 +241,10 @@ const myCommand :Spk.Manifest.Command = (
     #---------------------------------------------------------------------
     (key = "NODE_OPTIONS", value = "--max_old_space_size=4096"),
     (key = "PATH", value = "/usr/local/bin:/usr/bin:/bin"),
-    (key = "WRITABLE_PATH", value = "/var/wekan-uploads"),
+    # Files root for the Node24/FerretDB build: attachments/, avatars/ and the
+    # FerretDB SQLite db/ live under /var/files (start.js also exports this). See
+    # docs/Platforms/FOSS/Sandstorm/Meteor3/Migration.md.
+    (key = "WRITABLE_PATH", value = "/var/files"),
     (key = "RESULTS_PER_PAGE", value = ""),
     (key = "WITH_API", value = "true"),
     (key = "RICHER_CARD_COMMENT_EDITOR", value="false"),

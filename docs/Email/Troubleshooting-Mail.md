@@ -1,10 +1,13 @@
+{% raw %}
+<!-- Contains a literal {{variable}} code example; wrap in raw so Jekyll's
+     Liquid engine does not try to evaluate it when building GitHub Pages. -->
 [Azure Email Communication Service](https://github.com/wekan/wekan/issues/5453)
 
 [Uberspace Email](https://github.com/wekan/wekan/issues/2009#issuecomment-1017630758)
 
 ## Newest Wekan
 
-In [Wekan v5.02](https://github.com/wekan/wekan/blob/main/CHANGELOG.md#v502-2021-03-02-wekan-release) is fix for STMP settings [that works with very happy feedback](https://github.com/wekan/wekan/issues/3529#issuecomment-789085999). It requires:
+In [Wekan v5.02](../../CHANGELOG.md#v502-2021-03-02-wekan-release) is fix for STMP settings [that works with very happy feedback](https://github.com/wekan/wekan/issues/3529#issuecomment-789085999). It requires:
 - **There is no email settings at Admin Panel anymore**
 - Email settings are made only with snap commands like `sudo snap set wekan mail-url....` or similar in Docker/Source etc `MAIL_URL=...`, more details below.
 - For any errors like SSLv3 and STARTTLS, check [newest AWS SES info](#example-aws-ses) and use similar settings, other SSLv3/STARTTLS info could be outdated.
@@ -37,7 +40,7 @@ sudo snap set wekan mail-url='smtp://USER%40DOMAIN:PASSWORD@127.0.0.1:1025?ignor
 ```
 let htmlText = Assets.getText("emailTemplate.html");
 let modifiedText = htmlText.replace(new RegExp("{{variable}}", 'g'), variable);
-Email.send({
+await Email.sendAsync({
             from: "nobody@example.com",
             to: email,
             subject: `subject`,
@@ -47,7 +50,7 @@ Email.send({
 
 ## Debugging your SMTP mail server
 
-If you can't get your email server working with smtp/stmps or MAIL_SERVICE, look is there more config options for your email server at https://nodemailer.com docs, and add new issue about your email server to https://github.com/wekan/wekan/issues or [pull request](Emoji#how-you-could-add-another-plugin).
+If you can't get your email server working with smtp/stmps or MAIL_SERVICE, look is there more config options for your email server at https://nodemailer.com docs, and add new issue about your email server to https://github.com/wekan/wekan/issues or [pull request](../Features/Editor/Emoji.md#how-you-could-add-another-plugin).
 
 For example, for https://nodemailer.com/smtp/ 
 
@@ -79,7 +82,7 @@ let info = transporter.sendMail({
 ```
 
 
-If with some code example sending email works, xet7 can add it to wekan, like in [Wekan v5.52](https://github.com/wekan/wekan/blob/main/CHANGELOG.md#v552-2021-08-26-wekan-release) xet7 added direct nodemailer usage for MAIL_SERVICE.
+If with some code example sending email works, xet7 can add it to wekan, like in [Wekan v5.52](../../CHANGELOG.md#v552-2021-08-26-wekan-release) xet7 added direct nodemailer usage for MAIL_SERVICE.
 
 ## MAIL_SERVICE (not currently in use)
 
@@ -301,7 +304,7 @@ Mail configuration if done by settings of `MAIL_URL` & `MAIL_FROM` environment p
 
 ## No mail server
 
-You can choose to _NOT_ configure a mail server, by not providing the `MAIL_URL` & `MAIL_FROM` environment parameters. Instead the mail message will be send to the terminal output. See [FAQ](FAQ#show-mails-with-a-docker-image-without-mail-configuration) for more info.
+You can choose to _NOT_ configure a mail server, by not providing the `MAIL_URL` & `MAIL_FROM` environment parameters. Instead the mail message will be send to the terminal output. See [FAQ](../FAQ/FAQ.md#show-mails-with-a-docker-image-without-mail-configuration) for more info.
 
 ## Email servers: SMTP or Exchange
 
@@ -569,3 +572,4 @@ By default zoho uses port number 465 with TLS enabled.
 Step 3: form MAIL_FROM
 
 MAIL_FROM=Wekan Notifications <user1@example.com>
+{% endraw %}

@@ -1,4 +1,4 @@
-- [**OTHER LDAP Settings**](LDAP-AD-Simple-Auth) and [**RELATED Search Filter Settings**](https://github.com/wekan/wekan/issues/3908#issuecomment-887545168):
+- [**OTHER LDAP Settings**](LDAP-AD-Simple-Auth.md) and [**RELATED Search Filter Settings**](https://github.com/wekan/wekan/issues/3908#issuecomment-887545168):
 
 ```
 - LDAP_USER_SEARCH_FILTER=(objectClass=user)
@@ -13,7 +13,7 @@
 
 ## Docker
 
-Uncomment settings lines this wasy at [docker-compose.yml](https://github.com/wekan/wekan/blob/main/docker-compose.yml) to enable:
+Uncomment settings lines this wasy at [docker-compose.yml](../../docker-compose.yml) to enable:
 ```
       #-----------------------------------------------------------------
       # ==== LDAP AD Simple Auth ====

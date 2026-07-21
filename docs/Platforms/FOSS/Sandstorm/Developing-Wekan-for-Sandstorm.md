@@ -1,10 +1,10 @@
 Development is usually done on Xubuntu 16.04 64bit. This could also work on other Ubuntu or Debian based distros, that are 64bit.
 
-Standalone and Sandstorm Wekan has same code. Only difference is, that at Sandstorm, some features are hidden from web UI by checking `isSandstorm` environment variable that is defined at `wekan/sandstorm*` code files. You see checking at webpage templates `wekan/client/components/*/*.jade` and `wekan/client/components/*/*.js` Javascript code that clicking triggers. See [Directory Structure](https://github.com/wekan/wekan/wiki/Directory-Structure). Also, at Sandstorm there is single SSO login, with code at `wekan/server/authentication.js` and `wekan/sandstorm*`. Sandstorm does not use username and passwords, instead Sandstorm saves sandstorm ID to MongoDB, so that database structure is different on Sandstorm. Database tables/collections are defined at `wekan/models/*`.
+Standalone and Sandstorm Wekan has same code. Only difference is, that at Sandstorm, some features are hidden from web UI by checking `isSandstorm` environment variable that is defined at `wekan/sandstorm*` code files. You see checking at webpage templates `wekan/client/components/*/*.jade` and `wekan/client/components/*/*.js` Javascript code that clicking triggers. See [Directory Structure](../../../DeveloperDocs/Directory-Structure.md). Also, at Sandstorm there is single SSO login, with code at `wekan/server/authentication.js` and `wekan/sandstorm*`. Sandstorm does not use username and passwords, instead Sandstorm saves sandstorm ID to MongoDB, so that database structure is different on Sandstorm. Database tables/collections are defined at `wekan/models/*`.
 
 Read:
-- [Developer Docs](https://github.com/wekan/wekan/wiki/Developer-Documentation)
-- [Directory Structure](https://github.com/wekan/wekan/wiki/Directory-Structure)
+- [Developer Docs](../../../DeveloperDocs/Developer-Documentation.md)
+- [Directory Structure](../../../DeveloperDocs/Directory-Structure.md)
 
 
 
@@ -69,9 +69,11 @@ git merge upstream/master
 cd ~/repos
 ./rebuild-wekan.sh
 ```
-First with option 1, to install deps.
+The menu is two levels: pick a category (`1) Setup 2) Dev server 3) Tests 4) Docker 5) Tools 6) Quit`), then an item inside it.
 
-Then same `./rebuild-wekan.sh` again with option 2, to build Wekan.
+First **Setup -> Install dependencies** (press `1` then `1`), to install deps.
+
+Then run `./rebuild-wekan.sh` again and pick **Setup -> Build WeKan** (press `1` then `2`), to build Wekan.
 
 ## 5) Developing with Standalone Wekan
 
@@ -81,7 +83,7 @@ meteor --port 4000
 ```
 Wekan is at http://localhost:4000
 
-When you make changes to files, Meteor automatically notices that, and rebuilds Wekan. If Meteor does not notice change, you need to Ctrl-c and `./rebuild-wekan.sh` option 2.
+When you make changes to files, Meteor automatically notices that, and rebuilds Wekan. If Meteor does not notice change, you need to Ctrl-c and run `./rebuild-wekan.sh` -> **Setup -> Build WeKan** (press `1` then `2`).
 
 ## 6) Using MongoDB
 
@@ -106,7 +108,7 @@ https://www.nosqlbooster.com/downloads
 
 When your feature works at Standalone Wekan, you can also test it at Sandstorm.
 
-First build wekan with option 2:
+First build wekan with **Setup -> Build WeKan** (press `1` then `2`):
 ```
 cd ~/repos/wekan
 ./rebuild-wekan.sh

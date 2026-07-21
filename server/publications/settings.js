@@ -1,12 +1,27 @@
 import { ReactiveCache } from '/imports/reactiveCache';
+import Settings from '/models/settings';
+import Integrations from '/models/integrations';
 
-Meteor.publish('globalwebhooks', () => {
+Meteor.publish('globalwebhooks', async function() {
+  if (!this.userId) {
+    return this.ready();
+  }
+
+  const user = await ReactiveCache.getCurrentUser();
+  if (!user || !user.isAdmin) {
+    return this.ready();
+  }
+
   const boardId = Integrations.Const.GLOBAL_WEBHOOK_ID;
-  const ret = ReactiveCache.getIntegrations(
+  const ret = await ReactiveCache.getIntegrations(
     {
       boardId,
     },
-    {},
+    {
+      fields: {
+        token: 0,
+      },
+    },
     true,
   );
   return ret;
@@ -18,10 +33,22 @@ Meteor.publish('setting', () => {
       fields: {
         disableRegistration: 1,
         disableForgotPassword: 1,
+        renderLinksAsPlainText: 1,
+        alwaysShowCodeAsText: 1,
+        disableActivities: 1,
+        disableNotifications: 1,
+        disableWatch: 1,
+        disableAllExport: 1,
+        disableAllImport: 1,
+        disableExportAvatars: 1,
+        disableImportAvatars: 1,
+        anonymizeExportUsers: 1,
+        anonymizeImportUsers: 1,
         productName: 1,
         hideLogo: 1,
         hideCardCounterList: 1,
         hideBoardMemberList: 1,
+        cardsLoading: 1,
         customLoginLogoImageUrl: 1,
         customLoginLogoLinkUrl: 1,
         customHelpLinkUrl: 1,
@@ -38,6 +65,13 @@ Meteor.publish('setting', () => {
         oidcBtnText: 1,
         mailDomainName: 1,
         legalNotice: 1,
+        customHeadEnabled: 1,
+        customHeadMetaTags: 1,
+        customHeadLinkTags: 1,
+        customManifestEnabled: 1,
+        customManifestContent: 1,
+        customAssetLinksEnabled: 1,
+        customAssetLinksContent: 1,
         accessibilityPageEnabled: 1,
         accessibilityTitle: 1,
         accessibilityContent: 1,
@@ -47,8 +81,8 @@ Meteor.publish('setting', () => {
   return ret;
 });
 
-Meteor.publish('mailServer', function() {
-  const user = ReactiveCache.getCurrentUser();
+Meteor.publish('mailServer', async function() {
+  const user = await ReactiveCache.getCurrentUser();
 
   let ret = []
   if (user && user.isAdmin) {

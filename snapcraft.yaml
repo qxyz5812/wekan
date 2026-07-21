@@ -1,23 +1,71 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# snapcraft.yaml — the DEFAULT WeKan snap, built on `base: core24`.
+#
+# This is the file the release pipeline (.github/workflows/release-all.yml) and
+# releases/snap-build.sh use. It uses `base: core24`, a released base, so it can be
+# published to the Snap candidate channel (which core26 cannot). The automated
+# release-all.yml workflow publishes it to the candidate + beta + edge channels;
+# the stable channel is published MANUALLY later, once it has proven stable enough.
+# It ships the newest WeKan (Meteor 3.5, Node.js 24, FerretDB v1, MongoDB 7, Caddy 2).
+#
+# snapcraft-core26.yaml is the SAME WeKan on `base: core26` (build-base: devel +
+# grade: devel), kept for testing the next base; because core26 is not yet a
+# stable base it can only go to Beta/Edge. Keep the two in sync — the only
+# intended differences are:
+#   base: core24 (not core26) · no build-base: devel · grade: stable
+# ─────────────────────────────────────────────────────────────────────────────
 name: wekan
-version: '7.94'
+version: '10.10'
 base: core24
+confinement: strict
+grade: stable
 summary: Open Source kanban
 description: |
    WeKan ® is an Open Source and collaborative kanban board application.
 
-   Whether you're maintaining a personal todo list, planning your holidays with some friends, or working in a team on your next revolutionary idea, Kanban boards are an unbeatable tool to keep your things organized. They give you a visual overview of the current state of your project, and make you productive by allowing you to focus on the few items that matter the most.
+   Whether you're maintaining a personal todo list, planning your holidays with some friends,
+   or working in a team on your next revolutionary idea, Kanban boards are an unbeatable tool
+   to keep your things organized. They give you a visual overview of the current state of
+   your project, and make you productive by allowing you to focus on the few items that matter the most.
    Depending on target environment, some configuration settings might need to be adjusted.
    For full list of configuration options call:
    $ wekan.help
 
-confinement: strict
-grade: stable
+# Metadata fields
+title: Wekan
+contact: https://github.com/wekan/wekan/issues
+license: MIT
+donation: https://wekan.fi/commercial-support/
+issues: https://github.com/wekan/wekan/issues
+source-code: https://github.com/wekan/wekan
+website: https://wekan.fi
 
-# Use platforms instead of architectures for core24 base
+environment:
+  SNAP_DATA: "/var/snap/$SNAP_INSTANCE_NAME/$SNAP_REVISION"
+  SNAP_COMMON: "/var/snap/$SNAP_INSTANCE_NAME/common"
+  SNAP: "/snap/$SNAP_INSTANCE_NAME/$SNAP_REVISION"
+
+# core24 uses the platforms: key (snapcraft 8), same as core26.
 platforms:
   amd64:
     build-on: amd64
     build-for: amd64
+  arm64:
+    build-on: arm64
+    build-for: arm64
+  # FerretDB-only arches: MongoDB ships no server for these, so the mongodb part
+  # produces no mongod and new installs default to FerretDB v1 (see snap/hooks/install
+  # and the mongodb part below). The MongoDB Database Tools (wekan/mongo-tools) and
+  # FerretDB v1 are available for all of them.
+  s390x:
+    build-on: s390x
+    build-for: s390x
+  ppc64el:
+    build-on: ppc64el
+    build-for: ppc64el
+  riscv64:
+    build-on: riscv64
+    build-for: riscv64
 
 plugs:
   mongodb-plug:
@@ -41,9 +89,20 @@ apps:
         command: ./bin/wekan-control
         daemon: simple
         plugs: [network, network-bind]
+        after: [mongodb, ferretdb]
 
     mongodb:
         command: ./bin/mongodb-control
+        daemon: simple
+        plugs: [network, network-bind]
+
+    # Alternative MongoDB-compatible database: FerretDB v1 (the wekan/FerretDB
+    # fork) with its embedded SQLite backend. Only one of mongodb / ferretdb runs
+    # at a time; switch with `snap set wekan database=ferretdb` (the configure
+    # hook stops mongod and starts this, and vice-versa). The ferretdb binary is
+    # shipped inside the WeKan bundle (staged to $SNAP/ferretdb by the wekan part).
+    ferretdb:
+        command: ./bin/ferretdb-control
         daemon: simple
         plugs: [network, network-bind]
 
@@ -51,6 +110,7 @@ apps:
         command: ./bin/caddy-control
         daemon: simple
         plugs: [network, network-bind]
+        after: [mongodb]
 
     help:
         command: ./bin/wekan-help
@@ -66,10 +126,30 @@ apps:
         command: ./bin/mongodb-restore
         plugs: [network, network-bind]
 
+    migrate:
+        command: ./bin/wekan-force-migrate
+        plugs: [network, network-bind]
+
+    # #6473: incremental attachment/avatar repair (runs automatically in the
+    # background on every start; this command is for running it by hand, e.g.
+    # after deleting $SNAP_COMMON/.attachments-files-v2-done).
+    repair-attachments:
+        command: ./bin/attachment-repair
+        plugs: [network, network-bind]
+
+    maintenance:
+        command: ./bin/wekan-maintenance
+        plugs: [network, network-bind]
+
+    database:
+        command: ./bin/wekan-database
+        plugs: [network, network-bind]
+
+
 parts:
     mongodb:
-        source: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-7.0.23.tgz
-        plugin: dump
+        plugin: nil
+        #source: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-7.0.34.tgz
         stage-packages:
             - libssl3
             - libcurl4
@@ -77,13 +157,28 @@ parts:
             - zlib1g
             - libsnappy1v5
             - libyaml-cpp0.8
-            - libpcre3
-            - libpcrecpp0v5
-            - libboost-system1.74.0
-            - libboost-iostreams1.74.0
-            - libboost-filesystem1.74.0
-            - libboost-program-options1.74.0
+            - libpcre2-8-0
+            - libpcre2-posix3
+            - libboost-system1.83.0
+            - libboost-iostreams1.83.0
+            - libboost-filesystem1.83.0
+            - libboost-program-options1.83.0
             - libgoogle-perftools4
+        override-build: |
+            set -eu
+            case "${CRAFT_ARCH_BUILD_FOR}" in
+                amd64) MONGO_ARCH="x86_64" ;;
+                arm64) MONGO_ARCH="aarch64" ;;
+                # FerretDB-only arches: MongoDB ships no server, so build no mongod.
+                # New installs default to FerretDB v1 (snap/hooks/install), and
+                # mongodb-control disables the mongodb service when database=ferretdb.
+                *) echo "No MongoDB server for ${CRAFT_ARCH_BUILD_FOR}; FerretDB-only arch, skipping mongod."; exit 0 ;;
+            esac
+            MONGO_URL="https://fastdl.mongodb.org/linux/mongodb-linux-${MONGO_ARCH}-ubuntu2204-7.0.34.tgz"
+            wget -O mongodb.tgz "$MONGO_URL"
+            tar -xzf mongodb.tgz --strip-components=1
+            mkdir -p "$SNAPCRAFT_PART_INSTALL/bin"
+            cp -a bin/* "$SNAPCRAFT_PART_INSTALL/bin/"
         stage:
             - bin
             - usr
@@ -91,18 +186,52 @@ parts:
             - bin
             - usr
 
-    mongosh:
-        source: https://downloads.mongodb.com/compass/mongosh-2.5.3-linux-x64.tgz
-        plugin: dump
+    # No mongosh part: WeKan no longer bundles the MongoDB Shell. All scripted DB
+    # access (readiness, replica-set init, schema migration) uses the bundled
+    # Node.js 24 + the `mongodb` driver via $SNAP/bin/db-eval (see snap-src/bin).
 
-    mongotools:
-        source: https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2404-x86_64-100.12.2.tgz
-        plugin: dump
+    # No separate mongotools part: the per-arch MongoDB Database Tools are already
+    # embedded in the wekan-<arch>.zip bundle (built from wekan/mongo-tools by
+    # release-all.yml) and the wekan part above moves them from the bundle into
+    # $SNAP/bin. This keeps the snap bundle-centric — every binary comes from the
+    # one wekan-<arch>.zip — and avoids downloading the tools twice.
+
+    # migratemongo: the WeKan 6.09 MongoDB 3.2 binaries (bin/), the old libraries
+    # they need (lib/x86_64-linux-gnu: libssl/libcrypto.so.1.0.0, libpng12,
+    # libexpat) and the AVX QEMU wrappers (avx/), from
+    # https://github.com/wekan/migratemongo . Staged at $SNAP/migratemongo — which
+    # mongodb-control / mongodb-backup / mongodb-restore already reference via
+    # $SNAP/migratemongo/avx, and which migration-control uses to read the 6.09
+    # MongoDB 3.2 data during the one-time migration to FerretDB (it runs
+    # $SNAP/migratemongo/bin/mongod with LD_LIBRARY_PATH set to the lib dir above,
+    # and the legacy $SNAP/migratemongo/bin/mongo shell for readiness — mongosh
+    # cannot talk to MongoDB 3.2).
+    #
+    # amd64 only: these are x86_64 MongoDB 3.2 binaries. arm64 snaps run newest
+    # WeKan on MongoDB 7, whose data mongod 7 reads directly.
+    migratemongo:
+        plugin: nil
+        build-packages:
+            - git
+        override-build: |
+            set -eu
+            case "${CRAFT_ARCH_BUILD_FOR}" in
+                amd64)
+                    git clone --depth 1 https://github.com/wekan/migratemongo.git "$SNAPCRAFT_PART_INSTALL/migratemongo"
+                    rm -rf "$SNAPCRAFT_PART_INSTALL/migratemongo/.git"
+                    chmod +x "$SNAPCRAFT_PART_INSTALL/migratemongo/bin/"* \
+                             "$SNAPCRAFT_PART_INSTALL/migratemongo/avx/"* 2>/dev/null || true
+                    ;;
+                *)
+                    echo "migratemongo (MongoDB 3.2, x86_64) not staged for ${CRAFT_ARCH_BUILD_FOR}; arm64 uses MongoDB 7, other arches use FerretDB v1."
+                    ;;
+            esac
+
 
     wekan:
         source: .
         plugin: npm
-        npm-node-version: 14.21.3
+        npm-node-version: 24.18.0
         npm-include-node: true
         build-packages:
             - build-essential
@@ -114,100 +243,78 @@ parts:
             - curl
             - wget
             - unzip
-            - execstack
             - nodejs
             - npm
-            - git  # Add git for cloning migratemongo
         stage-packages:
             - libfontconfig1
         override-build: |
+            set -eu
+            case "${CRAFT_ARCH_BUILD_FOR}" in
+                amd64)   WEKAN_ARCH="amd64"   ;;
+                arm64)   WEKAN_ARCH="arm64"   ;;
+                s390x)   WEKAN_ARCH="s390x"   ;;
+                ppc64el) WEKAN_ARCH="ppc64le" ;;
+                riscv64) WEKAN_ARCH="riscv64" ;;
+                *) echo "Unsupported architecture: ${CRAFT_ARCH_BUILD_FOR}"; exit 1 ;;
+            esac
+            WEKAN_ZIP="wekan-10.10-${WEKAN_ARCH}.zip"
             echo "Cleaning environment first"
-            #rm -rf ~/.meteor ~/.npm /usr/local/lib/node_modules
             rm -rf .build
-            #echo "Using http npm packages so speedup install process https://stackoverflow.com/questions/39760113/callback-called-more-than-once-while-running-npm-install"
-            #echo "registry=http://registry.npmjs.org/" > ~/.npmrc
-            #echo "Installing npm, node-gyp, node-pre-gyp, fibers"
-            #npm -g install n --unsafe-perm
-            #n 14.21.4
-            #npm -g install node-gyp --unsafe-perm
-            #npm -g install node-pre-gyp --unsafe-perm
-            #npm -g install fibers --unsafe-perm
-            ##echo "Installing meteor"
-            ##curl https://install.meteor.com/ -o install_meteor.sh
-            ##chmod +x install_meteor.sh
-            ##sh install_meteor.sh
-            ##rm install_meteor.sh
-            #npm -g install meteor --unsafe-perm --allow-superuser
-            #rm -rf .build
-            ##chmod u+w *.json
-            #npm install --unsafe-perm
-            ##npm install
-            ##meteor build .build --directory --allow-superuser
-            # Remove legacy webbroser bundle, so that Wekan works also at Android Firefox, iOS Safari, etc.
-            ##rm -rf .build/bundle/programs/web.browser.legacy
-            # Change to directory .build/bundle/programs/server
-            ##cd .build/bundle/programs/server
-            ##chmod u+w *.json
-            #npm install --unsafe-perm
-            ##npm install
-            ##cd node_modules/fibers
-            ##node build.js
-            ##cd ../../../../../..
-            # Cleanup
             mkdir .build
             cd .build
-            wget https://github.com/wekan/wekan/releases/download/v7.94/wekan-7.94-amd64.zip
-            unzip wekan-7.94-amd64.zip
-            rm wekan-7.94-amd64.zip
-            cd ..
-            ##cd .build/bundle
-            ##find . -type d -name '*-garbage*' | xargs rm -rf
-            ##find . -name '*phantom*' | xargs rm -rf
-            ##find . -name '.*.swp' | xargs rm -f
-            ##find . -name '*.swp' | xargs rm -f
-            ##cd ../..
-            # Add fibers multi arch
-            #cd .build/bundle/programs/server/node_modules/fibers/bin
-            #curl https://releases.wekan.team/fibers-multi.7z -o fibers-multi.7z
-            #7z x fibers-multi.7z
-            #rm fibers-multi.7z
-            #cd ../../../../../../..
-            # Copy to Snap
-            wget https://github.com/wekan/node-v14-esm/releases/download/v14.21.4/node-v14.21.4-linux-x64.tar.xz
-            tar -xf node-v14.21.4-linux-x64.tar.xz node-v14.21.4-linux-x64/bin/node
-            rm node-v14.21.4-linux-x64.tar.xz
-            mkdir $SNAPCRAFT_PART_INSTALL/bin
-            cp -p node-v14.21.4-linux-x64/bin/node $SNAPCRAFT_PART_INSTALL/bin/
-            rm -rf node-v14.21.4-linux-x64
+            #wget https://github.com/wekan/wekan/releases/download/v10.10/wekan-10.10-amd64.zip
+            wget "https://github.com/wekan/wekan/releases/download/v10.10/${WEKAN_ZIP}"
+            unzip "${WEKAN_ZIP}"
+            rm "${WEKAN_ZIP}"
+            # Fix: bcrypt 5.0.1 (Meteor accounts-password) ships node-addon-api@3
+            # which fails to compile on Node.js 24. Replace with bcrypt 6.0.0.
+            BCRYPT_DIR="bundle/programs/server/npm/node_modules/meteor/accounts-password/node_modules/bcrypt"
+            if [ -d "$BCRYPT_DIR" ]; then
+              rm -rf "$BCRYPT_DIR"
+              TMP=$(mktemp -d)
+              pushd "$TMP" > /dev/null
+              npm pack bcrypt@6.0.0
+              mkdir bcrypt && tar xzf bcrypt-*.tgz --strip-components=1 -C bcrypt
+              cd bcrypt && npm install --ignore-scripts && cd ..
+              popd > /dev/null
+              cp -a "$TMP/bcrypt" "$BCRYPT_DIR"
+              rm -rf "$TMP"
+            fi
+            cd bundle/programs/server
+            rm -rf node_modules
+            npm install
+            cd ../../../..
+            # Copy to Snap. Use the bundle's OWN arch-correct Node.js: the
+            # wekan-<arch>.zip already ships the right node for this platform
+            # (nodejs.org for amd64/arm64/s390x/ppc64le, unofficial-builds.nodejs.org
+            # for riscv64), so the snap needs no separate node download and works on
+            # every arch the bundle is built for.
+            mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+            cp -p .build/bundle/node $SNAPCRAFT_PART_INSTALL/bin/node
+            chmod +x $SNAPCRAFT_PART_INSTALL/bin/node
             cp -r .build/bundle/* $SNAPCRAFT_PART_INSTALL/
             cp .build/bundle/.node_version.txt $SNAPCRAFT_PART_INSTALL/
             rm -f $SNAPCRAFT_PART_INSTALL/lib/node_modules/wekan
-
-            # Migrate MongoDB 3 to 6 - clone directly from git instead of downloading zip
-            echo "Cloning migratemongo repository..."
-            git clone https://github.com/wekan/migratemongo.git
-            echo "Copy migratemongo files to install directory..."
-            cp -pR migratemongo $SNAPCRAFT_PART_INSTALL/
-            rm -rf migratemongo
-
-            # Delete phantomjs that is in accounts-lockout
-            #rm -rf $SNAPCRAFT_PART_INSTALL/programs/server/npm/node_modules/meteor/lucasantoniassi_accounts-lockout/node_modules/phantomjs-prebuilt
-            # Delete temporary files
-            #rm -f $SNAPCRAFT_PART_INSTALL/programs/server/npm/node_modules/tar/lib/.mkdir.js.swp
-            #rm -f $SNAPCRAFT_PART_INSTALL/lib/node_modules/node-pre-gyp/node_modules/tar/lib/.mkdir.js.swp
-            #rm -f $SNAPCRAFT_PART_INSTALL/lib/node_modules/node-gyp/node_modules/tar/lib/.mkdir.js.swp
-            # Meteor 1.8.x additional .swp remove
-            #rm -f $SNAPCRAFT_PART_INSTALL/programs/server/node_modules/node-pre-gyp/node_modules/tar/lib/.mkdir.js.swp
-            # Delete fibers for other archs
-            #rm -rf $SNAPCRAFT_PART_INSTALL/programs/server/node_modules/fibers/bin/linux-ia32*
-            # ostrio tmp remove
-            #rm -rf $SNAPCRAFT_PART_INSTALL/programs/server/npm/node_modules/meteor/ostrio_files/node_modules/request-libcurl/.node_modules-garbage*
+            # The snap uses its own bin/node (copied from the bundle above) and
+            # wekan-control, so drop the bundle's root-level node + self-contained
+            # launchers. Keep the bundle's ferretdb (ferretdb-control runs
+            # $SNAP/ferretdb) and move the bundle's per-arch MongoDB Database Tools
+            # into bin/ so the backup/restore scripts (which use $SNAP/bin) find them.
+            rm -f $SNAPCRAFT_PART_INSTALL/node \
+                  $SNAPCRAFT_PART_INSTALL/start-wekan.sh \
+                  $SNAPCRAFT_PART_INSTALL/start-wekan.bat
+            for t in bsondump mongodump mongoexport mongofiles mongoimport mongorestore mongostat mongotop; do
+              [ -f "$SNAPCRAFT_PART_INSTALL/$t" ] && mv -f "$SNAPCRAFT_PART_INSTALL/$t" "$SNAPCRAFT_PART_INSTALL/bin/$t" || true
+            done
+            # Bundle the MongoDB -> FerretDB migrator (run by migration-control on
+            # first boot when upgrading from an old MongoDB-based snap).
+            cp releases/migrate-mongodb-to-ferretdb.mjs $SNAPCRAFT_PART_INSTALL/bin/
 
         organize:
             README: README.wekan
-        prime:
-            - -lib/node_modules/node-pre-gyp/node_modules/tar/lib/.unpack.js.swp
-            - -lib/node_modules/weka*
+        #prime:
+        #    - -lib/node_modules/node-pre-gyp/node_modules/tar/lib/.unpack.js.swp
+        #    - -lib/node_modules/weka*
 
     helpers:
         source: snap-src
@@ -216,31 +323,40 @@ parts:
     caddy:
         plugin: nil
         build-packages:
-            - debian-keyring
-            - debian-archive-keyring
-            - apt-transport-https
-            - gnupg
             - curl
         override-build: |
-            # Add Caddy repository
-            echo "Installing Caddy 2 from the official repository..."
-            curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /tmp/caddy-stable-archive-keyring.gpg
-            mkdir -p /etc/apt/keyrings
-            cp /tmp/caddy-stable-archive-keyring.gpg /etc/apt/keyrings/
-            echo "deb [signed-by=/etc/apt/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main" > /etc/apt/sources.list.d/caddy-stable.list
-            apt update
-            apt -y install caddy
+            set -eu
+            # Download the official prebuilt Caddy static binary from GitHub
+            # releases. WeKan uses only built-in Caddy directives (reverse_proxy,
+            # header, tls, redir, handle) — no third-party modules — so vanilla
+            # Caddy is sufficient and xcaddy is NOT needed. Fetched from GitHub
+            # because the Launchpad remote builders cannot reach the Cloudsmith
+            # apt repo (their network is restricted to a fetch proxy).
+            # Tracks the latest stable Caddy with a pinned fallback; set
+            # CADDY_VERSION explicitly for fully reproducible builds.
+            CADDY_VERSION="$(curl -fsSL https://api.github.com/repos/caddyserver/caddy/releases/latest | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p' | head -1)"
+            [ -n "${CADDY_VERSION}" ] || CADDY_VERSION="2.8.4"
+            case "${CRAFT_ARCH_BUILD_FOR}" in
+                amd64)   CADDY_ARCH=amd64 ;;
+                arm64)   CADDY_ARCH=arm64 ;;
+                s390x)   CADDY_ARCH=s390x ;;
+                ppc64el) CADDY_ARCH=ppc64le ;;   # Caddy uses ppc64le, not Debian's ppc64el
+                riscv64) CADDY_ARCH=riscv64 ;;
+                *) CADDY_ARCH="${CRAFT_ARCH_BUILD_FOR}" ;;
+            esac
+            echo "Downloading Caddy ${CADDY_VERSION} (linux/${CADDY_ARCH}) from GitHub releases..."
+            curl -fsSL -o /tmp/caddy.tar.gz \
+                "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_${CADDY_ARCH}.tar.gz"
+            mkdir -p /tmp/caddy-extract
+            tar -xzf /tmp/caddy.tar.gz -C /tmp/caddy-extract caddy
+
+            # Install the Caddy binary into the snap
+            mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+            install -m 0755 /tmp/caddy-extract/caddy $SNAPCRAFT_PART_INSTALL/bin/caddy
 
             # Display installed Caddy version for confirmation
             echo "Installed Caddy version:"
-            /usr/bin/caddy version
-
-            # Create directory structure in the snap
-            mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-
-            # Copy Caddy binary
-            cp /usr/bin/caddy $SNAPCRAFT_PART_INSTALL/bin/
-            chmod +x $SNAPCRAFT_PART_INSTALL/bin/caddy
+            $SNAPCRAFT_PART_INSTALL/bin/caddy version
 
             # Create license files manually since they don't exist in the package
             mkdir -p $SNAPCRAFT_PART_INSTALL/license

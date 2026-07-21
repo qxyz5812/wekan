@@ -1,14 +1,11 @@
+import { Meteor } from 'meteor/meteor';
 import { TAPi18n } from './tap';
 import './accounts';
-import './moment';
-
-if (Meteor.isClient) {
-  import './blaze';
-}
+import './blaze';
 
 export { TAPi18n };
 
-(async () => {
+// Initialize translations immediately and synchronously
+Meteor.startup(async () => {
   await TAPi18n.init();
-})();
-
+});

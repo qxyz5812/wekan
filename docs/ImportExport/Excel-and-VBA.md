@@ -1,3 +1,21 @@
+# Importing an Excel (.xlsx) board
+
+WeKan can import a board directly from an Excel `.xlsx` spreadsheet:
+
+1. **All Boards → New → Import → From Excel (.xlsx)**.
+2. Choose a WeKan-style `.xlsx` file (the same columns the **Excel export** produces:
+   Title, Description, Status/List, Members, Labels, dates, custom fields). The first
+   row is the header.
+
+The spreadsheet is parsed on the server and imported through the same engine as the
+CSV/TSV import. Member columns are not auto-mapped for Excel import (map members
+afterwards); see also [CSV/TSV import](CSV/CSV.md).
+
+This complements the existing **Excel export** (Board Settings → Export → Excel), so
+boards can round-trip through `.xlsx`.
+
+# Excel VBA and the REST API
+
 Related projects:
 * [VBA-Web](https://github.com/VBA-tools/VBA-Web) - using REST APIs with VBA
 * [VBA-JSON](https://github.com/VBA-tools/VBA-JSON)
@@ -6,13 +24,13 @@ Related projects:
 
 For accessing Wekan with Excel VBA, you can use Wekan REST API:
 
-https://github.com/wekan/wekan/wiki/REST-API
+[REST API](../API/REST-API.md)
 
 For example, with using curl, you first login with admin credentials,
 by sending username and password to url.
 Change your server url etc details to below:
 
-Login with as JSON https://github.com/wekan/wekan/wiki/REST-API#example-call---as-json
+Login with as JSON [REST API](../API/REST-API.md#example-call---as-json)
 ```
 curl -H "Content-type:application/json" \
       http://localhost:3000/users/login \
@@ -48,7 +66,7 @@ individually, and array converted back to JSON.
 Current Wekan REST API does not yet cover access to all data that is in MongoDB.
 If you need that, REST API page also has link to Restheart, that adds REST API
 to MongoDB, so you can use all of MongoDB data directly with REST API.
-https://github.com/wekan/wekan/wiki/REST-API
+[REST API](../API/REST-API.md)
 
 Wekan boards also have export JSON, where also attachments are included in JSON as
 base64 encoded files. To convert them back to files, you first get whole one board exported

@@ -14,7 +14,7 @@ At AnLinux choose:
 ## 2) At Termux
 
 When you get from Termux to Ubuntu bash, you can install Wekan similarly like arm64 or x64:
-https://github.com/wekan/wekan/wiki/Raspberry-Pi
+[Raspberry Pi](RaspberryPi/Raspberry-Pi.md)
 
 Edit start-wekan.sh so you can start Wekan for example:
 ```
@@ -34,7 +34,7 @@ Edit start-wekan.sh so you can start Wekan for example:
 ROOT_URL=http://IP-ADDRESS:2000
 PORT=2000
 ```
-Then you can use any computer or mobile phone Javascript capable webbrowser at WLAN to use Wekan at http://IP-ADDRESS:2000 like http://192.168.0.100:2000 . [More info about ROOT_URL](Settings).
+Then you can use any computer or mobile phone Javascript capable webbrowser at WLAN to use Wekan at http://IP-ADDRESS:2000 like http://192.168.0.100:2000 . [More info about ROOT_URL](../../Webserver/Settings.md).
 
 ## 4) Optional: Mobile Linux Desktop
 

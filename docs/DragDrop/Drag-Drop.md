@@ -1,6 +1,6 @@
 ## Roles
 
-It depends on role of user what drag drop is allowed https://github.com/wekan/wekan/wiki/REST-API-Role
+It depends on role of user what drag drop is allowed [REST API Role](../API/Role.md)
 
 ## Mobile Drag Drop
 
@@ -10,7 +10,7 @@ It depends on role of user what drag drop is allowed https://github.com/wekan/we
 
 3. Use non-drag-handle area to to view other parts of board, by dragging board up/down/left/right, without moving any icons etc.
 
-<img src="https://wekan.fi/dragdrop/mobile-drag-drop.png" width="40%" alt="Wekan logo" />
+<img src="mobile-drag-drop.png" width="40%" alt="Mobile drag drop" />
 
 ## 2 or more external screens of desktop or mobile
 
@@ -44,3 +44,9 @@ Reorder with drag drop:
 
 - https://blog.la-terminal.net/godot-on-ipad-summer-update/
 - https://news.ycombinator.com/item?id=41415077
+
+## Drag and drop from search results
+
+Cards shown in the board **search results** list can be dragged directly onto a board
+list / column. In this initial version the card is dropped at the end of the target list
+(pixel-precise insertion position is not supported yet).

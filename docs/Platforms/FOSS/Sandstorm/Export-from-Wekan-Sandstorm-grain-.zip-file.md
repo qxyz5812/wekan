@@ -147,7 +147,7 @@ In Wekan Snap, database files are in directory `/var/snap/wekan/common` - if you
 
 [Snap Backup and Restore](https://github.com/wekan/wekan-snap/wiki/Backup-and-restore)
 
-[Docker Backup and Restore](Export-Docker-Mongo-Data)
+[Docker Backup and Restore](../Docker/Export-Docker-Mongo-Data.md)
 
 ## 6) Change database file permissions to root user
 
@@ -185,7 +185,7 @@ Wekan Docker: If you have MongoDB exposed to outside Docker, Connect with Robo3T
 
 [Snap Backup and Restore](https://github.com/wekan/wekan-snap/wiki/Backup-and-restore)
 
-[Docker Backup and Restore](Export-Docker-Mongo-Data)
+[Docker Backup and Restore](../Docker/Export-Docker-Mongo-Data.md)
 
 ## 10) Browse data in Robo 3T
 
@@ -222,7 +222,7 @@ and most likely how to get them back to mongodb
 so just copying all of those boards JSON files and restoring to MongoDB database would work
 and editing JSON files with any plain text editor. For big files you can try JEdit.
 
-12.6 Here is how to backup and restore mongodb in docker, snap etc https://github.com/wekan/wekan/wiki/Backup
+12.6 Here is how to backup and restore mongodb in docker, snap etc [Backup](../../../Backup/Backup.md)
 
 12.7 All Wekan Docker settings are in this textfile https://raw.githubusercontent.com/wekan/wekan/devel/docker-compose-build.yml
 

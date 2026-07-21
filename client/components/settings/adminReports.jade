@@ -7,6 +7,34 @@ template(name="adminReports")
         .side-menu
           ul
             li
+              a.js-report-summary(data-id="report-summary")
+                i.fa.fa-list
+                | {{_ 'summary'}}
+
+            li
+              a.js-report-security(data-id="report-security")
+                i.fa.fa-shield
+                | {{_ 'securityReportTitle'}}
+
+            li
+              a.js-report-speed(data-id="report-speed")
+                i.fa.fa-tachometer
+                | {{_ 'speedReportTitle'}}
+
+            li
+              a.js-report-tests(data-id="report-tests")
+                i.fa.fa-flask
+                | {{_ 'testsReportTitle'}}
+
+            li
+              a.js-report-cpu(data-id="report-cpu")
+                i.fa.fa-tachometer
+                | {{_ 'cpuReportTitle'}}
+
+            li.admin-reports-separator
+              hr
+
+            li
               a.js-report-broken(data-id="report-broken")
                 i.fa.fa-chain-broken
                 | {{_ 'broken-cards'}}
@@ -23,27 +51,44 @@ template(name="adminReports")
 
             li
               a.js-report-boards(data-id="report-boards")
-                i.fa.fa-magic
+                i.fa.fa-columns
                 | {{_ 'boardsReportTitle'}}
 
             li
               a.js-report-cards(data-id="report-cards")
-                i.fa.fa-magic
+                i.fa.fa-id-card-o
                 | {{_ 'cardsReportTitle'}}
+
+            li
+              a.js-report-impersonation(data-id="report-impersonation")
+                i.fa.fa-user-secret
+                | {{_ 'impersonationReportTitle'}}
 
         .main-body
           if loading.get
             +spinner
+          else if showSummary.get
+            +problemsSummary
+          else if showSecurity.get
+            +eventStreamReport(stream="security")
+          else if showSpeed.get
+            +eventStreamReport(stream="speed")
+          else if showTests.get
+            +eventStreamReport(stream="tests")
+          else if showCpu.get
+            +eventStreamReport(stream="cpu")
           else if showBrokenCardsReport.get
             +brokenCardsReport
           else if showFilesReport.get
-            +filesReport
+            +filesReport(currentPage=filesCurrentPage totalPages=filesTotalPages hasPrevPage=hasFilesPrevPage hasNextPage=hasFilesNextPage)
           else if showRulesReport.get
-            +rulesReport
+            +rulesReport(currentPage=rulesCurrentPage totalPages=rulesTotalPages hasPrevPage=hasRulesPrevPage hasNextPage=hasRulesNextPage)
           else if showBoardsReport.get
-            +boardsReport
+            +boardsReport(currentPage=boardsCurrentPage totalPages=boardsTotalPages hasPrevPage=hasBoardsPrevPage hasNextPage=hasBoardsNextPage)
           else if showCardsReport.get
-            +cardsReport
+            +cardsReport(currentPage=cardsCurrentPage totalPages=cardsTotalPages hasPrevPage=hasCardsPrevPage hasNextPage=hasCardsNextPage)
+          else if showImpersonationReport.get
+            +impersonationReport(currentPage=impersonationCurrentPage totalPages=impersonationTotalPages hasPrevPage=hasImpersonationPrevPage hasNextPage=hasImpersonationNextPage)
 
 
 template(name="brokenCardsReport")
@@ -56,6 +101,14 @@ template(name="brokenCardsReport")
 
 template(name="rulesReport")
   h1 {{_ 'rulesReportTitle'}}
+  .admin-report-controls
+    input.js-rules-search-input(type="search" placeholder="{{_ 'search'}}")
+    .admin-report-pagination
+      button.js-rules-prev-page(class="{{#if hasPrevPage}}{{else}}disabled{{/if}}")
+        | &lt;
+      span.admin-report-page-info {{currentPage}} / {{totalPages}}
+      button.js-rules-next-page(class="{{#if hasNextPage}}{{else}}disabled{{/if}}")
+        | &gt;
   if resultsCount
     table
       thead
@@ -77,6 +130,14 @@ template(name="rulesReport")
 
 template(name="filesReport")
   h1 {{_ 'filesReportTitle'}}
+  .admin-report-controls
+    input.js-files-search-input(type="search" placeholder="{{_ 'search'}}")
+    .admin-report-pagination
+      button.js-files-prev-page(class="{{#if hasPrevPage}}{{else}}disabled{{/if}}")
+        | &lt;
+      span.admin-report-page-info {{currentPage}} / {{totalPages}}
+      button.js-files-next-page(class="{{#if hasNextPage}}{{else}}disabled{{/if}}")
+        | &gt;
   if resultsCount
     table
       thead
@@ -91,7 +152,7 @@ template(name="filesReport")
       each att in results
         tbody
           tr
-            td {{ att.name }}
+            td {{ cleanFilename att.name }}
             td.right {{ fileSize att.size }}
             td {{ att.type }}
             td {{ att._id }}
@@ -102,6 +163,14 @@ template(name="filesReport")
 
 template(name="cardsReport")
   h1 {{_ 'cardsReportTitle'}}
+  .admin-report-controls
+    input.js-cards-search-input(type="search" placeholder="{{_ 'search'}}")
+    .admin-report-pagination
+      button.js-cards-prev-page(class="{{#if hasPrevPage}}{{else}}disabled{{/if}}")
+        | &lt;
+      span.admin-report-page-info {{currentPage}} / {{totalPages}}
+      button.js-cards-next-page(class="{{#if hasNextPage}}{{else}}disabled{{/if}}")
+        | &gt;
   if resultsCount
     table.table
       thead
@@ -125,8 +194,50 @@ template(name="cardsReport")
   else
     div {{_ 'no-results' }}
 
+template(name="impersonationReport")
+  h1 {{_ 'impersonationReportTitle'}}
+  .admin-report-controls
+    input.js-impersonation-search-input(type="search" placeholder="{{_ 'search'}}")
+    .admin-report-pagination
+      button.js-impersonation-prev-page(class="{{#if hasPrevPage}}{{else}}disabled{{/if}}")
+        | &lt;
+      span.admin-report-page-info {{currentPage}} / {{totalPages}}
+      button.js-impersonation-next-page(class="{{#if hasNextPage}}{{else}}disabled{{/if}}")
+        | &gt;
+  if resultsCount
+    table.table
+      thead
+        tr
+          th {{_ 'date'}}
+          th {{_ 'impersonation-admin'}}
+          th {{_ 'impersonation-user'}}
+          th {{_ 'board'}}
+          th {{_ 'reason'}}
+      each row in results
+        tbody
+          tr
+            td {{ formatDate row.createdAt }}
+            td
+              if row.adminId
+                a.edit-user.js-impersonation-edit-user(data-user-id="{{ row.adminId }}") {{ userName row.adminId }}
+            td
+              if row.userId
+                a.edit-user.js-impersonation-edit-user(data-user-id="{{ row.userId }}") {{ userName row.userId }}
+            td {{ row.boardId }}
+            td {{ row.reason }}
+  else
+    div {{_ 'no-results' }}
+
 template(name="boardsReport")
   h1 {{_ 'boardsReportTitle'}}
+  .admin-report-controls
+    input.js-boards-search-input(type="search" placeholder="{{_ 'search'}}")
+    .admin-report-pagination
+      button.js-boards-prev-page(class="{{#if hasPrevPage}}{{else}}disabled{{/if}}")
+        | &lt;
+      span.admin-report-page-info {{currentPage}} / {{totalPages}}
+      button.js-boards-next-page(class="{{#if hasNextPage}}{{else}}disabled{{/if}}")
+        | &gt;
   if resultsCount
     table.table
       thead
@@ -151,3 +262,40 @@ template(name="boardsReport")
             td {{teams board.teams }}
   else
     div {{_ 'no-results' }}
+
+template(name="eventStreamReport")
+  .global-search-results-list-wrapper
+    h1 {{streamTitle}}
+    .admin-event-controls
+      input.js-event-search(type="search" placeholder="{{_ 'search'}}" value="{{searchTerm}}")
+      span.admin-event-pagination
+        a.js-event-prev(class="{{prevDisabled}}") ‹
+        span.admin-event-page {{currentPage}} / {{totalPages}}
+        a.js-event-next(class="{{nextDisabled}}") ›
+    if rowCount
+      table.admin-event-table
+        thead
+          tr
+            th {{_ 'event-datetime'}}
+            th {{_ 'event-category'}}
+            th {{_ 'event-bleed'}}
+            th {{_ 'event-severity'}}
+            th {{_ 'event-action'}}
+            th {{_ 'event-source'}}
+            th {{_ 'username'}}
+            th {{_ 'event-detail'}}
+        tbody
+          each row in rows
+            tr
+              td.admin-event-at {{formatAt row.at}}
+              td {{row.category}}
+              td {{row.bleed}}
+              td.admin-event-sev(data-sev="{{row.severity}}") {{row.severity}}
+              td {{row.action}}
+              td {{row.source}}
+              td
+                if row.userId
+                  a.edit-user.js-event-edit-user(data-user-id="{{ row.userId }}") {{ userName row.userId }}
+              td.admin-event-detail {{row.detail}}
+    else
+      p {{_ 'no-new-problems'}}

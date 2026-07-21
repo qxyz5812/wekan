@@ -1,15 +1,16 @@
+import { Meteor } from 'meteor/meteor';
 import { AccountsLockout } from 'meteor/wekan-accounts-lockout';
 import { ReactiveCache } from '/imports/reactiveCache';
 import LockoutSettings from '/models/lockoutSettings';
 
 Meteor.methods({
-  reloadAccountsLockout() {
+  async reloadAccountsLockout() {
     // Check if user has admin rights
-    const userId = Meteor.userId();
+    const userId = this.userId;
     if (!userId) {
       throw new Meteor.Error('error-invalid-user', 'Invalid user');
     }
-    const user = ReactiveCache.getUser(userId);
+    const user = await ReactiveCache.getUser(userId);
     if (!user || !user.isAdmin) {
       throw new Meteor.Error('error-not-allowed', 'Not allowed');
     }
@@ -17,15 +18,15 @@ Meteor.methods({
     try {
       // Get configurations from database
       const knownUsersConfig = {
-        failuresBeforeLockout: LockoutSettings.findOne('known-failuresBeforeLockout')?.value || 3,
-        lockoutPeriod: LockoutSettings.findOne('known-lockoutPeriod')?.value || 60,
-        failureWindow: LockoutSettings.findOne('known-failureWindow')?.value || 15
+        failuresBeforeLockout: (await LockoutSettings.findOneAsync('known-failuresBeforeLockout'))?.value || 3,
+        lockoutPeriod: (await LockoutSettings.findOneAsync('known-lockoutPeriod'))?.value || 60,
+        failureWindow: (await LockoutSettings.findOneAsync('known-failureWindow'))?.value || 15
       };
 
       const unknownUsersConfig = {
-        failuresBeforeLockout: LockoutSettings.findOne('unknown-failuresBeforeLockout')?.value || 3,
-        lockoutPeriod: LockoutSettings.findOne('unknown-lockoutPeriod')?.value || 60,
-        failureWindow: LockoutSettings.findOne('unknown-failureWindow')?.value || 15
+        failuresBeforeLockout: (await LockoutSettings.findOneAsync('unknown-failuresBeforeLockout'))?.value || 3,
+        lockoutPeriod: (await LockoutSettings.findOneAsync('unknown-lockoutPeriod'))?.value || 60,
+        failureWindow: (await LockoutSettings.findOneAsync('unknown-failureWindow'))?.value || 15
       };
 
       // Initialize the AccountsLockout with configuration

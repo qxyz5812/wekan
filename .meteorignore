@@ -1,0 +1,9 @@
+npm-packages/
+# Root tests/ holds Playwright specs, Node E2E and node-based unit tests - none
+# of it is Meteor code, and Meteor's file watcher otherwise churns on the
+# tests/playwright/test-results/ tree (inotify errors). The leading slash anchors
+# this to the repo root only, so it does NOT match server/lib/tests/ or
+# client/lib/tests/ (the Mocha suites, loaded via meteor.testModule in
+# package.json). A naked "tests/" would match a dir named tests at any depth and
+# would hide those suites, making `meteor test` report "0 passing".
+/tests/

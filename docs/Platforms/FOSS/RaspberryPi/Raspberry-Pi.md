@@ -1,6 +1,6 @@
 NOTE: If you use MongoDB Snap package below, most likely it works with many distro versions, like newest distros also. But if installing without Snap from https://www.mongodb.com/try/download/community , those packages are not for so many distros and versions.
 
-This page is NOT only about Raspberry Pi. This page IS about install without container for ANY Linux/BSD/[macOS](Mac)/[Windows](Offline) using CPU of amd64/arm64/s390x/ppc64le.
+This page is NOT only about Raspberry Pi. This page IS about install without container for ANY Linux/BSD/[macOS](../../Propietary/Mac/Mac.md)/[Windows](../../Propietary/Windows/Offline.md) using CPU of amd64/arm64/s390x/ppc64le.
 
 WeKan only requires:
 - WeKan bundle .zip file of Javascript etc for that CPU. Only difference per CPU is that fibers package is compiled for that CPU. Those .zip files are built this way, for example:
@@ -15,13 +15,13 @@ WeKan only requires:
   - init.d script
   - any other script, that sets environment variables and in bundle directory does `node main.js`
 - most important environment settings are:
-  - `ROOT_URL=http://192.168.0.200` for WeKan server IP address at local network or `ROOT_URL=https://kanban.example.com` if [Caddy](Caddy-Webserver-Config)/[Nginx](Nginx-Webserver-Config)/[Apache2](Apache) proxies from HTTPS to WeKan http://127.0.0.1:4000 etc, see https://github.com/wekan/wekan/wiki/Settings
+  - `ROOT_URL=http://192.168.0.200` for WeKan server IP address at local network or `ROOT_URL=https://kanban.example.com` if [Caddy](../../../Webserver/Caddy.md)/[Nginx](../../../Webserver/Nginx.md)/[Apache2](../../../Webserver/Apache.md) proxies from HTTPS to WeKan http://127.0.0.1:4000 etc, see [Settings](../../../Webserver/Settings.md)
   - `PORT=80` or `PORT=4000` or some other port where WeKan Nodejs runs.
   - `MONGO_URL=mongodb://127.0.0.1:27017/wekan` where MongoDB server is, like localhost port 27017 using database name wekan. (Snap usually has MongoDB port at 27019, if it's not changed for example with `sudo snap set wekan mongodb-port='27020'`)
   - `WRITABLE_PATH=..`
   - if using node http at port 80, permission for binding to port 80, like `sudo setcap cap_net_bind_service=+ep /usr/local/bin/node`. See https://github.com/wekan/wekan/issues/4735#issuecomment-1295079327
   - Optional other settings are at [start-wekan.sh](https://raw.githubusercontent.com/wekan/wekan/master/start-wekan.sh) (and at https://github.com/wekan/wekan-snap/wiki/Supported-settings-keys#list-of-supported-keys but Snap settings have lowercase minus like `root-url`, where `.sh` scripts and services have uppercase underline like `ROOT_URL`)
-- https://github.com/wekan/wekan/wiki/Adding-users and https://github.com/wekan/wekan/wiki/Troubleshooting-Mail
+- [Adding users](../../../Login/Adding-users.md) and [Troubleshooting Mail](../../../Email/Troubleshooting-Mail.md)
 - Optional autoupgrade script https://github.com/wekan/wekan-bash-install-autoupgrade
 
 ## Bundle files
@@ -32,12 +32,12 @@ Windows and Linux versions at:
 and also:
 - Linux amd64 https://releases.wekan.team filename wekan-VERSION-amd64.zip
 - Linux arm64 https://releases.wekan.team/raspi3/
-- Linux [s390x](s390x) https://releases.wekan.team/s390x/
+- Linux [s390x](../s390x.md) https://releases.wekan.team/s390x/
 
 ## Related wiki pages
 
-- https://github.com/wekan/wekan/wiki/ppc
-- https://github.com/wekan/wekan/wiki/s390x
+- [ppc](../ppc.md)
+- [s390x](../s390x.md)
 
 ## Installing Node.js
 
@@ -117,7 +117,7 @@ mongo
 
 ## Please store MongoDB database etc Wekan files to external SSD hardrive (or HDD)
 
-It's very easy to corrupt microSD card with a lot of writes. Please make [at least daily backups](Backup).
+It's very easy to corrupt microSD card with a lot of writes. Please make [at least daily backups](../../../Backup/Backup.md).
 
 ## Install Wekan to RasPi3, RasPi4 or any arm64 server
 
@@ -130,7 +130,7 @@ Currently uses Node v12.17.0 and MongoDB v3.x or v4.x
 Built on arm64 server.
 Should work on RasPi3 and RasPi4 on Ubuntu 20.04 64bit arm64 or Raspberry Pi OS 64bit.
 Install info here:
-https://github.com/wekan/wekan/wiki/Raspberry-Pi
+[Raspberry Pi](Raspberry-Pi.md)
 ```
 You should always check what distro, node etc version it has, before downloading and installing.
 
@@ -331,7 +331,7 @@ you could install [postfix](https://github.com/wekan/wekan-bash-install-autoupgr
 MAIL_URL='smtp://127.0.0.1:25/'
 MAIL_FROM='Board Support <wekan@example.com>'
 ```
-It is much more recommended to use [email sending service like AWS SES or some other service](Troubleshooting-Mail) that can ensure delivering email correctly, for Wekan email notifications etc.
+It is much more recommended to use [email sending service like AWS SES or some other service](../../../Email/Troubleshooting-Mail.md) that can ensure delivering email correctly, for Wekan email notifications etc.
 
 ## 8. Optional: Nginx and Let's Encrypt SSL
 
@@ -491,7 +491,7 @@ mongorestore --drop --noIndexRestore
 ```
 And maybe [run as service](https://www.certdepot.net/rhel7-install-wekan/)
 
-Or start at boot, by having [at bottom of /etc/rc.local](https://github.com/wekan/wekan/blob/main/releases/virtualbox/etc-rc.local.txt).
+Or start at boot, by having [at bottom of /etc/rc.local](../../../../releases/virtualbox/etc-rc.local.txt).
 
 7) On other computer, with webbrowser go to http://192.168.0.12 (or other of your IP address you changed to start-wekan.sh)
 
@@ -510,7 +510,7 @@ sudo systemctl enable mongodb
 wget https://releases.wekan.team/raspi3/start-wekan.sh
 nano start-wekan.sh
 ```
-There edit [ROOT_URL to have your IP address or domain, and PORT for your localhost port](Settings). 
+There edit [ROOT_URL to have your IP address or domain, and PORT for your localhost port](../../../Webserver/Settings.md). 
 
 You can also allow node to run on port 80, when you check where node is:
 ```
@@ -520,7 +520,7 @@ and then allow it:
 ```
 sudo setcap cap_net_bind_service=+ep /usr/local/bin/node
 ```
-[Adding users](Adding-users)
+[Adding users](../../../Login/Adding-users.md)
 
 #### Upgrade bundle
 

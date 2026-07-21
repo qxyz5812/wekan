@@ -1,16 +1,29 @@
-- [More RocketChat fixes here](https://github.com/wekan/wekan/wiki/RocketChat)
+- [More RocketChat fixes here](../Webhooks/Chat/RocketChat.md)
 - [OAuth2 small bug](https://github.com/wekan/wekan/issues/1874) - currently OAuth2 works mostly
 
 # OAuth2 providers
 
 You can use some OAuth2 providers for logging into Wekan, for example:
-- [Auth0](OAuth2#auth0) - works
-- [Rocket.Chat](OAuth2#rocketchat-providing-oauth2-login-to-wekan) - works
-- [GitLab](OAuth2#gitlab-providing-oauth2-login-to-wekan) - works
+- [Auth0](OAuth2.md#auth0) - works
+- [Rocket.Chat](OAuth2.md#rocketchat-providing-oauth2-login-to-wekan) - works
+- [GitLab](OAuth2.md#gitlab-providing-oauth2-login-to-wekan) - works
 - Google - not tested yet
-- [LemonLDAP::NG](OAuth2#lemonldapng) - works
+- [LemonLDAP::NG](OAuth2.md#lemonldapng) - works
 
 You can ask your identity provider (LDAP, SAML etc) do they support adding OAuth2 application like Wekan.
+
+## OAuth2/OIDC auto-registration and admin groups
+
+These settings control who is allowed to log in via OAuth2/OIDC and who becomes a
+Wekan admin. They are read as environment variables (Docker / Source). On Snap use
+the lower-case dash-separated equivalent (for example `oauth2-admin-groups`).
+
+- `OAUTH2_AUTO_REGISTRATION` (default `true`) — when `false`, OAuth2/OIDC login is
+  refused for users that do not already have a Wekan account (matched by verified
+  email address). Use this when accounts must be provisioned in Wekan first.
+- `OAUTH2_ADMIN_GROUPS` (default empty) — comma/space-separated list of OIDC group
+  names whose members become Wekan admins. This mirrors `LDAP_SYNC_ADMIN_GROUPS`
+  for OAuth2/OIDC.
 
 ## GitLab providing OAuth2 login to Wekan
 
@@ -42,7 +55,7 @@ The redirect URL is described in the wekan wiki: https://wekan.example.com/_oaut
 
 ## Rocket.Chat providing OAuth2 login to Wekan
 
-- [More RocketChat fixes here](https://github.com/wekan/wekan/wiki/RocketChat)
+- [More RocketChat fixes here](../Webhooks/Chat/RocketChat.md)
 - [RocketChat Skip Install Registration Wizard Fix](https://github.com/RocketChat/Rocket.Chat/issues/31163#issuecomment-1848364117)
 
 > So for someone using snap, it means creating a file `/var/snap/rocketchat-server/common/override-setup-wizard.env ` (the name of the file itself could be anything as long as it has an .env extension) and setting its content to `OVERWRITE_SETTING_Show_Setup_Wizard=completed`
@@ -82,7 +95,7 @@ sudo snap set wekan port='3001'
 sudo snap set core refresh.schedule=02:00-04:00
 sudo snap set wekan with-api='true'
 ```
-Email settings [ARE NOT REQUIRED](Troubleshooting-Mail), Wekan works without setting up Email.
+Email settings [ARE NOT REQUIRED](../Email/Troubleshooting-Mail.md), Wekan works without setting up Email.
 ```
 sudo snap set wekan mail-url='smtps://user:pass@MAILSERVER.YOURDOMAIN.COM:453'
 sudo snap set wekan mail-from='Wekan Boards <support@YOURDOMAIN.COM>'
@@ -91,7 +104,7 @@ Edit Caddyfile:
 ```
 sudo nano /var/snap/wekan/common/Caddyfile
 ```
-Add Caddy config. This uses free Let's Encrypt SSL. You can also use [free CloudFlare wildcard SSL or any other SSL cert](Caddy-Webserver-Config).
+Add Caddy config. This uses free Let's Encrypt SSL. You can also use [free CloudFlare wildcard SSL or any other SSL cert](../Webserver/Caddy.md).
 ```
 boards.yourdomain.com {
         proxy / localhost:3001 {

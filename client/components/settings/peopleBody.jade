@@ -9,7 +9,7 @@ template(name="people")
             +spinner
           else if orgSetting.get
             span
-              i.fa.fa-sitemap
+              i.fa.fa-globe
               unless isMiniScreen
                 | {{_ 'organizations'}}
             input#searchOrgInput(placeholder="{{_ 'search'}}")
@@ -46,27 +46,40 @@ template(name="people")
                   option(value="locked") {{_ 'admin-people-filter-locked'}}
                   option(value="active") {{_ 'admin-people-filter-active'}}
                   option(value="inactive") {{_ 'admin-people-filter-inactive'}}
+                  option(value="admin") Admin
               button#unlockAllUsers.unlock-all-btn
+                span.emoji-icon
                 i.fa.fa-unlock
                 | {{_ 'accounts-lockout-unlock-all'}}
             .ext-box-right
               span {{#unless isMiniScreen}}{{_ 'people-number'}}{{/unless}} #{peopleNumber}
             .divAddOrRemoveTeam#divAddOrRemoveTeam
               button#addOrRemoveTeam
-                i.fa.fa-edit
+                i.fa.fa-pencil-square-o
                 | {{_ 'add'}} / {{_ 'delete'}} {{_ 'teams'}}
           else if lockedUsersSetting.get
             span
-              i.fa.fa-lock.text-red
+              span.emoji-icon.text-red
+                i.fa.fa-lock
               unless isMiniScreen
                 | {{_ 'accounts-lockout-locked-users'}}
+          else if rolesSetting.get
+            span
+              i.fa.fa-key
+              unless isMiniScreen
+                | {{_ 'roles'}}
+          else if templatesSetting.get
+            span
+              i.fa.fa-clone
+              unless isMiniScreen
+                | {{_ 'shared-templates'}}
 
       .content-body
         .side-menu
           ul
             li.active
               a.js-org-menu(data-id="org-setting")
-                i.fa.fa-sitemap
+                i.fa.fa-globe
                 | {{_ 'organizations'}}
             li
               a.js-team-menu(data-id="team-setting")
@@ -78,106 +91,211 @@ template(name="people")
                 | {{_ 'people'}}
             li
               a.js-locked-users-menu(data-id="locked-users-setting")
-                i.fa.fa-lock.text-red
+                span.emoji-icon.text-red
+                  i.fa.fa-lock
                 | {{_ 'accounts-lockout-locked-users'}}
+            li
+              a.js-roles-menu(data-id="roles-setting")
+                i.fa.fa-key
+                | {{_ 'roles'}}
+            li
+              a.js-templates-menu(data-id="templates-setting")
+                i.fa.fa-clone
+                | {{_ 'shared-templates'}}
+            li
+              a.js-domains-menu(data-id="domains-setting")
+                i.fa.fa-at
+                | {{_ 'domains'}}
         .main-body
           if loading.get
             +spinner
           else if orgSetting.get
-            +orgGeneral
+            +orgGeneral(orgList=orgList orgCurrentPage=orgCurrentPage orgTotalPages=orgTotalPages hasOrgPrevPage=hasOrgPrevPage hasOrgNextPage=hasOrgNextPage)
           else if teamSetting.get
-            +teamGeneral
+            +teamGeneral(teamList=teamList teamCurrentPage=teamCurrentPage teamTotalPages=teamTotalPages hasTeamPrevPage=hasTeamPrevPage hasTeamNextPage=hasTeamNextPage)
           else if peopleSetting.get
-            +peopleGeneral
+            +peopleGeneral(peopleList=peopleList peopleCurrentPage=peopleCurrentPage peopleTotalPages=peopleTotalPages hasPeoplePrevPage=hasPeoplePrevPage hasPeopleNextPage=hasPeopleNextPage)
           else if lockedUsersSetting.get
             +lockedUsersGeneral
+          else if rolesSetting.get
+            +rolesGeneral
+          else if templatesSetting.get
+            +templatesGeneral
+          else if domainSetting.get
+            +domainGeneral
 
 
 template(name="orgGeneral")
+  .org-pagination
+    button.js-org-prev-page(class="{{#if hasOrgPrevPage}}{{else}}disabled{{/if}}")
+      | &lt;
+    span.org-page-info {{orgCurrentPage}} / {{orgTotalPages}}
+    button.js-org-next-page(class="{{#if hasOrgNextPage}}{{else}}disabled{{/if}}")
+      | &gt;
   table
     thead
       tr
+        th
+          +newOrgRow
         th {{_ 'displayName'}}
         th {{_ 'description'}}
         th {{_ 'shortName'}}
-        th {{_ 'autoAddUsersWithDomainName'}}
         th {{_ 'website'}}
         th {{_ 'createdAt'}}
-        th {{_ 'active'}}
+        th {{_ 'active-org'}}
         th
-          +newOrgRow
+          | {{_ 'org-shared-templates'}}
+          br
+          a.js-org-feature-all(href="#", data-feature="orgSharedTemplates", data-value="true", title="{{_ 'select-all'}}")
+            i.fa.fa-check-square-o
+          |  
+          a.js-org-feature-all(href="#", data-feature="orgSharedTemplates", data-value="false", title="{{_ 'unselect-all'}}")
+            i.fa.fa-square-o
+        th
+          | {{_ 'org-propagate-members-to-boards'}}
+          br
+          a.js-org-feature-all(href="#", data-feature="orgPropagateMembersToBoards", data-value="true", title="{{_ 'select-all'}}")
+            i.fa.fa-check-square-o
+          |  
+          a.js-org-feature-all(href="#", data-feature="orgPropagateMembersToBoards", data-value="false", title="{{_ 'unselect-all'}}")
+            i.fa.fa-square-o
+        th
+          | {{_ 'org-sync-members-from-auth'}}
+          br
+          a.js-org-feature-all(href="#", data-feature="orgSyncMembersFromAuth", data-value="true", title="{{_ 'select-all'}}")
+            i.fa.fa-check-square-o
+          |  
+          a.js-org-feature-all(href="#", data-feature="orgSyncMembersFromAuth", data-value="false", title="{{_ 'unselect-all'}}")
+            i.fa.fa-square-o
     tbody
       tr
       each org in orgList
-        +orgRow(orgId=org._id)
+        +orgRow(org=org)
 
 template(name="teamGeneral")
+  .team-pagination
+    button.js-team-prev-page(class="{{#if hasTeamPrevPage}}{{else}}disabled{{/if}}")
+      | &lt;
+    span.team-page-info {{teamCurrentPage}} / {{teamTotalPages}}
+    button.js-team-next-page(class="{{#if hasTeamNextPage}}{{else}}disabled{{/if}}")
+      | &gt;
   table
     thead
       tr
+        th
+          +newTeamRow
         th {{_ 'displayName'}}
         th {{_ 'description'}}
         th {{_ 'shortName'}}
         th {{_ 'website'}}
         th {{_ 'createdAt'}}
-        th {{_ 'active'}}
+        th {{_ 'active-team'}}
         th
-          +newTeamRow
+          | {{_ 'team-shared-templates'}}
+          br
+          a.js-team-feature-all(href="#", data-feature="teamSharedTemplates", data-value="true", title="{{_ 'select-all'}}")
+            i.fa.fa-check-square-o
+          |  
+          a.js-team-feature-all(href="#", data-feature="teamSharedTemplates", data-value="false", title="{{_ 'unselect-all'}}")
+            i.fa.fa-square-o
+        th
+          | {{_ 'team-propagate-members-to-boards'}}
+          br
+          a.js-team-feature-all(href="#", data-feature="teamPropagateMembersToBoards", data-value="true", title="{{_ 'select-all'}}")
+            i.fa.fa-check-square-o
+          |  
+          a.js-team-feature-all(href="#", data-feature="teamPropagateMembersToBoards", data-value="false", title="{{_ 'unselect-all'}}")
+            i.fa.fa-square-o
+        th
+          | {{_ 'team-sync-members-from-auth'}}
+          br
+          a.js-team-feature-all(href="#", data-feature="teamSyncMembersFromAuth", data-value="true", title="{{_ 'select-all'}}")
+            i.fa.fa-check-square-o
+          |  
+          a.js-team-feature-all(href="#", data-feature="teamSyncMembersFromAuth", data-value="false", title="{{_ 'unselect-all'}}")
+            i.fa.fa-square-o
     tbody
       tr
       each team in teamList
-        +teamRow(teamId=team._id)
+        +teamRow(team=team)
 
 template(name="peopleGeneral")
   #divAddOrRemoveTeamContainer
     +modifyTeamsUsers
+  .people-pagination
+    button.js-people-prev-page(class="{{#if hasPeoplePrevPage}}{{else}}disabled{{/if}}")
+      | &lt;
+    span.people-page-info {{peopleCurrentPage}} / {{peopleTotalPages}}
+    button.js-people-next-page(class="{{#if hasPeopleNextPage}}{{else}}disabled{{/if}}")
+      | &gt;
   table
     thead
       tr
         th
-          +selectAllUser
-        th {{_ 'accounts-lockout-status'}}
-        th {{_ 'admin-people-active-status'}}
-        th {{_ 'username'}}
-        th {{_ 'fullname'}}
-        th {{_ 'initials'}}
-        th {{_ 'admin'}}
-        th {{_ 'email'}}
-        th {{_ 'verified'}}
-        th {{_ 'createdAt'}}
-        th {{_ 'active'}}
-        th {{_ 'authentication-method'}}
-        th {{_ 'import-usernames'}}
-        th {{_ 'organizations'}}
-        th {{_ 'teams'}}
-        th
           +newUserRow
+        th {{_ 'username'}}
+        th {{_ 'email'}}
+        th {{_ 'admin'}}
+        th {{_ 'active-person'}}
+        th {{_ 'accounts-lockout-status'}}
+        th {{_ 'createdAt'}}
+        th
+          +selectAllUser
     tbody
       tr
       each user in peopleList
-        +peopleRow(userId=user._id)
+        +peopleRow(user=user)
 
 template(name="selectAllUser")
   | {{_ 'dueCardsViewChange-choice-all'}}
   input.allUserChkBox(type="checkbox", id="chkSelectAll")
 
+template(name="domainGeneral")
+  .domain-controls
+    input.js-domain-search(type="text" placeholder="{{_ 'search'}}" aria-label="{{_ 'search'}}")
+    button.js-domain-search-button(type="button") {{_ 'search'}}
+  .domain-pagination
+    button.js-domain-prev-page(type="button" class="{{#unless hasPrevPage}}disabled{{/unless}}" aria-label="{{_ 'previous'}}") {{_ 'previous'}}
+    span.domain-page-info {{currentPage}} / {{totalPages}}
+    button.js-domain-next-page(type="button" class="{{#unless hasNextPage}}disabled{{/unless}}" aria-label="{{_ 'next'}}") {{_ 'next'}}
+  table
+    thead
+      tr
+        th(scope="col") {{_ 'domain'}}
+        th(scope="col") {{_ 'domain-user-count'}}
+    tbody
+      if domainList.length
+        each domainList
+          tr
+            td {{ domain }}
+            td {{ count }}
+      else
+        tr
+          td(colspan="2") {{_ 'no-items-message'}}
+
 template(name="newOrgRow")
   a.new-org
-    i.fa.fa-plus-square
+    i.fa.fa-plus
     | {{_ 'new'}}
 
 template(name="newTeamRow")
   a.new-team
-    i.fa.fa-plus-square
+    i.fa.fa-plus
     | {{_ 'new'}}
 
 template(name="newUserRow")
   a.new-user
-    i.fa.fa-plus-square
+    i.fa.fa-plus
     | {{_ 'new'}}
 
 template(name="orgRow")
   tr
+    td
+      a.edit-org
+        i.fa.fa-pencil-square-o
+        | {{_ 'edit'}}
+      a.more-settings-org
+        | ⋯
     if orgData.orgIsActive
       td {{ orgData.orgDisplayName }}
     else
@@ -191,31 +309,33 @@ template(name="orgRow")
     else
       td <s>{{ orgData.orgShortName }}</s>
     if orgData.orgIsActive
-      td {{ orgData.orgAutoAddUsersWithDomainName }}
-    else
-      td <s>{{ orgData.orgAutoAddUsersWithDomainName }}</s>
-    if orgData.orgIsActive
       td {{ orgData.orgWebsite }}
     else
       td <s>{{ orgData.orgWebsite }}</s>
     if orgData.orgIsActive
-      td {{ moment orgData.createdAt 'LLL' }}
+      td {{ displayDate orgData.createdAt 'LLL' }}
     else
-      td <s>{{ moment orgData.createdAt 'LLL' }}</s>
+      td <s>{{ displayDate orgData.createdAt 'LLL' }}</s>
     td
       if orgData.orgIsActive
         | {{_ 'yes'}}
       else
         | {{_ 'no'}}
-    td
-      a.edit-org
-        i.fa.fa-edit
-        | {{_ 'edit'}}
-      a.more-settings-org
-        i.fa.fa-ellipsis-h
+    td.text-center
+      input.js-toggle-org-feature(type="checkbox", data-feature="orgSharedTemplates", checked=orgData.orgSharedTemplates)
+    td.text-center
+      input.js-toggle-org-feature(type="checkbox", data-feature="orgPropagateMembersToBoards", checked=orgData.orgPropagateMembersToBoards)
+    td.text-center
+      input.js-toggle-org-feature(type="checkbox", data-feature="orgSyncMembersFromAuth", checked=orgData.orgSyncMembersFromAuth)
 
 template(name="teamRow")
   tr
+    td
+      a.edit-team
+        i.fa.fa-pencil-square-o
+        | {{_ 'edit'}}
+      a.more-settings-team
+        | ⋯
     if teamData.teamIsActive
       td {{ teamData.teamDisplayName }}
     else
@@ -233,112 +353,96 @@ template(name="teamRow")
     else
       td <s>{{ teamData.teamWebsite }}</s>
     if teamData.teamIsActive
-      td {{ moment teamData.createdAt 'LLL' }}
+      td {{ displayDate teamData.createdAt 'LLL' }}
     else
-      td <s>{{ moment teamData.createdAt 'LLL' }}</s>
+      td <s>{{ displayDate teamData.createdAt 'LLL' }}</s>
     td
       if teamData.teamIsActive
         | {{_ 'yes'}}
       else
         | {{_ 'no'}}
-    td
-      a.edit-team
-        i.fa.fa-edit
-        | {{_ 'edit'}}
-      a.more-settings-team
-        i.fa.fa-ellipsis-h
+    td.text-center
+      input.js-toggle-team-feature(type="checkbox", data-feature="teamSharedTemplates", checked=teamData.teamSharedTemplates)
+    td.text-center
+      input.js-toggle-team-feature(type="checkbox", data-feature="teamPropagateMembersToBoards", checked=teamData.teamPropagateMembersToBoards)
+    td.text-center
+      input.js-toggle-team-feature(type="checkbox", data-feature="teamSyncMembersFromAuth", checked=teamData.teamSyncMembersFromAuth)
 
 template(name="peopleRow")
   tr
+    td
+      a.edit-user(data-user-id=userData._id)
+        i.fa.fa-pencil-square-o
+        | {{_ 'edit'}}
+      a.more-settings-user(data-user-id=userData._id)
+        | ⋯
     if userData.loginDisabled
-      td
-        input.selectUserChkBox(type="checkbox", disabled="disabled", id="{{userData._id}}")
-    else
-      td
-        input.selectUserChkBox(type="checkbox", id="{{userData._id}}")
-    td.account-status
-      if isUserLocked
-        i.fa.fa-lock.text-red.js-toggle-lock-status(data-user-id=userData._id, data-is-locked="true", title="{{_ 'accounts-lockout-click-to-unlock'}}")
-      else
-        i.fa.fa-unlock.text-green.js-toggle-lock-status(data-user-id=userData._id, data-is-locked="false", title="{{_ 'accounts-lockout-user-unlocked'}}")
-    td.account-active-status
-      if userData.loginDisabled
-        i.fa.fa-ban.text-red.js-toggle-active-status(data-user-id=userData._id, data-is-active="false", title="{{_ 'admin-people-user-inactive'}}")
-      else
-        i.fa.fa-check-circle.text-green.js-toggle-active-status(data-user-id=userData._id, data-is-active="true", title="{{_ 'admin-people-user-active'}}")
-    if userData.loginDisabled
-      td.username <s>{{ userData.username }}</s>
+      td.username
+        a.js-edit-people-avatar(data-user-id=userData._id)
+          if hasAvatarUrl
+            .avatar
+              img.avatar-image(src="{{userData.profile.avatarUrl}}", alt="{{userData.username}}", title="{{_ 'change-avatar'}}")
+          else
+            +userAvatarInitials(userId=userData._id)
+        <s>{{ userData.username }}</s>
     else if isUserLocked
-      td.username {{ userData.username }}
+      td.username
+        a.js-edit-people-avatar(data-user-id=userData._id)
+          if hasAvatarUrl
+            .avatar
+              img.avatar-image(src="{{userData.profile.avatarUrl}}", alt="{{userData.username}}", title="{{_ 'change-avatar'}}")
+          else
+            +userAvatarInitials(userId=userData._id)
+        | {{ userData.username }}
     else
-      td.username {{ userData.username }}
-    if userData.loginDisabled
-      td <s>{{ userData.profile.fullname }}</s>
-    else
-      td {{ userData.profile.fullname }}
-    if userData.loginDisabled
-      td <s>{{ userData.profile.initials }}</s>
-    else
-      td {{ userData.profile.initials }}
-    if userData.loginDisabled
-      td
-        if userData.isAdmin
-          | <s>{{_ 'yes'}}</s>
-        else
-          | <s>{{_ 'no'}}</s>
-    else
-      td
-        if userData.isAdmin
-          | {{_ 'yes'}}
-        else
-          | {{_ 'no'}}
+      td.username
+        a.js-edit-people-avatar(data-user-id=userData._id)
+          if hasAvatarUrl
+            .avatar
+              img.avatar-image(src="{{userData.profile.avatarUrl}}", alt="{{userData.username}}", title="{{_ 'change-avatar'}}")
+          else
+            +userAvatarInitials(userId=userData._id)
+        | {{ userData.username }}
     if userData.loginDisabled
       td <s>{{ userData.emails.[0].address }}</s>
     else
       td {{ userData.emails.[0].address }}
     if userData.loginDisabled
       td
-        if userData.emails.[0].verified
+        if userData.isAdmin
           | <s>{{_ 'yes'}}</s>
         else
           | <s>{{_ 'no'}}</s>
     else
       td
-        if userData.emails.[0].verified
+        if userData.isAdmin
           | {{_ 'yes'}}
         else
           | {{_ 'no'}}
-    if userData.loginDisabled
-      td <s>{{ moment userData.createdAt 'LLL' }}</s>
-    else
-      td {{ moment userData.createdAt 'LLL' }}
-    td
+    td.account-active-status
       if userData.loginDisabled
-        | {{_ 'no'}}
+        span.text-red.js-toggle-active-status(data-user-id=userData._id, data-is-active="false", title="{{_ 'admin-people-user-inactive'}}")
+          i.fa.fa-ban
       else
-        | {{_ 'yes'}}
+        span.text-green.js-toggle-active-status(data-user-id=userData._id, data-is-active="true", title="{{_ 'admin-people-user-active'}}")
+          i.fa.fa-check
+    td.account-status
+      if isUserLocked
+        span.text-red.js-toggle-lock-status.emoji-icon(data-user-id=userData._id, data-is-locked="true", title="{{_ 'accounts-lockout-click-to-unlock'}}")
+          i.fa.fa-lock
+      else
+        span.text-green.js-toggle-lock-status.emoji-icon(data-user-id=userData._id, data-is-locked="false", title="{{_ 'accounts-lockout-user-unlocked'}}")
+          i.fa.fa-unlock
     if userData.loginDisabled
-      td <s>{{_ userData.authenticationMethod }}</s>
+      td <s>{{ displayDate userData.createdAt 'LLL' }}</s>
     else
-      td {{_ userData.authenticationMethod }}
+      td {{ displayDate userData.createdAt 'LLL' }}
     if userData.loginDisabled
-      td <s>{{ userData.importUsernamesString }}</s>
+      td
+        input.selectUserChkBox(type="checkbox", disabled="disabled", id="{{userData._id}}")
     else
-      td {{ userData.importUsernamesString }}
-    if userData.loginDisabled
-      td <s>{{ userData.orgsUserBelongs }}</s>
-    else
-      td {{ userData.orgsUserBelongs }}
-    if userData.loginDisabled
-      td <s>{{ userData.teamsUserBelongs }}</s>
-    else
-      td {{ userData.teamsUserBelongs }}
-    td
-      a.edit-user
-        i.fa.fa-edit
-        | {{_ 'edit'}}
-      a.more-settings-user
-        i.fa.fa-ellipsis-h
+      td
+        input.selectUserChkBox(type="checkbox", id="{{userData._id}}")
 
 template(name="editOrgPopup")
   form
@@ -361,7 +465,7 @@ template(name="editOrgPopup")
       | {{_ 'website'}}
       input.js-orgWebsite(type="text" value=org.orgWebsite)
     label
-      | {{_ 'active'}}
+      | {{_ 'active-org'}}
       select.select-active.js-org-isactive
         option(value="false") {{_ 'no'}}
         option(value="true" selected="{{org.orgIsActive}}") {{_ 'yes'}}
@@ -387,7 +491,7 @@ template(name="editTeamPopup")
       | {{_ 'website'}}
       input.js-teamWebsite(type="text" value=team.teamWebsite)
     label
-      | {{_ 'active'}}
+      | {{_ 'active-team'}}
       select.select-active.js-team-isactive
         option(value="false") {{_ 'no'}}
         option(value="true" selected="{{team.teamIsActive}}") {{_ 'yes'}}
@@ -434,7 +538,7 @@ template(name="editUserPopup")
         option(value="false") {{_ 'no'}}
         option(value="true" selected="{{userData.emails.[0].verified}}") {{_ 'yes'}}
     label
-      | {{_ 'active'}}
+      | {{_ 'active-person'}}
       select.select-active.js-profile-isactive
         option(value="false") {{_ 'yes'}}
         option(value="true" selected="{{user.loginDisabled}}") {{_ 'no'}}
@@ -448,8 +552,10 @@ template(name="editUserPopup")
             option(value="{{value}}") {{_ value}}
     label
       | {{_ 'organizations'}}
-      i.fa.fa-plus-square#addUserOrg
-      i.fa.fa-minus-square#removeUserOrg
+      span#addUserOrg
+        i.fa.fa-plus
+      span#removeUserOrg
+        i.fa.fa-minus
       select.js-orgs#jsOrgs
         option(value="-1") {{_ 'organizations'}} :
         each value in orgsDatas
@@ -458,8 +564,10 @@ template(name="editUserPopup")
       input#jsUserOrgIdsInPut.js-userOrgIds.hide(type="hidden" value=user.orgIdsUserBelongs)
     label
       | {{_ 'teams'}}
-      i.fa.fa-plus-square#addUserTeam
-      i.fa.fa-minus-square#removeUserTeam
+      span#addUserTeam
+        i.fa.fa-plus
+      span#removeUserTeam
+        i.fa.fa-minus
       select.js-teams#jsTeams
         option(value="-1") {{_ 'teams'}} :
         each value in teamsDatas
@@ -493,7 +601,7 @@ template(name="newOrgPopup")
       | {{_ 'website'}}
       input.js-orgWebsite(type="text" value="" required)
     label
-      | {{_ 'active'}}
+      | {{_ 'active-org'}}
       select.select-active.js-org-isactive
         option(value="false" selected="selected") {{_ 'no'}}
         option(value="true") {{_ 'yes'}}
@@ -517,7 +625,7 @@ template(name="newTeamPopup")
       | {{_ 'website'}}
       input.js-teamWebsite(type="text" value="")
     label
-      | {{_ 'active'}}
+      | {{_ 'active-team'}}
       select.select-active.js-team-isactive
         option(value="false" selected="selected") {{_ 'no'}}
         option(value="true") {{_ 'yes'}}
@@ -554,7 +662,8 @@ template(name="newUserPopup")
       span.error.hide.username-taken
         | {{_ 'error-username-taken'}}
       //if isLdap
-      //  input.js-profile-username(type="text" value=user.username readonly)
+      //
+        input.js-profile-username(type="text" value=user.username readonly)
       //else
       input.js-profile-username(type="text" value="" required)
     label
@@ -565,7 +674,8 @@ template(name="newUserPopup")
       span.error.hide.email-taken
         | {{_ 'error-email-taken'}}
       //if isLdap
-      //  input.js-profile-email(type="email" value="{{user.emails.[0].address}}" readonly)
+      //
+        input.js-profile-email(type="email" value="{{user.emails.[0].address}}" readonly)
       //else
       input.js-profile-email(type="email" value="" required)
     label
@@ -577,7 +687,7 @@ template(name="newUserPopup")
         option(value="false" selected="selected") {{_ 'no'}}
         option(value="true") {{_ 'yes'}}
     label
-      | {{_ 'active'}}
+      | {{_ 'active-person'}}
       select.select-active.js-profile-isactive
         option(value="false" selected="selected") {{_ 'yes'}}
         option(value="true") {{_ 'no'}}
@@ -591,8 +701,10 @@ template(name="newUserPopup")
             option(value="{{value}}") {{_ value}}
     label
       | {{_ 'organizations'}}
-      i.fa.fa-plus-square#addUserOrgNewUser
-      i.fa.fa-minus-square#removeUserOrgNewUser
+      span#addUserOrgNewUser
+        i.fa.fa-plus
+      span#removeUserOrgNewUser
+        i.fa.fa-minus
       select.js-orgsNewUser#jsOrgsNewUser
         option(value="-1") {{_ 'organizations'}} :
         each value in orgsDatas
@@ -601,8 +713,10 @@ template(name="newUserPopup")
       input#jsUserOrgIdsInPutNewUser.js-userOrgIdsNewUser.hide(type="text" value=user.orgIdsUserBelongs)
     label
       | {{_ 'teams'}}
-      i.fa.fa-plus-square#addUserTeamNewUser
-      i.fa.fa-minus-square#removeUserTeamNewUser
+      span#addUserTeamNewUser
+        i.fa.fa-plus
+      span#removeUserTeamNewUser
+        i.fa.fa-minus
       select.js-teamsNewUser#jsTeamsNewUser
         option(value="-1") {{_ 'teams'}} :
         each value in teamsDatas
@@ -634,10 +748,14 @@ template(name="settingsOrgPopup")
   // It's not yet possible to impersonate organization. Only impersonate user,
   // because that changes current user ID. What would it mean in practice
   // to impersonate organization?
-  //  li
-  //    a.impersonate-org
-  //      i.fa.fa-user
-  //      | {{_ 'impersonate-org'}}
+  //
+    li
+  //
+      a.impersonate-org
+  //
+        i.fa.fa-user
+  //
+        | {{_ 'impersonate-org'}}
   //
   //
 
@@ -678,8 +796,10 @@ template(name="settingsUserPopup")
   // - wekan/client/components/settings/peopleBody.jade deleteButton
   // - wekan/client/components/settings/peopleBody.js deleteButton
   // - wekan/client/components/sidebar/sidebar.js Popup.afterConfirm('removeMember'
-  //   that does now remove member from board, card members and assignees correctly,
-  //   but that should be used to remove user from all boards similarly
+  //
+     that does now remove member from board, card members and assignees correctly,
+  //
+     but that should be used to remove user from all boards similarly
   // - wekan/models/users.js Delete is not enabled
 
 template(name="lockedUsersGeneral")
@@ -710,3 +830,71 @@ template(name="lockedUsersGeneral")
       input.wekan-form-control#unknown-failure-window(type="number", min="1", max="60", placeholder="15" value="{{unknownFailureWindow}}")
 
     button.js-lockout-save.primary {{_ 'save'}}
+
+template(name="rolesGeneral")
+  .roles-settings
+    h3 {{_ 'roles'}}
+    p.roles-description {{_ 'roles-info'}}
+
+    h4 {{_ 'allow-invite-to-board'}}
+    ul#roles-setting.setting-detail
+      li
+        a.flex.js-toggle-all-roles
+          .materialCheckBox(class="{{#if allRolesAllowed}}is-checked{{/if}}")
+          span {{_ 'all-board-members'}}
+      each roleOptions
+        li
+          a.flex.js-toggle-role(data-role="{{key}}")
+            .materialCheckBox(class="{{#if allowed}}is-checked{{/if}}")
+            span {{_ label}}
+
+    button.js-roles-save.primary {{_ 'save'}}
+
+template(name="templatesGeneral")
+  .templates-settings
+    h3 {{_ 'shared-templates'}}
+    p.templates-description {{_ 'shared-templates-info'}}
+
+    ul#templates-setting.setting-detail
+      li
+        a.flex.js-toggle-template-scope(data-scope="organizations")
+          .materialCheckBox(class="{{#if scopeChecked 'organizations'}}is-checked{{/if}}")
+          span {{_ 'organizations'}}
+      li
+        a.flex.js-toggle-template-scope(data-scope="teams")
+          .materialCheckBox(class="{{#if scopeChecked 'teams'}}is-checked{{/if}}")
+          span {{_ 'teams'}}
+      li
+        a.flex.js-toggle-template-scope(data-scope="domains")
+          .materialCheckBox(class="{{#if scopeChecked 'domains'}}is-checked{{/if}}")
+          span {{_ 'domains'}}
+
+    .shared-templates-results
+      if loading.get
+        +spinner
+      else if hasAnyScope
+        each scopeBlock in scopeBlocks
+          h4 {{_ scopeBlock.scopeLabel}}
+          if scopeBlock.groups.length
+            each group in scopeBlock.groups
+              .shared-templates-group
+                h5 {{group.groupName}}
+                ul.setting-detail
+                  each member in group.members
+                    li
+                      span.shared-templates-user {{member.label}}
+                      ul.shared-templates-boards
+                        each board in member.templateBoards
+                          li
+                            if board.boardId
+                              a.js-shared-template-link(href="{{board.url}}" data-board-id="{{board.boardId}}" data-slug="{{board.slug}}")
+                                i.fa.fa-clone
+                                | {{board.title}}
+                            else
+                              span
+                                i.fa.fa-clone
+                                | {{board.title}}
+          else
+            p.shared-templates-none {{_ 'no-shared-templates'}}
+      else
+        p.shared-templates-hint {{_ 'shared-templates-select-scope'}}

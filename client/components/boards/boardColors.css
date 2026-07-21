@@ -1,4 +1,4 @@
-/* =============== 
+/* ===============
 THEME - NEPHRITIS
 =================*/
 
@@ -9,7 +9,7 @@ THEME - NEPHRITIS
   background-color: #27ae60;
 }
 .board-color-nephritis .is-selected .minicard {
-  border-left: 3px solid #27ae60;
+  border-inline-start: 3px solid #27ae60;
 }
 .board-color-nephritis .minicard {
   border-radius: 7px;
@@ -47,7 +47,13 @@ THEME - NEPHRITIS
 }
 .board-color-nephritis .materialCheckBox.is-checked {
   border-bottom: 2px solid #27ae60;
-  border-right: 2px solid #27ae60;
+  border-inline-end: 2px solid #27ae60;
+}
+.board-color-nephritis .checklist-progress-bar {
+  background-color: #d4f1dd !important;
+}
+.board-color-nephritis .checklist-progress-bar .checklist-progress {
+  background-color: #27ae60 !important;
 }
 .board-color-nephritis .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #e7faef;
@@ -89,7 +95,7 @@ THEME - NEPHRITIS
 /* Remove margins in between columns/fix spacing */
 
 .board-color-nephritis .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -99,7 +105,7 @@ THEME - NEPHRITIS
 
 /* === END NEPHRITIS THEME === */
 
-/* =============== 
+/* ===============
 THEME - Pomegranate
 =================*/
 
@@ -110,7 +116,7 @@ THEME - Pomegranate
   background-color: #c0392b;
 }
 .board-color-pomegranate .is-selected .minicard {
-  border-left: 3px solid #c0392b;
+  border-inline-start: 3px solid #c0392b;
 }
 .board-color-pomegranate .minicard {
   border-radius: 7px;
@@ -148,7 +154,13 @@ THEME - Pomegranate
 }
 .board-color-pomegranate .materialCheckBox.is-checked {
   border-bottom: 2px solid #c0392b;
-  border-right: 2px solid #c0392b;
+  border-inline-end: 2px solid #c0392b;
+}
+.board-color-pomegranate .checklist-progress-bar {
+  background-color: #f5d5d2 !important;
+}
+.board-color-pomegranate .checklist-progress-bar .checklist-progress {
+  background-color: #c0392b !important;
 }
 .board-color-pomegranate .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #faeae9;
@@ -190,7 +202,7 @@ THEME - Pomegranate
 /* Remove margins in between columns/fix spacing */
 
 .board-color-pomegranate .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -200,7 +212,7 @@ THEME - Pomegranate
 
 /* === END Pomegranate THEME === */
 
-/* =============== 
+/* ===============
 THEME - Belize
 =================*/
 
@@ -211,7 +223,7 @@ THEME - Belize
   background-color: #2980b9;
 }
 .board-color-belize .is-selected .minicard {
-  border-left: 3px solid #2980b9;
+  border-inline-start: 3px solid #2980b9;
 }
 .board-color-belize .minicard {
   border-radius: 7px;
@@ -249,7 +261,13 @@ THEME - Belize
 }
 .board-color-belize .materialCheckBox.is-checked {
   border-bottom: 2px solid #2980b9;
-  border-right: 2px solid #2980b9;
+  border-inline-end: 2px solid #2980b9;
+}
+.board-color-belize .checklist-progress-bar {
+  background-color: #d1e7f5 !important;
+}
+.board-color-belize .checklist-progress-bar .checklist-progress {
+  background-color: #2980b9 !important;
 }
 .board-color-belize .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #e8f3fa;
@@ -291,7 +309,7 @@ THEME - Belize
 /* Remove margins in between columns/fix spacing */
 
 .board-color-belize .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -301,7 +319,7 @@ THEME - Belize
 
 /* === END Belize THEME === */
 
-/* =============== 
+/* ===============
 THEME - Wisteria
 =================*/
 
@@ -312,7 +330,7 @@ THEME - Wisteria
   background-color: #8e44ad;
 }
 .board-color-wisteria .is-selected .minicard {
-  border-left: 3px solid #8e44ad;
+  border-inline-start: 3px solid #8e44ad;
 }
 .board-color-wisteria .minicard {
   border-radius: 7px;
@@ -350,7 +368,13 @@ THEME - Wisteria
 }
 .board-color-wisteria .materialCheckBox.is-checked {
   border-bottom: 2px solid #8e44ad;
-  border-right: 2px solid #8e44ad;
+  border-inline-end: 2px solid #8e44ad;
+}
+.board-color-wisteria .checklist-progress-bar {
+  background-color: #e8d9f0 !important;
+}
+.board-color-wisteria .checklist-progress-bar .checklist-progress {
+  background-color: #8e44ad !important;
 }
 .board-color-wisteria .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #f4ecf7;
@@ -392,7 +416,7 @@ THEME - Wisteria
 /* Remove margins in between columns/fix spacing */
 
 .board-color-wisteria .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -402,7 +426,7 @@ THEME - Wisteria
 
 /* === END Wisteria THEME === */
 
-/* =============== 
+/* ===============
 THEME - Midnight
 =================*/
 
@@ -413,7 +437,7 @@ THEME - Midnight
   background-color: #2c3e50;
 }
 .board-color-midnight .is-selected .minicard {
-  border-left: 3px solid #2c3e50;
+  border-inline-start: 3px solid #2c3e50;
 }
 .board-color-midnight .minicard {
   border-radius: 7px;
@@ -451,7 +475,13 @@ THEME - Midnight
 }
 .board-color-midnight .materialCheckBox.is-checked {
   border-bottom: 2px solid #2c3e50;
-  border-right: 2px solid #2c3e50;
+  border-inline-end: 2px solid #2c3e50;
+}
+.board-color-midnight .checklist-progress-bar {
+  background-color: #d2dae2 !important;
+}
+.board-color-midnight .checklist-progress-bar .checklist-progress {
+  background-color: #2c3e50 !important;
 }
 .board-color-midnight .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #e6ecf1;
@@ -493,7 +523,7 @@ THEME - Midnight
 /* Remove margins in between columns/fix spacing */
 
 .board-color-midnight .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -503,7 +533,7 @@ THEME - Midnight
 
 /* === END Midnight THEME === */
 
-/* =============== 
+/* ===============
 THEME - Pumpkin
 =================*/
 
@@ -514,7 +544,7 @@ THEME - Pumpkin
   background-color: #e67e22;
 }
 .board-color-pumpkin .is-selected .minicard {
-  border-left: 3px solid #e67e22;
+  border-inline-start: 3px solid #e67e22;
 }
 .board-color-pumpkin .minicard {
   border-radius: 7px;
@@ -552,7 +582,13 @@ THEME - Pumpkin
 }
 .board-color-pumpkin .materialCheckBox.is-checked {
   border-bottom: 2px solid #e67e22;
-  border-right: 2px solid #e67e22;
+  border-inline-end: 2px solid #e67e22;
+}
+.board-color-pumpkin .checklist-progress-bar {
+  background-color: #f9e5d1 !important;
+}
+.board-color-pumpkin .checklist-progress-bar .checklist-progress {
+  background-color: #e67e22 !important;
 }
 .board-color-pumpkin .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #fdf2e9;
@@ -594,7 +630,7 @@ THEME - Pumpkin
 /* Remove margins in between columns/fix spacing */
 
 .board-color-pumpkin .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -604,7 +640,7 @@ THEME - Pumpkin
 
 /* === END Pumpkin THEME === */
 
-/* =============== 
+/* ===============
 THEME - Moderate Pink
 =================*/
 
@@ -615,7 +651,7 @@ THEME - Moderate Pink
   background-color: #cd5a91;
 }
 .board-color-moderatepink .is-selected .minicard {
-  border-left: 3px solid #cd5a91;
+  border-inline-start: 3px solid #cd5a91;
 }
 .board-color-moderatepink .minicard {
   border-radius: 7px;
@@ -653,7 +689,13 @@ THEME - Moderate Pink
 }
 .board-color-moderatepink .materialCheckBox.is-checked {
   border-bottom: 2px solid #cd5a91;
-  border-right: 2px solid #cd5a91;
+  border-inline-end: 2px solid #cd5a91;
+}
+.board-color-moderatepink .checklist-progress-bar {
+  background-color: #f4dde8 !important;
+}
+.board-color-moderatepink .checklist-progress-bar .checklist-progress {
+  background-color: #cd5a91 !important;
 }
 .board-color-moderatepink .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #faeef4;
@@ -695,7 +737,7 @@ THEME - Moderate Pink
 /* Remove margins in between columns/fix spacing */
 
 .board-color-moderatepink .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -705,7 +747,7 @@ THEME - Moderate Pink
 
 /* === END Moderatepink THEME === */
 
-/* =============== 
+/* ===============
 THEME - Strong Cyan
 =================*/
 
@@ -716,7 +758,7 @@ THEME - Strong Cyan
   background-color: #00aecc;
 }
 .board-color-strongcyan .is-selected .minicard {
-  border-left: 3px solid #00aecc;
+  border-inline-start: 3px solid #00aecc;
 }
 .board-color-strongcyan .minicard {
   border-radius: 7px;
@@ -754,7 +796,13 @@ THEME - Strong Cyan
 }
 .board-color-strongcyan .materialCheckBox.is-checked {
   border-bottom: 2px solid #00aecc;
-  border-right: 2px solid #00aecc;
+  border-inline-end: 2px solid #00aecc;
+}
+.board-color-strongcyan .checklist-progress-bar {
+  background-color: #ccf2f9 !important;
+}
+.board-color-strongcyan .checklist-progress-bar .checklist-progress {
+  background-color: #00aecc !important;
 }
 .board-color-strongcyan .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #e0fbff;
@@ -796,7 +844,7 @@ THEME - Strong Cyan
 /* Remove margins in between columns/fix spacing */
 
 .board-color-strongcyan .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -806,7 +854,7 @@ THEME - Strong Cyan
 
 /* === END Strongcyan THEME === */
 
-/* =============== 
+/* ===============
 THEME - Lime Green
 =================*/
 
@@ -817,7 +865,7 @@ THEME - Lime Green
   background-color: #4bbf6b;
 }
 .board-color-limegreen .is-selected .minicard {
-  border-left: 3px solid #4bbf6b;
+  border-inline-start: 3px solid #4bbf6b;
 }
 .board-color-limegreen .minicard {
   border-radius: 7px;
@@ -855,7 +903,13 @@ THEME - Lime Green
 }
 .board-color-limegreen .materialCheckBox.is-checked {
   border-bottom: 2px solid #4bbf6b;
-  border-right: 2px solid #4bbf6b;
+  border-inline-end: 2px solid #4bbf6b;
+}
+.board-color-limegreen .checklist-progress-bar {
+  background-color: #daf4de !important;
+}
+.board-color-limegreen .checklist-progress-bar .checklist-progress {
+  background-color: #4bbf6b !important;
 }
 .board-color-limegreen .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #edf9f0;
@@ -897,7 +951,7 @@ THEME - Lime Green
 /* Remove margins in between columns/fix spacing */
 
 .board-color-limegreen .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -907,7 +961,7 @@ THEME - Lime Green
 
 /* === END Limegreen THEME === */
 
-/* =============== 
+/* ===============
 THEME - Dark
 =================*/
 
@@ -918,7 +972,7 @@ THEME - Dark
   background-color: #2c3e51;
 }
 .board-color-dark .is-selected .minicard {
-  border-left: 3px solid #2c3e51;
+  border-inline-start: 3px solid #2c3e51;
 }
 .board-color-dark .minicard {
   border-radius: 7px;
@@ -957,7 +1011,13 @@ THEME - Dark
 }
 .board-color-dark .materialCheckBox.is-checked {
   border-bottom: 2px solid #2c3e51;
-  border-right: 2px solid #2c3e51;
+  border-inline-end: 2px solid #2c3e51;
+}
+.board-color-dark .checklist-progress-bar {
+  background-color: #d2dae2 !important;
+}
+.board-color-dark .checklist-progress-bar .checklist-progress {
+  background-color: #2c3e51 !important;
 }
 .board-color-dark .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #e6ecf1;
@@ -1101,7 +1161,7 @@ THEME - Dark
 /* Remove margins in between columns/fix spacing */
 
 .board-color-dark .list {
-  border-left: none; /* Remove this property to bring back lines in-between columns if needed*/
+  border-inline-start: none; /* Remove this property to bring back lines in-between columns if needed*/
   padding: 0px 1px 8px 1px; /* Improves spacing between columns due to no borders, 8px padding at bottom to separate horizontal scrollbar/lists */
 }
 
@@ -1111,7 +1171,7 @@ THEME - Dark
 
 /* === END Dark THEME === */
 
-/* =============== 
+/* ===============
 THEME - Relax
 =================*/
 
@@ -1122,7 +1182,7 @@ THEME - Relax
   background-color: #27ae61;
 }
 .board-color-relax .is-selected .minicard {
-  border-left: 3px solid #27ae61;
+  border-inline-start: 3px solid #27ae61;
 }
 .board-color-relax .minicard {
   border-radius: 7px;
@@ -1160,7 +1220,13 @@ THEME - Relax
 }
 .board-color-relax .materialCheckBox.is-checked {
   border-bottom: 2px solid #27ae61;
-  border-right: 2px solid #27ae61;
+  border-inline-end: 2px solid #27ae61;
+}
+.board-color-relax .checklist-progress-bar {
+  background-color: #d4f1dd !important;
+}
+.board-color-relax .checklist-progress-bar .checklist-progress {
+  background-color: #27ae61 !important;
 }
 .board-color-relax .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #e7faef;
@@ -1197,7 +1263,7 @@ THEME - Relax
   background-color: #a7e366;
 }
 .board-color-relax .list {
-  border-left: 1px dotted #000;
+  border-inline-start: 1px dotted #000;
 }
 .board-color-relax .card-details .card-details-items ~ .js-open-inlined-form .viewer {
   background-color: #fff !important;
@@ -1231,7 +1297,7 @@ THEME - Relax
 /* Remove margins in between columns/fix spacing */
 
 .board-color-relax .list {
-  border-left: none;
+  border-inline-start: none;
  /* padding-bottom: 8px; - Removed to get rid of grey bars for relax theme */
 }
 
@@ -1241,7 +1307,7 @@ THEME - Relax
 
 /* === END Relax THEME === */
 
-/* =============== 
+/* ===============
 THEME - Corteza
 =================*/
 
@@ -1252,7 +1318,7 @@ THEME - Corteza
   background-color: #568ba2;
 }
 .board-color-corteza .is-selected .minicard {
-  border-left: 3px solid #568ba2;
+  border-inline-start: 3px solid #568ba2;
 }
 .board-color-corteza .minicard {
   border-radius: 7px;
@@ -1290,7 +1356,13 @@ THEME - Corteza
 }
 .board-color-corteza .materialCheckBox.is-checked {
   border-bottom: 2px solid #568ba2;
-  border-right: 2px solid #568ba2;
+  border-inline-end: 2px solid #568ba2;
+}
+.board-color-corteza .checklist-progress-bar {
+  background-color: #dce6ec !important;
+}
+.board-color-corteza .checklist-progress-bar .checklist-progress {
+  background-color: #568ba2 !important;
 }
 .board-color-corteza .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #eef3f6;
@@ -1332,7 +1404,7 @@ THEME - Corteza
 /* Remove margins in between columns/fix spacing */
 
 .board-color-corteza .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -1342,7 +1414,7 @@ THEME - Corteza
 
 /* === END Corteza THEME === */
 
-/* =============== 
+/* ===============
 THEME - Clear Blue
 =================*/
 
@@ -1352,7 +1424,7 @@ THEME - Clear Blue
   background: linear-gradient(180deg, #499bea 0%, #00aecc 100%);
 }
 .board-color-clearblue .is-selected .minicard {
-  border-left: 3px solid #499bea;
+  border-inline-start: 3px solid #499bea;
 }
 .board-color-clearblue.pop-over .pop-over-list li a:not(.disabled):hover,
 .board-color-clearblue .sidebar .sidebar-content .sidebar-btn:hover,
@@ -1395,7 +1467,13 @@ THEME - Clear Blue
 }
 .board-color-clearblue .materialCheckBox.is-checked {
   border-bottom: 2px solid #499bea;
-  border-right: 2px solid #499bea;
+  border-inline-end: 2px solid #499bea;
+}
+.board-color-clearblue .checklist-progress-bar {
+  background-color: #daeefb !important;
+}
+.board-color-clearblue .checklist-progress-bar .checklist-progress {
+  background-color: #499bea !important;
 }
 .board-color-clearblue .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #e0fbff;
@@ -1417,15 +1495,15 @@ THEME - Clear Blue
 }
 .board-color-clearblue .swimlane .list:first-child {
   min-width: 20px;
-  margin-left: 10px; /* Added 10px margin left to stop lists being butted up against the edge of the screen */
-  border-left: none;
+  margin-inline-start: 10px; /* Added 10px margin left to stop lists being butted up against the edge of the screen */
+  border-inline-start: none;
 }
 .board-color-clearblue .swimlane .list:nth-child {
   flex: 0 0 265px;
 }
 .board-color-clearblue .list {
   background: rgba(255,255,255,0.35);
-  margin: 10px;
+  margin: 10px 0;
   border: 0;
   border-radius: 14px;
 }
@@ -1435,8 +1513,8 @@ THEME - Clear Blue
   flex: unset;
   padding-bottom: 16px;
   min-width: 20px;
-  margin-left: 0px;
-  border-left: none;
+  margin-inline-start: 0px;
+  border-inline-start: none;
 }
 .board-color-clearblue .list.list-composer .open-list-composer {
   border-radius: 7px;
@@ -1472,7 +1550,7 @@ THEME - Clear Blue
 .board-color-clearblue .card-details {
   border-radius: 0 0 14px 14px;
   box-shadow: 0 0 7px 0 rgba(0,0,0,0.5);
-  margin-left: -10px;
+  margin-inline-start: -10px;
 }
 .board-color-clearblue .list-body .open-minicard-composer {
   border-radius: 7px;
@@ -1506,7 +1584,7 @@ THEME - Clear Blue
   color: rgba(0,0,0,0.5);
   position: absolute;
   margin-top: -34px;
-  margin-left: -11px;
+  margin-inline-start: -11px;
 }
 .board-color-clearblue a.fa,
 .board-color-clearblue a i.fa {
@@ -1527,7 +1605,7 @@ THEME - Clear Blue
 }
 .board-color-clearblue .sidebar-shadow {
   box-shadow: none;
-  border-left: 9px solid #00aecc;
+  border-inline-start: 9px solid #00aecc;
 }
 .board-color-clearblue .is-open .sidebar-shadow {
   box-shadow: -10px 0 8px rgba(0,0,0,0.3);
@@ -1568,7 +1646,7 @@ THEME - Clear Blue
   vertical-align: middle;
 }
 .board-color-clearblue .swimlane-header-wrap .primary.confirm {
-  margin-right: 0;
+  margin-inline-end: 0;
 }
 .board-color-clearblue .swimlane-header-wrap .fa.fa-times-thin {
   margin-top: 2px;
@@ -1599,7 +1677,7 @@ THEME - Clear Blue
 /* Remove margins in between columns/fix spacing */
 
 .board-color-clearblue .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -1609,7 +1687,7 @@ THEME - Clear Blue
 
 /* === END Clearblue THEME === */
 
-/* =============== 
+/* ===============
 THEME - Natural
 =================*/
 
@@ -1620,7 +1698,7 @@ THEME - Natural
   background-color: #596557;
 }
 .board-color-natural .is-selected .minicard {
-  border-left: 3px solid #596557;
+  border-inline-start: 3px solid #596557;
 }
 .board-color-natural .minicard {
   border-radius: 7px;
@@ -1658,7 +1736,13 @@ THEME - Natural
 }
 .board-color-natural .materialCheckBox.is-checked {
   border-bottom: 2px solid #596557;
-  border-right: 2px solid #596557;
+  border-inline-end: 2px solid #596557;
+}
+.board-color-natural .checklist-progress-bar {
+  background-color: #dee0dd !important;
+}
+.board-color-natural .checklist-progress-bar .checklist-progress {
+  background-color: #596557 !important;
 }
 .board-color-natural .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #eef0ee;
@@ -1709,7 +1793,7 @@ THEME - Natural
 /* Remove margins in between columns/fix spacing */
 
 .board-color-natural .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -1719,7 +1803,7 @@ THEME - Natural
 
 /* === END Natural THEME === */
 
-/* =============== 
+/* ===============
 THEME - Modern
 =================*/
 
@@ -1730,7 +1814,7 @@ THEME - Modern
   background-color: #2a80b8;
 }
 .board-color-modern .is-selected .minicard {
-  border-left: 3px solid #2a80b8;
+  border-inline-start: 3px solid #2a80b8;
 }
 .board-color-modern .minicard {
   border-radius: 7px;
@@ -1768,7 +1852,13 @@ THEME - Modern
 }
 .board-color-modern .materialCheckBox.is-checked {
   border-bottom: 2px solid #2a80b8;
-  border-right: 2px solid #2a80b8;
+  border-inline-end: 2px solid #2a80b8;
+}
+.board-color-modern .checklist-progress-bar {
+  background-color: #d1e7f5 !important;
+}
+.board-color-modern .checklist-progress-bar .checklist-progress {
+  background-color: #2a80b8 !important;
 }
 .board-color-modern .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #e8f3fa;
@@ -1814,7 +1904,7 @@ THEME - Modern
   display: none;
 }
 .board-color-modern#header-quick-access ul li:nth-child(3) {
-  margin-right: 10px;
+  margin-inline-end: 10px;
 }
 .board-color-modern#header-quick-access ul li a {
   padding: 5px 10px;
@@ -1862,7 +1952,7 @@ THEME - Modern
 }
 .board-color-modern .list {
   background: transparent;
-  border-left: 0;
+  border-inline-start: 0;
   margin: 10px 0;
   padding: 0px;
   border-radius: 5px;
@@ -1874,8 +1964,8 @@ THEME - Modern
 }
 .board-color-modern .swimlane .list:first-child {
   min-width: 20px;
-  margin-left: 0px;
-  border-left: none;
+  margin-inline-start: 0px;
+  border-inline-start: none;
 }
 .board-color-modern .swimlane .list:nth-child {
   flex: 0 0 265px;
@@ -1943,7 +2033,7 @@ THEME - Modern
 .board-color-modern .pop-over .header .close-btn {
   font-size: 20px;
   top: 6px;
-  right: 8px;
+  inset-inline-end: 8px;
 }
 .board-color-modern .pop-over .content-container .content {
   padding: 5px 20px 20px;
@@ -1953,7 +2043,7 @@ THEME - Modern
   border-radius: 5px;
 }
 .board-color-modern .pop-over-list li > a > i {
-  margin-right: 5px;
+  margin-inline-end: 5px;
 }
 .board-color-modern .pop-over-list li>a .sub-name {
   margin-bottom: 8px;
@@ -1996,7 +2086,7 @@ THEME - Modern
 /* Remove margins in between columns/fix spacing */
 
 .board-color-modern .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -2006,7 +2096,7 @@ THEME - Modern
 
 /* === END Modern THEME === */
 
-/* =============== 
+/* ===============
 THEME - Modern Dark
 =================*/
 
@@ -2017,7 +2107,7 @@ THEME - Modern Dark
   background-color: #2a2a2a;
 }
 .board-color-moderndark .is-selected .minicard {
-  border-left: 3px solid #2a2a2a;
+  border-inline-start: 3px solid #2a2a2a;
 }
 .board-color-moderndark .minicard {
   border-radius: 7px;
@@ -2060,7 +2150,13 @@ THEME - Modern Dark
 }
 .board-color-moderndark .materialCheckBox.is-checked {
   border-bottom: 2px solid #2a2a2a;
-  border-right: 2px solid #2a2a2a;
+  border-inline-end: 2px solid #2a2a2a;
+}
+.board-color-moderndark .checklist-progress-bar {
+  background-color: #d1d1d1 !important;
+}
+.board-color-moderndark .checklist-progress-bar .checklist-progress {
+  background-color: #2a2a2a !important;
 }
 .board-color-moderndark .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #eaeaea;
@@ -2154,7 +2250,7 @@ THEME - Modern Dark
   display: none;
 }
 .board-color-moderndark#header-quick-access ul li:nth-child(3) {
-  margin-right: 10px;
+  margin-inline-end: 10px;
 }
 .board-color-moderndark#header-quick-access ul li a {
   padding: 5px 10px;
@@ -2197,8 +2293,8 @@ THEME - Modern Dark
 .board-color-moderndark .swimlane .list:first-child {
   color: #eee;
   min-width: 20px;
-  margin-left: 0px;
-  border-left: none;
+  margin-inline-start: 0px;
+  border-inline-start: none;
 }
 .board-color-moderndark .swimlane .list-composer .list-header-add .inlined-form .edit-controls .quiet,
 .board-color-moderndark .swimlane .list-composer .list-header-add .inlined-form .edit-controls .quiet a.js-list-template {
@@ -2219,7 +2315,7 @@ THEME - Modern Dark
   background: #6a6a6a;
 }
 .board-color-moderndark .list-header .viewer {
-  padding-left: 10px;
+  padding-inline-start: 10px;
 }
 .board-color-moderndark .list-header .list-header-name,
 .board-color-moderndark .minicard {
@@ -2237,7 +2333,7 @@ THEME - Modern Dark
 }
 @media screen and (min-width: 801px) {
   .board-color-moderndark .list-header .list-header-name {
-    float: left;
+    float: inline-start;
   }
   .board-color-moderndark .list-header .list-header-menu {
     padding: 0 10px 10px;
@@ -2349,7 +2445,7 @@ THEME - Modern Dark
     padding: 0px 20px;
   }
   .board-color-moderndark .card-details .card-details-header .card-details-menu-mobile-web {
-    margin-right: 0;
+    margin-inline-end: 0;
   }
   .board-color-moderndark .pop-over > .content-wrapper > .popup-container-depth-0 > .content {
     width: calc(100% - 20px);
@@ -2359,7 +2455,7 @@ THEME - Modern Dark
   .board-color-moderndark .card-details {
     position: fixed;
     top: 82px;
-    left: calc(50% - 384px);
+    inset-inline-start: calc(50% - 384px);
     width: 768px;
     max-height: calc(100% - 60px);
   }
@@ -2417,9 +2513,9 @@ THEME - Modern Dark
 }
 .board-color-moderndark .card-details .check-box.materialCheckBox.is-checked {
   border-bottom: 2px solid #fff;
-  border-right: 2px solid #fff;
+  border-inline-end: 2px solid #fff;
   border-top: 0;
-  border-left: 0;
+  border-inline-start: 0;
 }
 .board-color-moderndark .card-details .js-add-checklist-item {
   margin-top: 4px;
@@ -2434,7 +2530,7 @@ THEME - Modern Dark
 .board-color-moderndark .sidebar {
   background-color: #222;
   box-shadow: -10px 0 5px -10px #444;
-  border-left: 1px solid #333;
+  border-inline-start: 1px solid #333;
   color: #ccc;
 }
 .board-color-moderndark .activities .activity .activity-desc .activity-comment {
@@ -2485,7 +2581,7 @@ THEME - Modern Dark
 /* Remove margins in between columns/fix spacing */
 
 .board-color-moderndark .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -2496,7 +2592,7 @@ THEME - Modern Dark
 /* === END ModernDark THEME === */
 
 
-/* =============== 
+/* ===============
 THEME - Exodark
 =================*/
 
@@ -2507,7 +2603,7 @@ THEME - Exodark
   background-color: #222;
 }
 .board-color-exodark .is-selected .minicard {
-  border-left: 3px solid #222;
+  border-inline-start: 3px solid #222;
 }
 .board-color-exodark .minicard {
   border-radius: 7px;
@@ -2545,7 +2641,13 @@ THEME - Exodark
 }
 .board-color-exodark .materialCheckBox.is-checked {
   border-bottom: 2px solid #dbdbdb!important;/*Fix contrast of checkbox*/
-  border-right: 2px solid #dbdbdb!important;
+  border-inline-end: 2px solid #dbdbdb!important;
+}
+.board-color-exodark .checklist-progress-bar {
+  background-color: #cccccc !important;
+}
+.board-color-exodark .checklist-progress-bar .checklist-progress {
+  background-color: #222 !important;
 }
 .board-color-exodark .is-multiselection-active .multi-selection-checkbox.is-checked + .minicard {
   background: #e9e9e9;
@@ -2588,7 +2690,7 @@ THEME - Exodark
   background: #222;
 }
 .board-color-exodark .list {
-  margin: 10px;
+  margin: 10px 0;
   color: #fff;
   border-radius: 15px;
   background-color: #1c1c1c;
@@ -2596,8 +2698,8 @@ THEME - Exodark
 }
 .board-color-exodark .swimlane .list:first-child {
   min-width: 20px;
-  margin-left: 10px; /*Added 10px margin to prevent butting up against edge of screen */
-  border-left: none;
+  margin-inline-start: 10px; /*Added 10px margin to prevent butting up against edge of screen */
+  border-inline-start: none;
 }
 .board-color-exodark .swimlane .list:nth-child {
   flex: 0 0 265px;
@@ -2744,7 +2846,7 @@ THEME - Exodark
 
 /* === END Exodark THEME === */
 
-/* =============== 
+/* ===============
 THEME - Clean Dark
 =================*/
 
@@ -2858,10 +2960,10 @@ THEME - Clean Dark
   background: #009B64;
   width: min-content;
   color: #FFFFFF;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-inline-start: 8px;
+  padding-inline-end: 8px;
   border-radius: 8px;
-  margin-left: 4px;
+  margin-inline-start: 4px;
 }
 
 .board-color-cleandark .card-details hr {
@@ -3101,7 +3203,7 @@ THEME - Clean Dark
 
 .board-color-cleandark .card-details .check-box.materialCheckBox.is-checked {
   border-bottom: 2px solid #FFFFFF;
-  border-right: 2px solid #FFFFFF;
+  border-inline-end: 2px solid #FFFFFF;
   width: 11px;
   height: 19px;
   border-radius: 0;
@@ -3132,13 +3234,19 @@ THEME - Clean Dark
 
 .board-color-cleandark #cards .materialCheckBox.is-checked {
   border-bottom: 2px solid #FFFFFF;
-  border-right: 2px solid #FFFFFF;
+  border-inline-end: 2px solid #FFFFFF;
   width: 5px;
   height: 13px;
   border-radius: 0;
   background: none;
-  margin-left: 3px;
+  margin-inline-start: 3px;
   margin-top: 3px;
+}
+.board-color-cleandark .checklist-progress-bar {
+  background-color: #6b6b78 !important;
+}
+.board-color-cleandark .checklist-progress-bar .checklist-progress {
+  background-color: #23232B !important;
 }
 
 .board-color-cleandark .allBoards {
@@ -3150,7 +3258,7 @@ THEME - Clean Dark
   align-items: center;
   padding-bottom: 4px;
   padding-top: 4px;
-  margin-right: 10px;
+  margin-inline-end: 10px;
 }
 
 .board-color-cleandark#header-quick-access ul.header-quick-access-list {
@@ -3172,7 +3280,7 @@ THEME - Clean Dark
 /* Remove margins in between columns/fix spacing */
 
 .board-color-cleandark .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 
@@ -3183,7 +3291,7 @@ THEME - Clean Dark
 .board-color-cleandark.background-box {
   background-color:#23232B;
 } /*Fixes contrast issues with background box in theme selection list*/
-/* =============== 
+/* ===============
 THEME - Clean Light
 =================*/
 /* Please note Clean Light theme elements also contain references to some cleandark theme elements so if unable to find code you're looking for under CleanDark it might be here. This should probably be cleaned up*/
@@ -3262,18 +3370,19 @@ THEME - Clean Light
 
 .board-color-cleanlight .list,
 .board-color-cleandark .list {
-  background: none;
-  border-left: none;
+  background: none !important;
+  border-inline-start: none !important;
 }
 
 .board-color-cleanlight .list .list-header,
 .board-color-cleandark .list .list-header {
-  border-bottom: none;
-  display: flex;
+  border-bottom: none !important;
+  display: flex !important;
   justify-content: space-between;
   align-items: center;
   font-size: 16px;
-  background: none;
+  background: none !important;
+  background-color: transparent !important;
 }
 
 .board-color-cleanlight .list .list-header div:has(.list-header-name),
@@ -3322,7 +3431,13 @@ THEME - Clean Light
 
 .board-color-cleanlight .list .list-header .list-header-menu .js-collapse,
 .board-color-cleandark .list .list-header .list-header-menu .js-collapse {
-  display: none;
+  /* Make collapse button visible in Clean Light / Clean Dark themes.
+     Previously this was hidden which caused the missing Collapse button
+     when using these themes. Use inline-block so it lines up with other
+     header controls. */
+  display: inline-block;
+  vertical-align: middle;
+  color: inherit;
 }
 
 .board-color-cleanlight .list-header-add,
@@ -3330,11 +3445,11 @@ THEME - Clean Light
   border-radius: 12px;
   margin-top: 18px;
   padding: 8px;
-  margin-right: 8px;
+  margin-inline-end: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 10px;
+  margin-inline-start: 10px;
 }
 
 .board-color-cleanlight .list-header-add:hover {
@@ -3364,7 +3479,7 @@ THEME - Clean Light
 .board-color-cleandark .card-label {
   border-radius: 18px;
   margin-top: 6px;
-  margin-right: 8px;
+  margin-inline-end: 8px;
   border: none;
   padding: 4px 12px;
 }
@@ -3414,14 +3529,14 @@ THEME - Clean Light
 
 .board-color-cleanlight .swimlane .swimlane-header-wrap .swimlane-header-plus-icon,
 .board-color-cleandark .swimlane .swimlane-header-wrap .swimlane-header-plus-icon {
-  margin-left: 14px;
+  margin-inline-start: 14px;
 }
 
 .board-color-cleanlight .swimlane .swimlane-header-wrap .list-composer,
 .board-color-cleandark .swimlane .swimlane-header-wrap .list-composer {
   display: flex;
   gap: 12px;
-  margin-left: 20px;
+  margin-inline-start: 20px;
 }
 
 .board-color-cleanlight .swimlane .swimlane-header-wrap .swimlane-header .viewer p,
@@ -3555,10 +3670,10 @@ THEME - Clean Light
   background: #009B64;
   width: min-content;
   color: #FFFFFF;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-inline-start: 8px;
+  padding-inline-end: 8px;
   border-radius: 8px;
-  margin-left: 4px;
+  margin-inline-start: 4px;
 }
 
 .board-color-cleanlight .card-details hr {
@@ -3847,7 +3962,7 @@ THEME - Clean Light
 
 .board-color-cleanlight .card-details .check-box.materialCheckBox.is-checked {
   border-bottom: 2px solid #000000;
-  border-right: 2px solid #000000;
+  border-inline-end: 2px solid #000000;
   width: 11px;
   height: 19px;
   border-radius: 0;
@@ -3878,13 +3993,20 @@ THEME - Clean Light
 
 .board-color-cleanlight #cards .materialCheckBox.is-checked {
   border-bottom: 2px solid #000000;
-  border-right: 2px solid #000000;
+  border-inline-end: 2px solid #000000;
   width: 5px;
   height: 13px;
   border-radius: 0;
   background: none;
-  margin-left: 3px;
+  margin-inline-start: 3px;
   margin-top: 3px;
+}
+.board-color-cleanlight .checklist-progress-bar {
+  background-color: #f5f5f5 !important;
+}
+.board-color-cleanlight .checklist-progress-bar .checklist-progress {
+  background-color: #c0c0c0 !important;
+  color: #010101 !important;
 }
 
 .board-color-cleanlight .allBoards {
@@ -3928,7 +4050,7 @@ THEME - Clean Light
   align-items: center;
   padding-bottom: 4px;
   padding-top: 4px;
-  margin-right: 10px;
+  margin-inline-end: 10px;
 }
 
 .board-color-cleanlight#header-quick-access ul.header-quick-access-list {
@@ -4116,12 +4238,12 @@ THEME - Clean Light
 
 .board-color-cleanlight .card-details-item-customfield:has(.checklist-item) div,
 .board-color-cleandark .card-details-item-customfield:has(.checklist-item) div {
-  padding-right: 0 !important;
+  padding-inline-end: 0 !important;
 }
 
 .board-color-cleanlight .card-details .card-details-items .card-details-item.custom-fields,
 .board-color-cleanlight .card-details .card-details-items .card-details-item.custom-fields {
-  margin-left: auto;
+  margin-inline-start: auto;
   flex-grow: 0;
   border-radius: 12px;
 }
@@ -4158,13 +4280,21 @@ THEME - Clean Light
   font-weight: 500;
 }
 
+.board-color-cleandark .pop-over-list li > a {
+  color: rgba(255, 255, 255, 1) !important;
+}
+
+.board-color-cleanlight .pop-over-list li > a {
+  color: rgba(10, 10, 20, 0.85) !important;
+}
+
 .board-color-cleanlight .pop-over-list li > a i,
 .board-color-cleandark .pop-over-list li > a i {
-  margin-right: 6px !important;
+  margin-inline-end: 6px !important;
 }
 
 .board-color-cleanlight .pop-over .quiet {
-  margin-left: 100px !important;
+  margin-inline-start: 100px !important;
 }
 
 .board-color-cleandark .minicard:hover:not(.minicard-composer),
@@ -4186,7 +4316,7 @@ THEME - Clean Light
 /* Remove margins in between columns/fix spacing */
 
 .board-color-cleanlight .list {
-  border-left: none;
+  border-inline-start: none;
   padding-bottom: 8px;
 }
 

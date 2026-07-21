@@ -4,7 +4,7 @@ https://github.com/wekan/wekan-snap/wiki/Many-Snaps-on-LXC#lxd-init-cidr
 
 Note: This presumes that your laptop runs newest Ubuntu or Kubuntu, and that server is Ubuntu.
 
-1) Install Caddy2 https://github.com/wekan/wekan/wiki/Caddy-Webserver-Config
+1) Install Caddy2 [Caddy Webserver Config](../../../Webserver/Caddy.md)
 
 2) Optional, recommended: Encrypted VM. Idea: Bare Metal Caddy => Proxy to encrypted VM ports => Each customer separate Snap WeKan port. Snap sandbox files at /common, snap code can not access files outside of it's /common directories. Newest WeKan is Snap Candidate. Snap has automatic updates.
 
@@ -104,10 +104,20 @@ sudo snap list
 ```
 If not, change to candidate:
 ```
-sudo snap refresh wekan_customer1 --channel=latest/candidate
+sudo snap refresh wekan_customer1 --channel=latest/candidate --amend
+```
+## Manual Parallel Snap
+
+If using manual snap package, with Parallel Snap, that has name wekan_other:
+```
+sudo snap install --dangerous wekan-VERSION.snap --name wekan_other
+```
+Back to channel:
+```
+sudo snap refresh wekan_other --channel=latest/candidate --amend
 ```
 If it complains about old database version (was at stable), stop it, move old files somewhere safe, and start again.
-WARNING: this deletes 
+WARNING: this deletes stuff.
 ```
 sudo su
 mkdir old_customer1_common
@@ -116,7 +126,7 @@ mv /var/snap/wekan_customer1/common/* old_customer1_common/
 snap start wekan_customer1
 ```
 
-5) Add some settings, for example Google login and [AWS SES email sending](https://github.com/wekan/wekan/wiki/Troubleshooting-Mail#example-aws-ses):
+5) Add some settings, for example Google login and [AWS SES email sending](../../../Email/Troubleshooting-Mail.md#example-aws-ses):
 
 For each customer, node and mongodb needs to be in different ports, for example:
 ```
@@ -144,7 +154,7 @@ sudo snap set wekan_customer1 oauth2-token-endpoint='https://oauth2.googleapis.c
 sudo snap set wekan_customer1 oauth2-userinfo-endpoint='https://openidconnect.googleapis.com/v1/userinfo'
 sudo snap set wekan_customer1 oauth2-username-map='nickname'
 ```
-You can check with [nosqlbooster](https://github.com/wekan/wekan/wiki/Backup#using-nosqlbooster-closed-source-mongodb-gui-with-wekan-snap-to-edit-mongodb-database) that each database has correct data.
+You can check with [nosqlbooster](../../../Backup/Backup.md#using-nosqlbooster-closed-source-mongodb-gui-with-wekan-snap-to-edit-mongodb-database) that each database has correct data.
 
 When restoring data, stop that wekan, and restore to that port, when you have subdirectory dump:
 ```
@@ -255,7 +265,7 @@ function websync {
 (websync) >> /home/wekan/backup/backup-log.txt 2>&1
 ```
 
-7. At bare metal server is installed [Caddy2](https://github.com/wekan/wekan/wiki/Caddy-Webserver-Config).
+7. At bare metal server is installed [Caddy2](../../../Webserver/Caddy.md).
 
 Each customer has set in their nameserver to WeKan hosting server IP address:
 ```
@@ -333,16 +343,21 @@ files.company.com {
 
 To server and LXC/LXD containers, install these packages:
 
+Ubuntu:
 ```
 sudo apt install libsquashfuse0 squashfuse fuse
 ```
-
+Fedora
+```
+sudo dnf install squashfuse fuse
+```
 Source: https://forum.snapcraft.io/t/system-does-not-fully-support-snapd/14767/11
 
 ## LXD init CIDR
 
 IPv4 CIDR: 10.1.1.1/24
 
+Ubuntu:
 ```
 sudo apt install snapd
 
@@ -351,7 +366,28 @@ sudo reboot
 sudo snap install lxd
 
 lxd init
+```
+Fedora:
+```
+sudo dnf install snapd
 
+sudo reboot
+
+sudo snap install lxd
+
+# Any Fedora Linux or Fedora Linux Asahi Remix at Apple Silicon:
+# Internet access from LXD container:
+# 1) Allow LXD-bridge:
+sudo firewall-cmd --zone=trusted --add-interface=lxdbr0 --permanent
+sudo firewall-cmd --reload
+# 2) Allow IP Masquerading:
+sudo firewall-cmd --zone=public --add-masquerade --permanent
+sudo firewall-cmd --reload
+
+lxd init
+```
+Answers for lxd init:
+```
 Would you like to use LXD clustering? (yes/no) [default=no]: 
 Do you want to configure a new storage pool? (yes/no) [default=yes]: 
 Name of the new storage pool [default=default]: 
@@ -372,7 +408,7 @@ https://discuss.linuxcontainers.org/t/failed-lxd-init-what-is-cidr/7181/2
 
 ## 1) Main Snap on bare metal
 
-[Install Wekan Snap](Install) to newest Ubuntu bare metal server. Snaps have automatic updates.
+[Install Wekan Snap](Install.md) to newest Ubuntu bare metal server. Snaps have automatic updates.
 
 For example:
 ```
@@ -393,7 +429,7 @@ boards.example.com {
 	}
 }
 ```
-For [CloudFlare SSL](https://github.com/wekan/wekan/wiki/Caddy-Webserver-Config), like this to `/var/snap/wekan/common/Caddyfile`:
+For [CloudFlare SSL](../../../Webserver/Caddy.md), like this to `/var/snap/wekan/common/Caddyfile`:
 ```
 http://boards.example.com https://boards.example.com {
 	tls {
@@ -418,7 +454,7 @@ Ubuntu Touch:
 ```
 sudo su
 
-snap install lxd --channel=5.21/stable
+snap install lxd
 ```
 
 3. From Ubuntu Touch Terminal, lxd init, etc.
@@ -434,17 +470,17 @@ sudo lxc profile set default security.nesting true
 5. Start new lxc container
 
 ```
-# launch-ubu2504.sh
+# launch-ubu2604.sh
 # lxc launch image-name container-name
-lxc launch ubuntu:25.04 ubu2504
+lxc launch ubuntu:26.04 ubu2604
 ```
 
 6. Bash shell to inside of container:
 
 ```
-# into-ubu2504.sh
+# into-ubu2604.sh
 # lxc exec container-name -- /bin/bash
-lxc exec ubu2504 -- /bin/bash
+lxc exec ubu2604 -- /bin/bash
 ```
 
 ## 3) Snapd and Wekan
@@ -471,7 +507,7 @@ You can also add more lxc containers to different subdomains and proxy to them i
 
 ### New Ubuntu container
 ```
-lxc launch images:ubuntu/20.04 lxccontainername
+lxc launch ubuntu:26.04 lxccontainername
 ```
 ### Inside LXC container
 ```

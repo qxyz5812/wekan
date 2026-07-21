@@ -1,7 +1,7 @@
 ## LDAP info
 
-- [LDAP sync script, that also correctly removes users](https://github.com/wekan/wekan/blob/main/docs/Login/ldap-sync/ldap-sync.py)
-- [LDAP AD Simple Auth](LDAP-AD-Simple-Auth) 2021-07-24 and related [Search Filter Settings](https://github.com/wekan/wekan/issues/3908#issuecomment-887545168):
+- [LDAP sync script, that also correctly removes users](ldap-sync/ldap-sync.py)
+- [LDAP AD Simple Auth](LDAP-AD-Simple-Auth.md) 2021-07-24 and related [Search Filter Settings](https://github.com/wekan/wekan/issues/3908#issuecomment-887545168):
 
 ```
 - LDAP_USER_SEARCH_FILTER=(objectClass=user)
@@ -13,7 +13,7 @@
 - [LDAP issues](https://github.com/wekan/wekan-ldap/issues)
 - [Univention LDAP related issues](https://github.com/wekan/univention/issues)
 - [Teams/Organizations feature related LDAP plans](https://github.com/wekan/wekan/issues/802). Needs info from LDAP experts to describe how LDAP works.
-- [Wekan LDAP code](https://github.com/wekan/wekan/tree/main/packages/wekan-ldap)
+- [Wekan LDAP code](../../packages/wekan-ldap)
 
 ***
 
@@ -25,9 +25,9 @@ You see all settings with:
 ```
 wekan.help | less
 ```
-For root-url, see [Settings](Settings)
+For root-url, see [Settings](../Webserver/Settings.md)
 
-For Caddy/Wekan/RocketChat Snap settings, see [Snap install page](https://github.com/wekan/wekan-snap/wiki/Install), [OAuth2 page](OAuth2#snap) and [Caddy page](Caddy-Webserver-Config). Instead of Caddy you can also use [Nginx](Nginx-Webserver-Config) or [Apache](Apache).
+For Caddy/Wekan/RocketChat Snap settings, see [Snap install page](https://github.com/wekan/wekan-snap/wiki/Install), [OAuth2 page](OAuth2.md#snap) and [Caddy page](../Webserver/Caddy.md). Instead of Caddy you can also use [Nginx](../Webserver/Nginx.md) or [Apache](../Webserver/Apache.md).
 
 ## LDAP Filter settings
 
@@ -165,6 +165,37 @@ sudo snap set wekan ldap-user-search-scope='sub'
 sudo snap set wekan ldap-username-field='uid'
 ```
 
+## LDAP background sync, Organizations and Teams sync
+
+These settings extend LDAP background sync and let LDAP groups be mirrored into
+Wekan Organizations and Teams. They are read as environment variables (Docker /
+Source). On Snap use the lower-case dash-separated equivalent (for example
+`ldap-sync-organizations`).
+
+- `LDAP_BACKGROUND_SYNC_DISABLE_NONEXISTANT_USERS` (default `false`) — when
+  `true`, background sync disables Wekan users that are no longer found in the LDAP
+  directory, and re-enables them if they reappear. This makes LDAP authoritative
+  for the active/inactive status of users.
+- `LDAP_SYNC_ORGANIZATIONS` (default `false`) — when `true`, a user's LDAP groups
+  are synced into that user's Wekan **Organizations**.
+- `LDAP_SYNC_ORGANIZATIONS_GROUPS` (default empty) — comma-separated list of LDAP
+  group names/patterns to sync as Organizations. Leave empty to sync all of the
+  user's groups. Supports wildcards: `*` (any number of characters) and `?`
+  (single character).
+- `LDAP_SYNC_TEAMS` (default `false`) — when `true`, a user's LDAP groups are
+  synced into that user's Wekan **Teams**.
+- `LDAP_SYNC_TEAMS_GROUPS` (default empty) — comma-separated list of LDAP group
+  names/patterns to sync as Teams. Leave empty to sync all of the user's
+  groups. Supports wildcards: `*` (any number of characters) and `?` (single
+  character).
+
+Notes:
+
+- LDAP admin status (`LDAP_SYNC_ADMIN_STATUS` / `LDAP_SYNC_ADMIN_GROUPS`) is now
+  also kept up to date during background sync, not only at sign-in.
+- LDAP group-filter values are now escaped, so a DN or `cn` that contains
+  parentheses no longer breaks sign-in.
+
 ## Docker
 
 LDAP login works now by using this docker-compose.yml file:
@@ -193,7 +224,7 @@ services:
 
   wekandb:
     # All Wekan data is stored in MongoDB. For backup and restore, see:
-    #   https://github.com/wekan/wekan/wiki/Export-Docker-Mongo-Data
+    #   [Export Docker Mongo Data](../Platforms/FOSS/Docker/Export-Docker-Mongo-Data.md)
     image: mongo:4.0.3
     container_name: wekan-db
     restart: always
@@ -264,7 +295,7 @@ services:
       #---------------------------------------------------------------
       # == EMAIL SETTINGS ==
       # Email settings are required in both MAIL_URL and Admin Panel,
-      #   see https://github.com/wekan/wekan/wiki/Troubleshooting-Mail
+      #   see [Troubleshooting Mail](../Email/Troubleshooting-Mail.md)
       #   For SSL in email, change smtp:// to smtps://
       # NOTE: Special characters need to be url-encoded in MAIL_URL.
       #---------------------------------------------------------------
@@ -354,7 +385,12 @@ services:
       # LDAP_BACKGROUND_SYNC_IMPORT_NEW_USERS : 
       # example : LDAP_BACKGROUND_SYNC_IMPORT_NEW_USERS=true
       - LDAP_BACKGROUND_SYNC_IMPORT_NEW_USERS=false
-      # LDAP_ENCRYPTION : If using LDAPS
+      # LDAP_ENCRYPTION : Connection encryption. Accepted values:
+      #   'true'     : LDAPS, TLS from the first byte (usually port 636)
+      #   'starttls' : connect unencrypted (usually port 389), then upgrade with STARTTLS
+      #   'false'    : no encryption (default; strongly advised against)
+      # Deprecated but still working: 'ssl' (same as 'true'), 'tls' (same as 'starttls').
+      # Any other value logs a warning and means no encryption.
       # example : LDAP_ENCRYPTION=true
       - LDAP_ENCRYPTION=false
       # LDAP_CA_CERT : The certification for the LDAPS server
@@ -378,7 +414,15 @@ services:
       # LDAP_SEARCH_SIZE_LIMIT : The limit number of entries (0=unlimited)
       # example : LDAP_SEARCH_SIZE_LIMIT=12345
       - LDAP_SEARCH_SIZE_LIMIT=0
-      # LDAP_GROUP_FILTER_ENABLE : Enable group filtering
+      # LDAP_GROUP_FILTER_ENABLE : Enable the login restriction group filter.
+      # When true, only members of LDAP_GROUP_FILTER_GROUP_NAME are allowed to log in.
+      # NOTE: This flag ONLY controls the login restriction. Admin status sync
+      # (LDAP_SYNC_ADMIN_STATUS / LDAP_SYNC_ADMIN_GROUPS) and group->role sync
+      # (LDAP_SYNC_GROUP_ROLES) query LDAP groups independently and do NOT require
+      # this flag to be true. The group filter metadata below
+      # (LDAP_GROUP_FILTER_OBJECTCLASS, LDAP_GROUP_FILTER_GROUP_MEMBER_ATTRIBUTE,
+      # LDAP_GROUP_FILTER_GROUP_MEMBER_FORMAT, LDAP_GROUP_FILTER_GROUP_ID_ATTRIBUTE)
+      # must still be configured for any group search to work.
       # example : LDAP_GROUP_FILTER_ENABLE=true
       - LDAP_GROUP_FILTER_ENABLE=false
       # LDAP_GROUP_FILTER_OBJECTCLASS : The object class for filtering

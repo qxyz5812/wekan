@@ -1,6 +1,6 @@
-Also see: [Windows](Windows)
+Also see: [Windows](Windows.md)
 
-[Other CPU/OS On-Premise WeKan install](https://github.com/wekan/wekan/wiki/Raspberry-Pi)
+[Other CPU/OS On-Premise WeKan install](../../FOSS/RaspberryPi/Raspberry-Pi.md)
 
 ## Wekan Windows 64bit version On-Premise
 
@@ -10,23 +10,23 @@ This is without container (without Docker or Snap).
 
 Right click and download files 1-4:
 
-1. [wekan-7.94-amd64-windows.zip](https://github.com/wekan/wekan/releases/download/v7.94/wekan-7.94-amd64-windows.zip)
+1. [wekan-10.10-win64.zip](https://github.com/wekan/wekan/releases/download/v10.10/wekan-10.10-win64.zip) or newest available at https://github.com/wekan/wekan/releases/
 
-2. [node.exe](https://nodejs.org/dist/latest-v14.x/win-x64/node.exe)
+2. [node.exe](https://nodejs.org/dist/latest-v24.x/win-x64/node.exe)
 
-3. [mongodb-windows-x86_64-7.0.23-signed.msi](https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-7.0.23-signed.msi)
+3. [mongodb-windows-x86_64-7.0.34-signed.msi](https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-7.0.34-signed.msi)
 
-4. [start-wekan.bat](https://raw.githubusercontent.com/wekan/wekan/main/start-wekan.bat)
+4. (already exists: [start-wekan.bat](https://raw.githubusercontent.com/wekan/wekan/main/start-wekan.bat))
 
-5. Copy files from steps 1-4 with USB stick or DVD to offline Windows computer
+5. Copy files from steps 1-3 with USB stick or DVD to offline Windows computer
 
-6. Double click `mongodb-windows-x86_64-7.0.23-signed.msi` . In installer, uncheck downloading MongoDB compass.
+6. Double click `mongodb-windows-x86_64-7.0.34-signed.msi` . In installer, uncheck downloading MongoDB compass.
 
-7. Unzip `wekan-7.94-amd64-windows.zip` , inside it is directory `bundle`, to it copy other files:
+7. Unzip `wekan-10.10-win64.zip` , inside it is directory `bundle`, to it copy other files:
 
 ```
 bundle (directory)
-  |_ start-wekan.bat (downloaded file)
+  |_ start-wekan.bat (already exists)
   |_ node.exe (downloaded file)
   |_ main.js (extracted file)
 ```
@@ -51,7 +51,7 @@ Then Wekan will be at http://IP-ADDRESS-HERE:2000/sign-in , for example http://1
 
 9. Double click `start-wekan.bat` to run it. Give permission to network. If it does not work, try instead with right click, Run as Administrator.
 
-10. For mobile devices, you can [create PWA app icon](PWA) using that http://IP-ADDRESS-HERE:2000/sign-in
+10. For mobile devices, you can [create PWA app icon](../../../Browsers/PWA.md) using that http://IP-ADDRESS-HERE:2000/sign-in
 
 RELATED INFO:
 - Windows 2022 server example https://github.com/wekan/wekan/issues/5084
@@ -79,7 +79,7 @@ This process creates `server.crt` and `server.key`—the files Caddy will use.
 
 #### Configure Caddyfile 📜
 
-Next, you need to tell Caddy to use these specific certificates instead of trying to get them automatically. 
+Next, you need to tell Caddy to use these specific certificates instead of trying to get them automatically.
 Modify your `Caddyfile` to use the `tls` directive with the paths to your generated files.
 
 Caddyfile:
@@ -189,7 +189,7 @@ internet service provider (ISP) and can be found using an online tool or a simpl
 
 1.  Open the **Start menu** and click on **Settings** (or press the **Windows key + I**).
 2.  In the left-hand menu, click on **Network & internet**.
-3.  Click on the connection you're currently using, either **Wi-Fi** or **Ethernet**. 
+3.  Click on the connection you're currently using, either **Wi-Fi** or **Ethernet**.
 4.  On the next screen, your IP address (both IPv4 and IPv6) will be listed under the **Properties** section.
 
 #### Method 2: Using the Command Prompt 💻
@@ -253,7 +253,7 @@ C:.
 │   ├───caddy.exe from .zip file
 │   ├───Caddyfile textfile for Caddy 2 config
 │   └───start-wekan.bat textfile
-│ 
+│
 └───Program Files
 ```
 
@@ -263,7 +263,7 @@ C:.
 ```
 SET WRITABLE_PATH=..\FILES
 
-SET ROOT_URL=https://wekan.example.com  
+SET ROOT_URL=https://wekan.example.com
 
 SET PORT=2000
 
@@ -380,9 +380,9 @@ At Offline Windows computer:
 ```
 mongodump
 ```
-Backup will be is in directory `dump`. More info at https://github.com/wekan/wekan/wiki/Backup
+Backup will be is in directory `dump`. More info at [Backup](../../../Backup/Backup.md)
 
-2.2. Backup part 2/2. If there is files at `WRITABLE_PATH` directory mentioned at `start-wekan.bat` of https://github.com/wekan/wekan , also backup those. For example, if there is `WRITABLE_PATH=..`, it means previous directory. So when WeKan is started with `node main.js` in bundle directory, it may create in previous directory (where is bundle) directory `files`, where is subdirectories like `files\attachments`, `files\avatars` or similar. 
+2.2. Backup part 2/2. If there is files at `WRITABLE_PATH` directory mentioned at `start-wekan.bat` of https://github.com/wekan/wekan , also backup those. For example, if there is `WRITABLE_PATH=..`, it means previous directory. So when WeKan is started with `node main.js` in bundle directory, it may create in previous directory (where is bundle) directory `files`, where is subdirectories like `files\attachments`, `files\avatars` or similar.
 
 2.3. Check required compatible version of Node.js from https://wekan.fi `Install WeKan ® Server` section and Download that version node.exe for Windows 64bit from https://nodejs.org/dist/
 
@@ -423,7 +423,7 @@ npm install bcrypt
 
 ## c) WSL
 
-[WSL](WSL)
+[WSL](WSL.md)
 
 ## d) Wekan to VirtualBox Ubuntu offline
 
@@ -445,7 +445,7 @@ sudo snap install wekan
 7. At offline computer, install virtualbox and import wekan.ova
 
 8. Set virtualbox network to bridged:
-https://github.com/wekan/wekan/wiki/virtual-appliance#how-to-use
+[virtual appliance](../../FOSS/virtual-appliance.md#how-to-use)
 
 9. Start VirtualBox and Ubuntu
 
@@ -468,8 +468,8 @@ http://192.168.0.100
 
 #### Windows notes (tested on Windows 11)
 
-- **Attachments error fix**: if you get  
-  `TypeError: The "path" argument must be of type string. Received undefined`  
+- **Attachments error fix**: if you get
+  `TypeError: The "path" argument must be of type string. Received undefined`
   from `models/attachments.js`, create folders and set writable paths **before** start:
   - Create: `C:\wekan-data` and `C:\wekan-data\attachments`
   - PowerShell:

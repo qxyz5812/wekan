@@ -1,10 +1,550 @@
-@import url("../../../css/reset.css") print, screen;
+@import url("../../../public/css/reset.css") print, screen;
+
+/* Two-column layout for All Boards */
+.boards-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+}
+
+.boards-left-menu {
+  border-inline-end: 1px solid #e0e0e0;
+  padding-inline-end: 12px;
+}
+
+.boards-left-menu ul.menu {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+}
+
+.boards-left-menu .menu-item {
+  margin: 4px 0;
+}
+.boards-left-menu .menu-item a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.boards-left-menu .menu-item .menu-label {
+  flex: 1;
+}
+.boards-left-menu .menu-item .menu-count {
+  background: #ddd;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-inline-start: 8px;
+}
+.boards-left-menu .menu-item.active a,
+.boards-left-menu .menu-item a:hover {
+  background: #f0f0f0;
+}
+.boards-left-menu .menu-item.active .menu-count {
+  background: #bbb;
+}
+
+/* Drag-over state for menu items (for dropping boards on Remaining) */
+.boards-left-menu .menu-item a.drag-over {
+  background: #d0e8ff;
+  border: 2px dashed #2196F3;
+}
+
+/* Highlight valid drop targets while a board is being dragged */
+.workspace-node.board-drag-hint > .workspace-node-content {
+  background: #e8f5e9;
+  border: 1px dashed #4CAF50;
+  border-radius: 4px;
+}
+.boards-left-menu .menu-item a.board-drag-hint {
+  background: #e8f5e9;
+  border: 1px dashed #4CAF50;
+}
+
+.workspaces-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: bold;
+  margin-top: 12px;
+}
+.workspaces-header .js-add-space,
+.workspaces-header .js-add-workspace {
+  text-decoration: none;
+  font-weight: bold;
+  border: none;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-inline-end: 10px;
+}
+
+.workspace-tree {
+  list-style: none;
+  padding-inline-start: 10px;
+}
+
+.workspace-node {
+  margin: 2px 0;
+  position: relative;
+}
+
+.workspace-node-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.workspace-node.dragging > .workspace-node-content {
+  opacity: 0.5;
+  background: #e0e0e0;
+}
+
+.workspace-node.drag-over > .workspace-node-content {
+  background: #d0e8ff;
+  border: 2px dashed #2196F3;
+}
+
+.workspace-drag-handle {
+  cursor: grab;
+  color: #999;
+  font-size: 14px;
+  padding: 0 4px;
+  user-select: none;
+}
+
+.workspace-drag-handle:active {
+  cursor: grabbing;
+}
+
+.workspace-node .js-select-space {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0; /* allow the workspace name inside to shrink + ellipsis */
+  text-decoration: none;
+}
+
+.workspace-node .workspace-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.workspace-node .workspace-icon .workspace-icon-value,
+.workspace-node .workspace-icon .workspace-icon-value p {
+  display: inline;
+  margin: 0;
+  margin-top: 12px;
+}
+
+.workspace-node .workspace-icon .emoji-icon {
+  margin-top: 0px;
+}
+
+.workspace-node .workspace-name {
+  flex: 1;
+  /* Let the name shrink inside the narrow left menu and truncate with an ellipsis
+     ("Roadmap…") instead of being hard-cut mid-word ("Ro"). */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-node .workspace-count {
+  background: #ddd;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+}
+
+.workspace-node .js-edit-space,
+.workspace-node .js-add-subspace {
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.workspace-node .js-edit-space:hover,
+.workspace-node .js-add-subspace:hover {
+  opacity: 1;
+  background: #e0e0e0;
+}
+
+.workspace-node .js-open-workspace-menu {
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.workspace-node .js-open-workspace-menu:hover {
+  opacity: 1;
+  background: #e0e0e0;
+}
+
+.workspace-actions-form label,
+.workspace-subspace-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.workspace-actions-form input[type='text'],
+.workspace-subspace-form input[type='text'] {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.workspace-actions-form .workspace-color-label {
+  margin-bottom: 6px;
+}
+
+.workspace-actions-form .workspace-color-list {
+  margin-bottom: 10px;
+}
+
+.workspace-delete-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.workspace-delete-confirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.workspace-node.active > .workspace-node-content .js-select-space,
+.workspace-node > .workspace-node-content:hover .js-select-space {
+  background: #f0f0f0;
+}
+
+.workspace-node.active .workspace-count {
+  background: #bbb;
+}
+
+.boards-right-grid {
+  min-height: 200px;
+  /* The right column is a 1fr grid item of .boards-layout; grid items default to
+     min-width:auto and will NOT shrink below their content's intrinsic width, so on
+     narrow (phone) screens the board tiles pushed this column wider than the viewport
+     and the board titles were cut off on the right. min-width:0 lets the 1fr column
+     shrink to its track so the board list fits and the titles stay visible. */
+  min-width: 0;
+}
+
+.boards-path-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  /* Wrap to a 2nd row on narrow windows so the search box and the Sort /
+     Multi-Selection / Clear buttons stay visible instead of overflowing. */
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.boards-path-header .path-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0; /* allow shrinking so path-right can wrap below instead of overflowing */
+  flex-wrap: wrap; /* the multi-selection hint wraps under the title when tight */
+}
+
+/* Keep the folder icon and the menu title (e.g. "Remaining") on ONE line, the
+   title to the RIGHT of the icon — never let flex-wrap stack them vertically. */
+.boards-path-header .path-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* Multi-Selection button with its hint stacked underneath (own column). */
+.boards-path-header .multiselection-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* "Selected:" actions row (star / home) below the Multi-Selection button. */
+.boards-path-header .selected-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.boards-path-header .selected-label {
+  font-size: 13px;
+  color: #333;
+}
+.boards-path-header .selected-action {
+  cursor: pointer;
+  color: #333;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 4px;
+}
+.boards-path-header .selected-action:hover {
+  color: #2980b9;
+}
+
+.boards-path-header .multiselection-hint {
+  background: #FFF3CD;
+  color: #856404;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: normal;
+  border: 1px solid #FFE69C;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.boards-path-header .path-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Buttons (Sort / Multi-Selection / Clear) wrap among themselves too, so none
+     is ever cut off on a narrow window. */
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* #5799: board-name search box in the All Boards header */
+.boards-path-header .board-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  /* Roughly half the previous width; the input flexes to fill what's left. */
+  width: 300px;
+  max-width: 100%;
+}
+
+.boards-path-header .board-search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  flex: 1 1 auto;
+  min-width: 0;
+  /* Nudge the text down so it sits at the vertical middle of the field. */
+  position: relative;
+  top: 8px;
+}
+
+.boards-path-header .board-search .board-search-clear {
+  cursor: pointer;
+  color: #999;
+}
+
+.boards-path-header .board-search .board-search-clear:hover {
+  color: #333;
+}
+
+/* #5799: board grid pagination controls, mirroring Admin Panel > People */
+.boards-pagination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.boards-pagination button {
+  min-width: 32px;
+  height: 30px;
+  border: 1px solid #bbb;
+  background: #fff;
+  border-radius: 0.4vw;
+  cursor: pointer;
+}
+
+.boards-pagination button.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.boards-page-info {
+  min-width: 72px;
+  text-align: center;
+  color: #333;
+}
+
+.boards-path-header .path-icon {
+  font-size: 18px;
+}
+
+.boards-path-header .path-text {
+  color: #333;
+}
+
+.boards-path-header .board-header-btn {
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.boards-path-header .board-header-btn:hover {
+  background: #f0f0f0;
+  border-color: #bbb;
+}
+
+.boards-path-header .board-header-btn.emphasis {
+  background: #2196F3;
+  color: #fff;
+  border-color: #2196F3;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.5);
+  transform: scale(1.05);
+}
+
+.boards-path-header .board-header-btn.emphasis:hover {
+  background: #1976D2;
+  box-shadow: 0 3px 12px rgba(33, 150, 243, 0.7);
+}
+
+.boards-path-header .board-header-btn-close {
+  padding: 4px 10px;
+  background: #f44336;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-inline-start: 10px; /* Extra space between MultiSelection toggle and Remove Filter */
+}
+
+.boards-path-header .board-header-btn-close:hover {
+  background: #d32f2f;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5vw;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.5vh 1vw;
+  border-radius: 0.5vw;
+  box-shadow: 0 0.2vh 0.5vh rgba(0,0,0,0.1);
+}
+
+.zoom-controls .board-header-btn {
+  padding: 0.5vh 0.8vw !important;
+  border-radius: 0.3vw !important;
+  background: #fff !important;
+  border: 1px solid #000 !important;
+  transition: all 0.2s ease !important;
+  text-decoration: none !important;
+  color: #000 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.3vw !important;
+  height: auto !important;
+  line-height: normal !important;
+  margin: 0 !important;
+  float: none !important;
+  overflow: visible !important;
+}
+
+.zoom-controls .board-header-btn i {
+  color: #000 !important;
+  float: none !important;
+  display: inline !important;
+  line-height: normal !important;
+  margin: 0 !important;
+}
+
+.zoom-controls .board-header-btn:hover {
+  background: #000 !important;
+  border-color: #000 !important;
+  color: #fff !important;
+}
+
+.zoom-controls .board-header-btn:hover i {
+  color: #fff !important;
+}
+
+.zoom-controls .board-header-btn.is-active {
+  background: #0079bf;
+  color: white;
+  border-color: #005a8a;
+}
+
+.zoom-controls .board-header-btn.is-active i {
+  color: white;
+}
+
+.zoom-level {
+  font-weight: bold;
+  color: #333;
+  min-width: 3vw;
+  text-align: center;
+  font-size: clamp(12px, 2vw, 14px);
+  cursor: pointer;
+  padding: 0.3vh 0.5vw;
+  border-radius: 0.3vw;
+  transition: all 0.2s ease;
+}
+
+.zoom-level:hover {
+  background: #f0f0f0;
+  color: #000;
+}
 
 .board-list {
   margin: 0 8px;
 }
 .board-list li {
-  float: left;
+  float: inline-start;
   width: 20%;
   box-sizing: border-box;
   position: relative;
@@ -22,25 +562,51 @@
   transform: rotate(4deg);
   display: block !important;
 }
-.board-list li.starred .fa-star,
-.board-list li.starred .fa-star-o {
+.board-list li.starred .is-star-active,
+.board-list li.starred .is-not-star-active {
+  opacity: 1;
+  color: #ffd700;
+}
+/* Show star icon on hover even for non-starred boards */
+.board-list li:hover .is-star-active,
+.board-list li:hover .is-not-star-active {
   opacity: 1;
 }
 .board-list .board-list-item {
   overflow: hidden;
-  background-color: #999;
+  background-color: inherit; /* Inherit board color from parent li.js-board */
   color: #f6f6f6;
-  min-height: 100px;
+  min-height: 72px; /* #6465: thinner tiles so more boards fit in the overview */
   font-size: 16px;
   line-height: 22px;
-  border-radius: 3px;
+  border-radius: 0; /* No border-radius - parent .js-board has it */
   display: block;
   font-weight: 700;
-  padding: 8px;
-  margin: 8px;
+  padding: 24px 8px 18px 8px; /* #6465: trimmed; top leaves room for the drag handle, bottom for the checkbox */
+  margin: 0; /* No margin - moved to parent .js-board */
   position: relative;
   text-decoration: none;
   word-wrap: break-word;
+}
+
+/* #2220: Home-board badge — a home icon centred at the top of the board tile. */
+.board-list .board-home-badge {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.board-list .board-list-item > .js-open-board {
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 .board-list .board-list-item.template-container {
   border: 4px solid #fff;
@@ -68,22 +634,46 @@
 }
 .board-list .js-add-board .label {
   font-weight: normal;
-  line-height: 56px;
+  /* Match the board tiles (#6465 thinner tiles) so the grey "+ Add Board" /
+     "+ Add Template Container" box is the same height as a board icon:
+     same min-height, padding and line-height as .board-list-item above. */
+  line-height: 22px;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #999; /* Darker background for better text contrast */
+  border-radius: 3px;
+  /* Same total vertical padding as .board-list-item (42px -> same tile height),
+     but shifted up (top 24->18, bottom 18->24) so the "+ Add Board" text sits
+     higher. */
+  padding: 18px 8px 24px 8px;
+  color: #fff; /* White text */
 }
-.board-list .js-add-board :hover {
-  background-color: #939393;
+/* "+ Add Template Container" text sits 2px lower than "+ Add Board" (same 42px
+   total vertical padding, so the tile height is unchanged). */
+.board-list .js-add-board .label.is-template-container {
+  padding: 20px 8px 22px 8px;
 }
-.board-list .fa-star,
-.board-list .fa-star-o {
-  bottom: 0;
+.board-list .js-add-board .label i {
+  color: #fff; /* White icon */
+}
+.board-list .js-add-board .label:hover {
+  background-color: #808080; /* Even darker on hover */
+}
+.board-list .js-add-board .label:hover i {
+  color: #fff; /* Keep icon white on hover */
+}
+.board-list .is-star-active,
+.board-list .is-not-star-active {
+  top: 0;
   font-size: 14px;
   height: 18px;
   line-height: 18px;
   opacity: 0;
   padding: 9px 9px;
   position: absolute;
-  right: 0;
-  top: 0;
+  inset-inline-end: 0;
   transition-duration: 0.15s;
   transition-property: color, font-size, background;
 }
@@ -94,7 +684,7 @@
   line-height: 10px;
   padding: 9px 9px;
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   transition-duration: 0.15s;
   transition-property: color, font-size, background;
 }
@@ -114,7 +704,7 @@
   height: 18px;
   line-height: 18px;
   opacity: 0;
-  right: 0;
+  inset-inline-end: 0;
   padding: 9px 9px;
   transition-duration: 0.15s;
   transition-property: color, font-size, background;
@@ -126,41 +716,144 @@
   height: 18px;
   line-height: 18px;
   opacity: 0;
-  left: 0;
+  inset-inline-start: 0;
   padding: 9px 9px;
   transition-duration: 0.15s;
   transition-property: color, font-size, background;
 }
-.board-list li:hover a:hover .fa-star,
+.board-list li:hover a:hover .is-star-active,
 .board-list li:hover a:hover .fa-clone,
 .board-list li:hover a:hover .fa-archive,
-.board-list li:hover a:hover .fa-star-o {
+.board-list li:hover a:hover .is-not-star-active {
   color: #fff;
 }
-.board-list li:hover a .fa-star,
+.board-list li:hover a .is-star-active,
 .board-list li:hover a .fa-clone,
 .board-list li:hover a .fa-archive,
-.board-list li:hover a .fa-star-o {
+.board-list li:hover a .is-not-star-active {
   color: #fff;
   opacity: 0.75;
 }
-.board-list li:hover a .fa-star:hover,
+.board-list li:hover a .is-star-active:hover,
 .board-list li:hover a .fa-clone:hover,
 .board-list li:hover a .fa-archive:hover,
-.board-list li:hover a .fa-star-o:hover {
+.board-list li:hover a .is-not-star-active:hover {
   font-size: 18px;
   opacity: 1;
 }
-.board-list li:hover a .fa-star.is-star-active,
-.board-list li:hover a .fa-clone.is-star-active,
-.board-list li:hover a .fa-archive.is-star-active,
-.board-list li:hover a .fa-star-o.is-star-active {
+.board-list li:hover a .is-star-active,
+.board-list li:hover a .fa-clone,
+.board-list li:hover a .fa-archive,
+.board-list li:hover a .is-not-star-active {
   opacity: 1;
 }
+
+/* Board drag handle - always visible and positioned at top */
+.board-list .board-handle {
+  position: absolute;
+  padding: 4px 6px;
+  /* Right middle of the tile (matches the mobile/small-screen handle position). */
+  top: 50%;
+  inset-inline-end: 6px;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #fff;
+  /* Transparent background so only the drag-handle icon shows (not a box). */
+  background: transparent;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background-color 0.2s ease;
+  cursor: grab;
+  opacity: 1;
+  user-select: none;
+}
+
+.board-list .board-handle:active {
+  cursor: grabbing;
+}
+
+.board-list .board-handle:hover {
+  background: rgba(255, 255, 0, 0.8) !important;
+  color: #000;
+}
+
+/* Multiselection checkbox on board items */
+.board-list .board-list-item .multi-selection-checkbox {
+  position: absolute !important;
+  bottom: 4px !important;
+  inset-inline-start: 4px !important;
+  top: auto !important;
+  width: 24px;
+  height: 24px;
+  border: 3px solid #fff;
+  background: rgba(0,0,0,0.5);
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transform: none !important;
+  margin: 0 !important;
+}
+
+.board-list .board-list-item .multi-selection-checkbox:hover {
+  background: rgba(0,0,0,0.7);
+  transform: scale(1.15) !important;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+}
+
+.board-list .board-list-item .multi-selection-checkbox.is-checked {
+  background: #3cb500;
+  border-color: #3cb500;
+  box-shadow: 0 2px 8px rgba(60, 181, 0, 0.6);
+  width: 24px !important;
+  height: 24px !important;
+  top: auto !important;
+  inset-inline-start: 4px !important;
+  transform: none !important;
+  border-radius: 4px !important;
+}
+
+.board-list .board-list-item .multi-selection-checkbox.is-checked::after {
+  content: '✓';
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Grey checkboxes when grey icons setting is enabled */
+body.grey-icons-enabled .board-list .board-list-item .multi-selection-checkbox.is-checked {
+  background: #7a7a7a;
+  border-color: #7a7a7a;
+  box-shadow: 0 2px 8px rgba(122, 122, 122, 0.6);
+}
+
+body.grey-icons-enabled .board-list.is-multiselection-active .js-board.is-checked {
+  outline: 4px solid #7a7a7a;
+  box-shadow: 0 4px 12px rgba(122, 122, 122, 0.4);
+}
+
+.board-list.is-multiselection-active .js-board.is-checked {
+  outline: 4px solid #3cb500;
+  outline-offset: -4px;
+  box-shadow: 0 4px 12px rgba(60, 181, 0, 0.4);
+}
+
+/* Visual hint when multiselection is active */
+.board-list.is-multiselection-active .board-list-item {
+  border: 2px dashed rgba(33, 150, 243, 0.3);
+}
+
 .board-backgrounds-list .board-background-select {
   box-sizing: border-box;
   display: block;
-  float: left;
+  float: inline-start;
   width: 50%;
   padding-top: 12px;
   position: relative;
@@ -170,10 +863,10 @@
   padding-top: 0;
 }
 .board-backgrounds-list .board-background-select:nth-child(2n) {
-  padding-left: 6px;
+  padding-inline-start: 6px;
 }
 .board-backgrounds-list .board-background-select:nth-child(2n+1) {
-  padding-right: 6px;
+  padding-inline-end: 6px;
 }
 .board-backgrounds-list .board-background-select .background-box {
   color: #fff;
@@ -190,45 +883,239 @@
 }
 .board-backgrounds-list .board-background-select .background-box i.fa-check {
   font-size: 25px;
-  color: #fff;
+  color: #3cb500;
 }
-@media screen and (max-width: 800px) {
+/* Grey check icons when grey icons setting is enabled */
+body.grey-icons-enabled .board-backgrounds-list .board-background-select .background-box i.fa-check {
+  color: #7a7a7a;
+}
+
+/* Prevent Grey Icons from affecting checkmarks in background color list */
+body.grey-icons-enabled .checkmark-no-grey {
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+/* Mobile view styles - applied when isMiniScreen is true (iPhone, etc.) */
+.board-list.mobile-view {
+  /* #6488: a real 2-column grid — robust regardless of float support or how narrow
+     the boards column is (at least 2 board icons per row on phones). */
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  height: calc(100vh - 120px);
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  padding: 0 0.5rem;
+  margin: 0;
+  scrollbar-width: auto !important;
+  scrollbar-color: #888 #f1f1f1;
+}
+.board-list.mobile-view li {
+  width: auto; /* the grid controls the column width */
+  float: none;
+  display: block;
+  margin-bottom: 0.5rem;
+  padding-inline-end: 32px; /* Space for drag handle */
+}
+.board-list.mobile-view .board-list-item {
+  overflow: visible;
+  height: 8rem;
+  width: 100%;
+  margin: 0;
+  /* Keep clear of the drag handle, but only as much as the (smaller) handle needs —
+     on a ~2-per-row phone column the tile is narrow, so an oversized reserve hid most
+     of the board title. */
+  padding-inline-end: 30px;
+}
+
+.board-list.mobile-view .board-list-item .details {
+  padding-inline-end: 30px; /* room for the drag handle */
+  width: 100%;
+  box-sizing: border-box;
+}
+.board-list.mobile-view .board-list-item-sub-name {
+  position: relative;
+  top: -100px;
+  inset-inline-start: -100px;
+}
+.board-list.mobile-view .board-handle {
+  position: absolute;
+  padding: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  inset-inline-end: 6px;
+  font-size: 16px;
+  color: #fff;
+  background: rgba(0,0,0,0.3);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background-color 0.2s ease;
+}
+
+.board-list.mobile-view .board-handle:hover {
+  background: rgba(255, 255, 0, 0.8) !important; /* Yellow hover */
+}
+
+/* Force scrollbar to be visible on mobile view */
+.board-list.mobile-view::-webkit-scrollbar {
+  width: 12px !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+.board-list.mobile-view::-webkit-scrollbar-track {
+  background: #f1f1f1 !important;
+  border-radius: 6px !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+.board-list.mobile-view::-webkit-scrollbar-thumb {
+  background: #888 !important;
+  border-radius: 6px !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+.board-list.mobile-view::-webkit-scrollbar-thumb:hover {
+  background: #555 !important;
+}
+
+/* Hide archive and clone board buttons in mobile view */
+.board-list.mobile-view .js-archive-board,
+.board-list.mobile-view .js-clone-board {
+  display: none !important;
+}
+
+/* Change board drag handle to up-down arrow in mobile view */
+.board-list.mobile-view .board-handle.fa-arrows::before {
+  content: "↕️" !important;
+  font-family: inherit !important;
+}
+
+@media screen and (max-width: 800px),
+       screen and (max-device-width: 800px),
+       screen and (-webkit-min-device-pixel-ratio: 2) and (max-width: 800px),
+       screen and (max-width: 800px) and (orientation: portrait),
+       screen and (max-width: 800px) and (orientation: landscape),
+       screen and (max-device-width: 932px) and (-webkit-min-device-pixel-ratio: 3) {
+  /* #6488 + mobile layout: keep the left menu on the left but narrow (so the boards
+     get room), and show the board icons on the right at least 2 per row. */
+  .boards-layout {
+    grid-template-columns: minmax(84px, 30%) 1fr;
+    gap: 8px;
+  }
   .board-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
     height: 100%;
-    overflow: scroll;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 0.25rem;
+    margin: 0;
   }
   .board-list li {
-    width: 50%;
+    width: auto; /* the grid controls the column width */
+    float: none;
+    display: block;
+    margin-bottom: 0.5rem;
+    padding-inline-end: 32px; /* Space for drag handle */
   }
   .board-list .board-list-item {
-    overflow: hidden;
+    overflow: visible;
     height: 8rem;
+    width: 100%;
+    margin: 0;
+    padding-inline-end: 40px; /* Ensure content doesn't overlap with drag handle */
+  }
+
+  .board-list .board-list-item .details {
+    padding-inline-end: 50px; /* Extra space for drag handle */
+    width: 100%;
+    box-sizing: border-box;
   }
   .board-list .board-list-item-sub-name {
     position: relative;
     top: -100px;
-    left: -100px;
+    inset-inline-start: -100px;
   }
   .board-list .board-handle {
     position: absolute;
     padding: 7px;
     top: 50%;
     transform: translateY(-50%);
-    right: 10px;
+    inset-inline-end: 10px;
     font-size: 24px;
+    color: #fff;
+    background: rgba(0,0,0,0.3);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: background-color 0.2s ease;
+  }
+
+  .board-list .board-handle:hover {
+    background: rgba(255, 255, 0, 0.8) !important; /* Yellow hover */
   }
 }
+/* Very small screens - still keep at least 2 board icons per row (#6488). */
 @media screen and (max-width: 360px) {
-  li {
-    width: 100%;
+  .board-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px;
   }
-  .board-handle {
+  .board-list li {
+    width: auto !important;
+    float: none !important;
+    display: block !important;
+  }
+  .board-list .board-handle {
     position: absolute;
     padding: 7px;
     top: 50%;
     transform: translateY(-50%);
-    right: 10px;
+    inset-inline-end: 10px;
     font-size: 24px;
+    color: #fff;
+    background: rgba(0,0,0,0.3);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Mobile All Boards layout fixes */
+@media screen and (max-width: 800px),
+       screen and (max-device-width: 800px),
+       screen and (-webkit-min-device-pixel-ratio: 2) and (max-width: 800px),
+       screen and (max-width: 800px) and (orientation: portrait),
+       screen and (max-width: 800px) and (orientation: landscape),
+       screen and (max-device-width: 932px) and (-webkit-min-device-pixel-ratio: 3) {
+  /* #6488: KEEP the two-column layout (narrow left menu, board icons on the RIGHT)
+     on small touch screens — do NOT stack the boards below the menu. Stacking pushed
+     the board icons under the menu + search bar, and dragscroll does not work over
+     the menu / search area, so boards below the fold were unreachable (you could not
+     drag-scroll down to them). The narrow minmax() menu set in the block above
+     already prevents the old fixed-260px overflow that used to clip the left menu, so
+     collapsing to one column is no longer needed. The board list stays in its own
+     right-hand column with its own overflow-y:auto scroll. */
+  .boards-layout {
+    grid-template-columns: minmax(84px, 30%) 1fr !important;
   }
 }
 .AllBoardTeamsOrgs {
@@ -238,13 +1125,13 @@
 .AllBoardTeams,
 .AllBoardOrgs,
 .AllBoardBtns {
-  float: left;
+  float: inline-start;
 }
 .js-AllBoardOrgs {
-  margin-left: 16px;
+  margin-inline-start: 16px;
 }
 .AllBoardTeams {
-  margin-left: 16px;
+  margin-inline-start: 16px;
 }
 .AllBoardButtonsContainer {
   margin: 16px;
@@ -253,14 +1140,74 @@
 #resetBtn {
   display: inline;
 }
+
+#resetBtn.filter-reset-btn {
+  background: #f44336;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+#resetBtn.filter-reset-btn:hover {
+  background: #d32f2f;
+}
+
+#resetBtn.filter-reset-btn .reset-icon {
+  font-size: 14px;
+}
+
 .js-board {
   display: block;
+  background-color: #999; /* Default gray background if no color class is applied */
+  border-radius: 3px; /* Rounded corners for board items */
+  overflow: hidden; /* Ensure children respect rounded corners */
+  margin: 8px; /* Space between board items */
 }
+
+/* #6439: highlight the board a dragged board will be dropped before, when
+   reordering in the Custom (drag order) sort mode. */
+.js-board.board-reorder-over {
+  outline: 2px dashed #3498db;
+  outline-offset: 2px;
+}
+
+/* Reset background for add-board button */
+.js-add-board {
+  background-color: transparent !important;
+  margin: 8px !important; /* Keep margin for add-board */
+}
+
+/* Apply board colors to li.js-board parent instead of just the link */
+.board-list .board-color-nephritis { background-color: #27ae60; }
+.board-list .board-color-pomegranate { background-color: #c0392b; }
+.board-list .board-color-belize { background-color: #2980b9; }
+.board-list .board-color-wisteria { background-color: #8e44ad; }
+.board-list .board-color-midnight { background-color: #2c3e50; }
+.board-list .board-color-pumpkin { background-color: #e67e22; }
+.board-list .board-color-moderatepink { background-color: #cd5a91; }
+.board-list .board-color-strongcyan { background-color: #00aecc; }
+.board-list .board-color-limegreen { background-color: #4bbf6b; }
+.board-list .board-color-dark { background-color: #2c3e51; }
+.board-list .board-color-relax { background-color: #27ae61; }
+.board-list .board-color-corteza { background-color: #568ba2; }
+.board-list .board-color-clearblue { background-color: #3498db; }
+.board-list .board-color-natural { background-color: #596557; }
+.board-list .board-color-modern { background-color: #2a80b8; }
+.board-list .board-color-moderndark { background-color: #2a2a2a; }
+.board-list .board-color-exodark { background-color: #222; }
+
 .minicard-members {
   padding: 6px 0 6px 8px;
   width: 100%;
   margin-bottom: 2px;
-  margin-left: -4px;
+  margin-inline-start: -4px;
   display: inline-block;
 }
 .minicard-lists {
@@ -276,6 +1223,129 @@
 }
 .flex-wrap .item {
   margin: 2px;
-  padding-right: 6px;
+  padding-inline-end: 6px;
   text-align: center;
+}
+
+/* Fix multiple scrollbars issue on mobile */
+@media screen and (max-width: 800px),
+       screen and (max-device-width: 800px),
+       screen and (-webkit-min-device-pixel-ratio: 2) and (max-width: 800px),
+       screen and (max-width: 800px) and (orientation: portrait),
+       screen and (max-width: 800px) and (orientation: landscape),
+       screen and (max-device-width: 932px) and (-webkit-min-device-pixel-ratio: 3) {
+  .wrapper {
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* The left menu (Starred / Templates / Remaining / Workspaces / Add board) is its
+     own vertical scroll area, so when it is taller than the screen you can drag-scroll
+     down to its lower items — the board icons already scroll in their own column on the
+     right. Both columns are reachable in LTR and RTL: the grid columns and the logical
+     inline borders mirror automatically, so in RTL the menu is on the right and the
+     boards on the left. */
+  .boards-left-menu {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    max-height: calc(100vh - 120px);
+  }
+
+  .board-list {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+    /* #6488: a BOUNDED height so the boards overflow and scroll. The old rule set
+       min-height:100vh (plus a phantom ::after), which grew the list to fit all its
+       content — so nothing overflowed and, clipped by the overflow:hidden wrapper,
+       boards below the fold were unreachable. */
+    height: calc(100vh - 120px);
+    max-height: calc(100vh - 120px);
+  }
+
+  /* Force scrollbar to always be visible */
+  .board-list::-webkit-scrollbar {
+    width: 12px !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .board-list::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+    border-radius: 6px !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .board-list::-webkit-scrollbar-thumb {
+    background: #888 !important;
+    border-radius: 6px !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .board-list::-webkit-scrollbar-thumb:hover {
+    background: #555 !important;
+  }
+
+  /* Ensure scrollbar is always visible */
+  .board-list::-webkit-scrollbar-corner {
+    background: #f1f1f1 !important;
+  }
+
+  /* Force scrollbar to be visible */
+  .board-list {
+    scrollbar-gutter: stable;
+    scrollbar-width: auto !important;
+    /* NOTE: no min-height/::after here — the bounded height above is what makes the
+       list scroll; forcing it 100vh tall would defeat that (see #6488). */
+  }
+
+  /* Ensure only one scrollbar is visible */
+  body {
+    overflow: hidden;
+  }
+
+  #content {
+    overflow: hidden;
+  }
+
+  /* Hide archive and clone board buttons in mobile view */
+  .board-list .js-archive-board,
+  .board-list .js-clone-board {
+    display: none !important;
+  }
+
+  /* Change board drag handle to up-down arrow in mobile view */
+  .board-list .board-handle.fa-arrows::before {
+    content: "↕️" !important;
+    font-family: inherit !important;
+  }
+}
+
+
+/* #5157: show the board's background image on the board list tile, reusing the
+ * existing board.backgroundImageURL. A dark overlay keeps the title readable. */
+.board-list-item.has-background-image {
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+.board-list-item.has-background-image .details,
+.board-list-item.has-background-image .board-list-item-name {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  color: #fff;
+}
+.board-list-item.has-background-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: inherit;
+  z-index: 0;
 }

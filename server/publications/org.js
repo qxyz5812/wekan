@@ -1,16 +1,18 @@
 import { ReactiveCache } from '/imports/reactiveCache';
 
-Meteor.publish('org', function(query, limit) {
+Meteor.publish('org', async function(query, limit, skip = 0) {
   check(query, Match.OneOf(Object, null));
   check(limit, Number);
+  check(skip, Match.OneOf(Number, null, undefined));
 
   let ret = [];
-  const user = ReactiveCache.getCurrentUser();
+  const user = await ReactiveCache.getCurrentUser();
 
   if (user && user.isAdmin) {
-    ret = ReactiveCache.getOrgs(query,
+    ret = await ReactiveCache.getOrgs(query,
       {
         limit,
+        skip: skip || 0,
         sort: { createdAt: -1 },
         fields: {
           orgDisplayName: 1,
@@ -21,6 +23,9 @@ Meteor.publish('org', function(query, limit) {
           orgTeams: 1,
           createdAt: 1,
           orgIsActive: 1,
+          orgSharedTemplates: 1,
+          orgPropagateMembersToBoards: 1,
+          orgSyncMembersFromAuth: 1,
         }
       },
       true,

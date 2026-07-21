@@ -1,9 +1,17 @@
 template(name="userAvatar")
-  a.member(class="js-{{#if assignee}}assignee{{else}}member{{/if}}" title="{{userData.profile.fullname}} ({{userData.username}}) {{_ memberType}}")
-    if userData.profile.avatarUrl
-      img.avatar.avatar-image(src="{{userData.profile.avatarUrl}}")
+  a.member(class="js-{{#if assignee}}assignee{{else}}member{{/if}} {{memberAccountClass}}" title="{{#if userData}}{{userData.profile.fullname}} ({{userData.username}}) {{_ memberType}}{{#if isImportedMember}} — {{_ 'imported-member-no-account'}}{{else}}{{#if isInactiveMember}} — {{_ 'inactive-member'}}{{/if}}{{/if}}{{/if}}")
+    if userData
+      if userData.profile.avatarUrl
+        img.avatar.avatar-image(src="{{avatarUrl}}" alt="")
+      else
+        +userAvatarInitials(userId=userData._id)
     else
-      +userAvatarInitials(userId=userData._id)
+      +userAvatarInitials(userId=this.userId)
+
+    if isImportedMember
+      span.member-account-badge.imported(title="{{_ 'imported-member-no-account'}}") ?
+    else if isInactiveMember
+      span.member-account-badge.inactive(title="{{_ 'inactive-member'}}")
 
     if showStatus
       span.member-presence-status(class=presenceStatusClassName)
@@ -13,45 +21,27 @@ template(name="userAvatar")
       if showEdit
         if $eq currentUser._id userData._id
           a.edit-avatar.js-change-avatar
-            i.fa.fa-pencil
+            i.fa.fa-pencil-square-o
 
 template(name="userAvatarInitials")
   svg.avatar.avatar-initials(viewBox="0 0 {{viewPortWidth}} 15")
-    text(x="50%" y="13" text-anchor="middle")= initials
+    text(x="50%" y="11" text-anchor="middle" dominant-baseline="middle" font-size="16")= initials
 
 template(name="orgAvatar")
   a.member.orgOrTeamMember(class="js-member" title="{{orgData.orgDisplayName}}")
     +boardOrgName(orgId=orgData._id)
 
 template(name="boardOrgRow")
-  tr
-    if orgData.orgIsActive
-      td {{ orgData.orgDisplayName }}
-    else
-      td <s>{{ orgData.orgDisplayName }}</s>
-    td
-      if currentUser.isBoardAdmin
-        a.member.orgOrTeamMember.add-member.js-manage-board-removeOrg(title="{{_ 'remove-from-board'}}")
-          i.removeTeamFaMinus.fa.fa-minus
-        .divaddfaplusminus
-          | {{_ 'remove-btn'}}
+  a.member.orgOrTeamMember.js-manage-board-removeOrg(title="{{orgData.orgDisplayName}}")
+    +boardOrgName(orgId=orgData._id)
 
 template(name="boardTeamRow")
-  tr
-    if teamData.teamIsActive
-      td {{ teamData.teamDisplayName }}
-    else
-      td <s>{{ teamData.teamDisplayName }}</s>
-    td
-      if currentUser.isBoardAdmin
-        a.member.orgOrTeamMember.add-member.js-manage-board-removeTeam(title="{{_ 'remove-from-board'}}")
-          i.removeTeamFaMinus.fa.fa-minus
-        .divaddfaplusminus
-          | {{_ 'remove-btn'}}
+  a.member.orgOrTeamMember.js-manage-board-removeTeam(title="{{teamData.teamDisplayName}}")
+    +boardTeamName(teamId=teamData._id)
 
 template(name="boardOrgName")
   svg.avatar.avatar-initials(viewBox="0 0 {{orgViewPortWidth}} 15")
-    text(x="50%" y="13" text-anchor="middle")= orgName
+    text(x="50%" y="11" text-anchor="middle" dominant-baseline="middle" font-size="16")= orgName
 
 template(name="teamAvatar")
   a.member.orgOrTeamMember(class="js-member" title="{{teamData.teamDisplayName}}")
@@ -59,7 +49,7 @@ template(name="teamAvatar")
 
 template(name="boardTeamName")
   svg.avatar.avatar-initials(viewBox="0 0 {{teamViewPortWidth}} 15")
-    text(x="50%" y="13" text-anchor="middle")= teamName
+    text(x="50%" y="11" text-anchor="middle" dominant-baseline="middle" font-size="16")= teamName
 
 template(name="userPopup")
   .board-member-menu
@@ -85,14 +75,12 @@ template(name="changeAvatarPopup")
     each uploadedAvatars
       li: a.js-select-avatar
         .member
-          img.avatar.avatar-image(src="{{link}}?auth=false&brokenIsFine=true")
-        | {{_ 'uploaded-avatar'}}
+          img.avatar.avatar-image(src="{{avatarLink}}")
         if isSelected
           i.fa.fa-check
-        p.sub-name
-          unless isSelected
-            a.js-delete-avatar {{_ 'delete'}}
-            |  -
+          p.sub-name
+          a.js-delete-avatar(data-avatar-id="{{_id}}") {{_ 'delete'}}
+          |  -
           = name
     li: a.js-select-initials
       .member
@@ -100,7 +88,47 @@ template(name="changeAvatarPopup")
       | {{_ 'initials' }}
       if noAvatarUrl
         i.fa.fa-check
-       p.sub-name {{_ 'default-avatar'}}
+        p.sub-name {{_ 'default-avatar'}}
+  unless avatarUploadBlocked
+    input.hide.js-upload-avatar-input(accept="image/*;capture=camera" type="file")
+    if Meteor.settings.public.avatarsUploadMaxSize
+      | {{_ 'max-avatar-filesize'}} {{Meteor.settings.public.avatarsUploadMaxSize}}
+      br
+    if Meteor.settings.public.avatarsUploadMimeTypes
+      | {{_ 'allowed-avatar-filetypes'}} {{Meteor.settings.public.avatarsUploadMimeTypes}}
+      br
+    | {{_ 'invalid-file'}}
+    button.full.primary.js-upload-avatar
+      i.fa.fa-upload
+      | {{_ 'upload-avatar' }}
+
+template(name="deleteAvatarPopup")
+  p {{_ 'delete-avatar-confirm'}}
+  button.js-confirm.negate.full(type="submit") {{_ 'delete'}}
+
+template(name="adminChangeAvatarPopup")
+  .admin-change-avatar-header
+    h3 {{_ 'change-avatar'}} - {{ username }}
+  if error.get
+    .warning {{_ error.get}}
+  ul.pop-over-list
+    each uploadedAvatars
+      li: a.js-select-avatar
+        .member
+          img.avatar.avatar-image(src="{{avatarLink}}")
+        if isSelected
+          i.fa.fa-check
+          p.sub-name
+          a.js-delete-avatar(data-avatar-id="{{_id}}") {{_ 'delete'}}
+          |  -
+          = name
+    li: a.js-select-initials
+      .member
+        +userAvatarInitials(userData=userData)
+      | {{_ 'initials' }}
+      if noAvatarUrl
+        i.fa.fa-check
+        p.sub-name {{_ 'default-avatar'}}
   input.hide.js-upload-avatar-input(accept="image/*;capture=camera" type="file")
   if Meteor.settings.public.avatarsUploadMaxSize
     | {{_ 'max-avatar-filesize'}} {{Meteor.settings.public.avatarsUploadMaxSize}}
@@ -109,23 +137,33 @@ template(name="changeAvatarPopup")
     | {{_ 'allowed-avatar-filetypes'}} {{Meteor.settings.public.avatarsUploadMimeTypes}}
     br
   | {{_ 'invalid-file'}}
-  button.full.js-upload-avatar
+  button.full.primary.js-upload-avatar
     i.fa.fa-upload
-    | {{_ 'upload-avatar'}}
+    | {{_ 'upload-avatar' }}
 
 template(name="cardMemberPopup")
   .board-member-menu
     .mini-profile-info
-      +userAvatar(userId=user._id showEdit=true)
-      .info
-        h3= user.profile.fullname
-        p.quiet @{{ user.username }}
+      if user
+        +userAvatar(userId=user._id showEdit=true)
+        .info
+          h3= user.profile.fullname
+          p.quiet @{{ user.username }}
+      else
+        //- #4847: the member's user account was deleted. Still show the entry
+        //- (with its id) and the remove control so the orphaned member can be
+        //- removed from the card — the remove handler keys off userId, not the
+        //- user document.
+        .info
+          h3 {{_ 'deleted-user'}}
+          p.quiet {{ userId }}
     ul.pop-over-list
       unless noRemove
         if currentUser.isNotCommentOnly
           if currentUser.isNotWorker
             li: a.js-remove-member {{_ 'remove-member-from-card'}}
 
-      if $eq currentUser._id user._id
-        with currentUser
-          li: a.js-edit-profile {{_ 'edit-profile'}}
+      if user
+        if $eq currentUser._id user._id
+          with currentUser
+            li: a.js-edit-profile {{_ 'edit-profile'}}

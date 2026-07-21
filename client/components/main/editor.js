@@ -1,16 +1,30 @@
 import { ReactiveCache } from '/imports/reactiveCache';
+import { findWhere } from '/imports/lib/collectionHelpers';
 import { TAPi18n } from '/imports/i18n';
+import Attachments from '/models/attachments';
+import { Utils } from '/client/lib/utils';
+import autosize from 'autosize';
 var converter = require('@wekanteam/html-to-markdown');
 
 const specialHandles = [
   {userId: 'board_members', username: 'board_members'},
-  {userId: 'card_members', username: 'card_members'}
+  {userId: 'card_members', username: 'card_members'},
+  {userId: 'board_assignees', username: 'board_assignees'},
+  {userId: 'card_assignees', username: 'card_assignees'}
+];
+const cardSpecialHandles = [
+  {userId: 'card_members', username: 'card_members'},
+  {userId: 'card_assignees', username: 'card_assignees'}
+];
+const boardSpecialHandles = [
+  {userId: 'board_members', username: 'board_members'},
+  {userId: 'board_assignees', username: 'board_assignees'}
 ];
 const specialHandleNames = specialHandles.map(m => m.username);
 
 
-BlazeComponent.extendComponent({
-  onRendered() {
+Template.editor.onRendered(function () {
+    const tpl = this;
     // Start: Copy <pre> code https://github.com/wekan/wekan/issues/5149
     // TODO: Try to make copyPre visible at Card Details after editing or closing editor or Card Details.
     //       - Also this same TODO below at event, if someone gets it working.
@@ -45,22 +59,26 @@ BlazeComponent.extendComponent({
         match: /\B@([\w.-]*)$/,
         search(term, callback) {
           const currentBoard = Utils.getCurrentBoard();
-          callback(
-            _.union(
-            currentBoard
-              .activeMembers()
-              .map(member => {
-                const user = ReactiveCache.getUser(member.userId);
-                const username = user.username;
-                const fullName = user.profile && user.profile !== undefined && user.profile.fullname ? user.profile.fullname : "";
-                return username.includes(term) || fullName.includes(term) ? user : null;
-              })
-              .filter(Boolean), [...specialHandles])
-          );
+          const searchTerm = term.toLowerCase();
+          const users = currentBoard
+            .activeMembers()
+            .map(member => {
+              const user = ReactiveCache.getUser(member.userId);
+              const username = user.username.toLowerCase();
+              const fullName = user.profile && user.profile !== undefined && user.profile.fullname ? user.profile.fullname.toLowerCase() : "";
+              return username.includes(searchTerm) || fullName.includes(searchTerm) ? user : null;
+            })
+            .filter(Boolean);
+          // Order: 1. Users, 2. Card-specific options, 3. Board-wide options
+          callback([...new Set([...users, ...cardSpecialHandles, ...boardSpecialHandles])]);
         },
         template(user) {
           if (user.profile && user.profile.fullname) {
             return (user.profile.fullname + " (" + user.username + ")");
+          }
+          // Translate special group mentions
+          if (specialHandleNames.includes(user.username)) {
+            return TAPi18n.__(user.username);
           }
           return user.username;
         },
@@ -75,11 +93,10 @@ BlazeComponent.extendComponent({
     ];
 
     const enableTextarea = function() {
-      const $textarea = this.$(textareaSelector);
+      const $textarea = tpl.$(textareaSelector);
       autosize($textarea);
       $textarea.escapeableTextComplete(mentions);
     };
-/*
     if (Meteor.settings.public.RICHER_CARD_COMMENT_EDITOR === true || Meteor.settings.public.RICHER_CARD_COMMENT_EDITOR === 'true') {
       const isSmall = Utils.isMiniScreen();
       const toolbar = isSmall
@@ -117,7 +134,7 @@ BlazeComponent.extendComponent({
         ].join('|');
         const badPatterns = new RegExp(
           `(?:${[
-            `<(${badTags})s*[^>][\\s\\S]*?<\\/\\1>`,
+            `<(${badTags})\\s*[^>][\\s\\S]*?<\\/\\1>`,
             `<(${badTags})[^>]*?\\/>`,
           ].join('|')})`,
           'gi',
@@ -128,9 +145,9 @@ BlazeComponent.extendComponent({
         // remove attributes ' style="..."'
         const badAttributes = new RegExp(
           `(?:${[
-            'on\\S+=([\'"]?).*?\\1',
-            'href=([\'"]?)javascript:.*?\\2',
-            'style=([\'"]?).*?\\3',
+            'on\\S+=([\'\"]?).*?\\1',
+            'href=([\'\"]?)javascript:.*?\\2',
+            'style=([\'\"]?).*?\\3',
             'target=\\S+',
           ].join('|')})`,
           'gi',
@@ -193,11 +210,11 @@ BlazeComponent.extendComponent({
                   const currentCard = Utils.getCurrentCard();
                   const MAX_IMAGE_PIXEL = Utils.MAX_IMAGE_PIXEL;
                   const COMPRESS_RATIO = Utils.IMAGE_COMPRESS_RATIO;
-                  const processUpload = function(file) {
-                    const uploader = Attachments.insert(
+                  const processUpload = async function(file) {
+                    const uploader = await Attachments.insertAsync(
                       {
                         file,
-                        meta: Utils.getCommonAttachmentMetaFrom(card),
+                        meta: Utils.getCommonAttachmentMetaFrom(currentCard),
                         chunkSize: 'dynamic',
                       },
                       false,
@@ -300,33 +317,29 @@ BlazeComponent.extendComponent({
     } else {
       enableTextarea();
     }
-*/
     enableTextarea();
-  },
-  events() {
-    return [
-      {
-        'click a.fa.fa-copy'(event) {
-          const $editor = this.$('textarea.editor');
-          const promise = Utils.copyTextToClipboard($editor[0].value);
+});
 
-          const $tooltip = this.$('.copied-tooltip');
-          Utils.showCopied(promise, $tooltip);
-        },
-        'click a.fa.fa-brands.fa-markdown'(event) {
-          const $editor = this.$('textarea.editor');
-          $editor[0].value = converter.convert($editor[0].value);
-        },
-        // TODO: Try to make copyPre visible at Card Details after editing or closing editor or Card Details.
-        //'click .js-close-inlined-form'(event) {
-        //  Utils.copyPre();
-        //},
-      }
-    ]
-  }
-}).register('editor');
+Template.editor.events({
+    'click a.fa.fa-copy'(event, tpl) {
+      const $editor = tpl.$('textarea.editor');
+      const promise = Utils.copyTextToClipboard($editor[0].value);
+
+      const $tooltip = tpl.$('.copied-tooltip');
+      Utils.showCopied(promise, $tooltip);
+    },
+    'click a.fa.fa-brands.fa-markdown'(event, tpl) {
+      const $editor = tpl.$('textarea.editor');
+      $editor[0].value = converter.convert($editor[0].value);
+    },
+    // TODO: Try to make copyPre visible at Card Details after editing or closing editor or Card Details.
+    //'click .js-close-inlined-form'(event) {
+    //  Utils.copyPre();
+    //},
+});
 
 import DOMPurify from 'dompurify';
+import { sanitizeHTML } from '/imports/lib/secureDOMPurify';
 
 // Additional  safeAttrValue function to allow for other specific protocols
 // See https://github.com/leizongmin/js-xss/issues/52#issuecomment-241354114
@@ -370,26 +383,45 @@ Blaze.Template.registerHelper(
   'mentions',
   new Template('mentions', function() {
     const view = this;
+    // Admin Panel / Features / Security: read the setting FIRST (a reactive dependency
+    // of this viewer) and push the "always show all code as plain text" flag into the
+    // wekan-markdown package BEFORE rendering the inner markdown below. Doing it here —
+    // not only in the separate startup autorun — removes a re-render race: this viewer
+    // already re-renders whenever the setting doc changes (it reads it for stripLinks),
+    // and the inner markdown helper then reads the up-to-date flag in the SAME
+    // synchronous render, so toggling "always show all code as plain text" takes effect
+    // immediately. Without this the viewer could re-render (setting changed) BEFORE the
+    // startup autorun updated the flag, read the stale value, and never re-render again
+    // since it does not itself depend on that ReactiveVar.
+    const setting = ReactiveCache.getCurrentSetting();
+    if (typeof Markdown !== 'undefined' && Markdown.alwaysShowCodeAsText) {
+      Markdown.alwaysShowCodeAsText.set(!!(setting && setting.alwaysShowCodeAsText));
+    }
     let content = Blaze.toHTML(view.templateContentBlock);
+    // Admin Panel / Features: when "render links as plain text" is enabled, every
+    // link (markdown [label](url) and raw HTML <a href>) is stripped to plain,
+    // non-clickable text everywhere rich text is shown. Reactive: toggling the
+    // setting re-renders viewers.
+    const stripLinks = !!(setting && setting.renderLinksAsPlainText);
     const currentBoard = Utils.getCurrentBoard();
     if (!currentBoard)
-      return HTML.Raw(
-        DOMPurify.sanitize(content, { ALLOW_UNKNOWN_PROTOCOLS: true }),
-      );
-    const knowedUsers = _.union(currentBoard.members.map(member => {
-      const u = ReactiveCache.getUser(member.userId);
-      if (u) {
-        member.username = u.username;
-      }
-      return member;
-    }), [...specialHandles]);
+      return HTML.Raw(sanitizeHTML(content, { stripLinks }));
+    const knowedUsers = [...new Set([...currentBoard.members
+      .filter(member => member.isActive)
+      .map(member => {
+        const u = ReactiveCache.getUser(member.userId);
+        if (u) {
+          member.username = u.username;
+        }
+        return member;
+      }), ...specialHandles])];
     const mentionRegex = /\B@([\w.-]*)/gi;
 
     let currentMention;
     while ((currentMention = mentionRegex.exec(content)) !== null) {
       const [fullMention, quoteduser, simple] = currentMention;
       const username = quoteduser || simple;
-      const knowedUser = _.findWhere(knowedUsers, { username });
+      const knowedUser = findWhere(knowedUsers, { username });
       if (!knowedUser) {
         continue;
       }
@@ -399,6 +431,14 @@ Blaze.Template.registerHelper(
       if (knowedUser.userId === Meteor.userId()) {
         linkClass += ' me';
       }
+
+      // For special group mentions, display translated text
+      let displayText = knowedUser.username;
+      if (specialHandleNames.includes(knowedUser.username)) {
+        displayText = TAPi18n.__(knowedUser.username);
+        linkClass = 'atMention'; // Remove js-open-member for special handles
+      }
+
       // This @user mention link generation did open same Wekan
       // window in new tab, so now A is changed to U so it's
       // underlined and there is no link popup. This way also
@@ -413,15 +453,13 @@ Blaze.Template.registerHelper(
           // using a data attribute.
           'data-userId': knowedUser.userId,
         },
-        linkValue,
+        [' ', at, displayText],
       );
 
       content = content.replace(fullMention, Blaze.toHTML(link));
     }
 
-    return HTML.Raw(
-      DOMPurify.sanitize(content, { ALLOW_UNKNOWN_PROTOCOLS: true }),
-    );
+    return HTML.Raw(sanitizeHTML(content, { stripLinks }));
   }),
 );
 
@@ -453,4 +491,18 @@ Template.viewer.events({
       event.preventDefault();
     }
   },
+});
+
+// Admin Panel / Features / Security: keep the wekan-markdown package's
+// "show all code as plain text" flag in sync with the alwaysShowCodeAsText setting.
+// The package cannot import app code, so we push the setting into the reactive flag
+// it exposes on the exported Markdown object; the markdown helper reads it reactively
+// and shows the raw source (escaped, non-clickable, non-running) when enabled.
+Meteor.startup(() => {
+  Tracker.autorun(() => {
+    const setting = ReactiveCache.getCurrentSetting();
+    if (typeof Markdown !== 'undefined' && Markdown.alwaysShowCodeAsText) {
+      Markdown.alwaysShowCodeAsText.set(!!(setting && setting.alwaysShowCodeAsText));
+    }
+  });
 });

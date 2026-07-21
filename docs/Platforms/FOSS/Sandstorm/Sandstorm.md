@@ -1,6 +1,69 @@
 - At some cases [Hardened kernel may prevent creating new Wekan boards at Sandstorm](https://github.com/wekan/wekan/issues/1398)
 
-# Sandstorm at Debian and Ubuntu
+## 1. Backup Sandstorm
+
+1. Please first backup your Sandstorm https://docs.sandstorm.io/en/latest/administering/backups/
+2. Please first download all of your grains to .zip files from top menu row down arrow button, just in case.
+
+## 2. Upgrade Sandstorm WeKan 
+
+Backup your Sandstorm first ! See above !
+
+This new Sandstorm WeKan uses fork of FerretDB v1 SQLite at https://github.com/wekan/FerretDB
+
+- FerretDB is drop-in replacement for MongoDB 7 Server
+- FerretDB implements MongoDB 7 server wire protocol
+- FerretDB converts MongoDB Javascript queries to SQLite SQL queries
+- FerretDB saves data to SQLite database
+- Fork has additional MongoDB features
+- Fork is maintained by xet7
+
+Migrating old MongoDB 3 data
+
+- If there is old WeKan data, it is automatically migrated when opening old WeKan grain.
+  Attachments are migrated from MongoDB to files/attachments.
+  Text data is migrated from MongoDB to SQLite at files/db/wekan.sqlite .
+- After migrating, you may get error, that browser can not open that page embedded to other page.
+  So you need to close WeKan grain and open it again. Sorry, trying to fix it later.
+
+All Boards page
+
+- WeKan starts at All Boards page Favorites
+- All your boards are at first at Remaining, until you Star to have your board at Favorites
+- You can move boards from Remaining to your personal Workspaces or Sub-Workspaces
+
+After migrating, free some disk space
+
+- If after migrating you would like to free disk space of WeKan grain
+  by deleting old MongoDB raw database files
+- At right top corner, click your WeKan username at WeKan board (not at Sandstorm black backround) /
+  Member Settings / Admin Panel / Attachments / Sandstorm / Delete raw MongoDB database files.
+
+Cover image
+
+- You can enable it for minicard and card at:
+  Right Sidebar/Board Settings/Card Settings/Cover Image
+  (at bottom of Card Settings list).
+
+Download Official Version
+
+- [Official Sandstorm Store](https://apps.sandstorm.io/app/m86q05rdvj14yvn78ghaxynqz7u2svw6rnttptxx49g1785cdv1h)
+
+Download Newest Test Version
+
+1. Please backup first.
+2. Go to [Sandstorm Test App Loader](https://mnutt.github.io/sandstorm-test-app-loader/?spk_url=https%3A%2F%2Fgithub.com%2Fwekan%2Fwekan%2Freleases%2Fdownload%2Fv9.89%2Fwekan-sandstorm-2026_07_13-16_54_56.spk&package_id=1c39541fb4710bdb04a68d0b66e9d634)
+3. Copy newest wekan.spk URL from https://github.com/wekan/wekan/releases to Sandstorm Test App Loader page
+4. Write your Sandstorm Instance URL to Sandstorm Test Loader page
+5. Click Install
+6. Later, newest WeKan will also be added to [Experimental](https://apps.sandstorm.io/app/m86q05rdvj14yvn78ghaxynqz7u2svw6rnttptxx49g1785cdv1h?experimental=true)
+   and [Official](https://apps.sandstorm.io/app/m86q05rdvj14yvn78ghaxynqz7u2svw6rnttptxx49g1785cdv1h) Sandstorm Store.
+
+About CloudFlare and uploading wekan.spk file
+
+- If your Sandstorm you use CloudFlare, there may be 100 MB file size upload limit,
+  it prevents uploading wekan.spk as file to your Sandstorm
+- So instead use above Sandstorm Test App Loader to install Newest Test Version
 
 ### Sandstorm Radicale: Calendars and Contacts
 
@@ -56,7 +119,7 @@ othercompany.com {
         reverse_proxy 127.0.0.1:81
 }
 ```
-If having Sandstorm inside of KVM VM: https://github.com/wekan/wekan/blob/main/docs/Platforms/FOSS/Snap/Many-Snaps-on-LXC.md
+If having Sandstorm inside of KVM VM: [Many Snaps on LXC](../Snap/Many-Snaps-on-LXC.md)
 
 At /opt/sandstorm/sandstorm.conf is domain where Sandstorm login is, http port etc.
 ```
@@ -74,7 +137,7 @@ SMTP_LISTEN_PORT=25
 ```
 Some related info at:
 
-https://github.com/wekan/wekan/wiki/Caddy-Webserver-Config
+[Caddy Webserver Config](../../../Webserver/Caddy.md)
 
 I also had to wait that Origin certificate becomes active.
 
@@ -120,14 +183,14 @@ Install to your own server. Automatic updates, tested before release. Sandstorm 
 - Google/GitHub/LDAP/SAML/Passwordless email login.
 - Import from Wekan JSON.
 - Free SSL at https://yourservername.sandcats.io domain.
-- [Rescuing MongoDB data from Sandstorm Grain .zip file to Standalone Wekan](Export-from-Wekan-Sandstorm-grain-.zip-file)
+- [Rescuing MongoDB data from Sandstorm Grain .zip file to Standalone Wekan](Export-from-Wekan-Sandstorm-grain-.zip-file.md)
 
 **Does not work**
 - [Sandstorm open issues](https://github.com/wekan/wekan/issues?q=is%3Aissue+is%3Aopen+sandstorm+label%3ATargets%3ASandstorm)
 - Import from Trello does not import attachments, because Sandstorm-compatible HTTP-access from Wekan to outside of Wekan grain sandbox is not implemented yet 
 - [Copying/Moving card to another board](https://github.com/wekan/wekan/issues/1729).
 - [REST API](https://github.com/wekan/wekan/issues/1279) 
-- [Outgoing Webhooks](Outgoing-Webhook-to-Discord)
+- [Outgoing Webhooks](../../../Webhooks/Discord/Outgoing-Webhook-to-Discord.md)
 - [Email from Wekan](https://github.com/wekan/wekan/issues/2208#issuecomment-469290305)
 
 ## Demo
@@ -137,11 +200,12 @@ Install to your own server. Automatic updates, tested before release. Sandstorm 
 ## Keep backups
 
 - Keep backups. Download your Wekan grains.
-- It's possible to [Export from Wekan Sandstorm grain .zip file to rescue data](Export-from-Wekan-Sandstorm-grain-.zip-file)
+- It's possible to [Export from Wekan Sandstorm grain .zip file to rescue data](Export-from-Wekan-Sandstorm-grain-.zip-file.md)
 
 ## Wekan App
 
-Wekan at [experimental](https://apps.sandstorm.io/app/m86q05rdvj14yvn78ghaxynqz7u2svw6rnttptxx49g1785cdv1h?experimental=true) or [official](https://apps.sandstorm.io/app/m86q05rdvj14yvn78ghaxynqz7u2svw6rnttptxx49g1785cdv1h) Sandstorm App Market. Note: Only use official. Experimental versions are broken.
+Wekan at [experimental](https://apps.sandstorm.io/app/m86q05rdvj14yvn78ghaxynqz7u2svw6rnttptxx49g1785cdv1h?experimental=true) or
+[official](https://apps.sandstorm.io/app/m86q05rdvj14yvn78ghaxynqz7u2svw6rnttptxx49g1785cdv1h) Sandstorm App Market. Note: Only use official. Experimental versions are broken.
 
 Newest Wekap app .spk file download at https://releases.wekan.team/sandstorm/
 
@@ -157,7 +221,7 @@ Newest Wekap app .spk file download at https://releases.wekan.team/sandstorm/
 
 ## Wekan Sandstorm cards to CSV using Python
 
-[Wekan Sandstorm cards to CSV using Python](Wekan-Sandstorm-cards-to-CSV-using-Python)
+[Wekan Sandstorm cards to CSV using Python](Wekan-Sandstorm-cards-to-CSV-using-Python.md)
 
 ## Importing to Trello workaround
 
